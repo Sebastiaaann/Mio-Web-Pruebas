@@ -37,7 +37,7 @@ onMounted(() => {
               Queremos cuidarte
             </h2>
             <p class="text-lg text-gray-700 leading-relaxed max-w-2xl mx-auto">
-              Bienvenido a HOMA, tu plataforma integral de monitoreo de salud. 
+              Bienvenido a Mio, tu plataforma integral de monitoreo de salud. 
               Estamos aquí para acompañarte en tu viaje hacia una vida más saludable.
             </p>
           </div>
@@ -113,7 +113,7 @@ onMounted(() => {
               </div>
               <div class="flex items-center">
                 <span class="w-6 h-6 bg-black text-white rounded-full text-xs flex items-center justify-center mr-3">3</span>
-                <span class="text-sm text-gray-700">¡Listo! Tu plataforma HOMA estará configurada</span>
+                <span class="text-sm text-gray-700">¡Listo! Tu plataforma Mio estará configurada</span>
               </div>
             </div>
           </div>

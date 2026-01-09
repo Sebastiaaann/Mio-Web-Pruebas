@@ -9,25 +9,25 @@ const router = createRouter({
       path: "/",
       name: "inicio",
       component: InicioView,
-      meta: { requiresLayout: false, title: 'Inicio - HOMA' }
+      meta: { requiresLayout: false, title: 'Inicio - Mio' }
     },
     {
       path: "/mediciones",
       name: "mediciones",
       component: () => import("../views/MedicionesView.vue"),
-      meta: { requiresLayout: true, title: 'Mediciones - HOMA' }
+      meta: { requiresLayout: true, title: 'Mediciones - Mio' }
     },
     {
       path: "/recursos",
       name: "recursos",
       component: () => import("../views/RecursosView.vue"),
-      meta: { requiresLayout: true, title: 'Recursos - HOMA' }
+      meta: { requiresLayout: true, title: 'Recursos - Mio' }
     },
     {
       path: "/perfil",
       name: "perfil",
       component: () => import("../views/PerfilView.vue"),
-      meta: { requiresLayout: true, title: 'Perfil - HOMA' }
+      meta: { requiresLayout: true, title: 'Perfil - Mio' }
     }
 
     // FASE 2 - Rutas de Onboarding y Dashboard
@@ -39,8 +39,8 @@ const router = createRouter({
       component: () => import("../views/onboarding/OnboardingView.vue"),
       meta: {
         requiresLayout: false,
-        title: 'Configuración - HOMA',
-        description: 'Configure su perfil HOMA'
+        title: 'Configuración - Mio',
+        description: 'Configure su perfil Mio'
       }
     },
 
@@ -51,7 +51,7 @@ const router = createRouter({
       component: () => import("../views/DashboardView.vue"),
       meta: {
         requiresLayout: true,
-        title: 'Dashboard - HOMA',
+        title: 'Dashboard - Mio',
         description: 'Panel principal de monitoreo'
       }
     }
@@ -60,7 +60,7 @@ const router = createRouter({
 
 // Navigation guard que actualiza el título de la página
 router.beforeEach((to) => {
-  document.title = to.meta.title || 'HOMA';
+  document.title = to.meta.title || 'Mio';
 });
 
 export default router;

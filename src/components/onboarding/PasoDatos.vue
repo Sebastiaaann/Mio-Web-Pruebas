@@ -270,7 +270,7 @@ onMounted(() => {
             </div>
             <p class="text-xs text-gray-600 leading-relaxed">
               Tus datos personales están protegidos y solo se utilizarán para 
-              personalizar tu experiencia HOMA. Nunca compartimos información 
+              personalizar tu experiencia Mio. Nunca compartimos información 
               personal sin tu consentimiento explícito.
             </p>
           </div>

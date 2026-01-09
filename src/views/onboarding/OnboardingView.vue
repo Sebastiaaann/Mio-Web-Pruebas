@@ -32,7 +32,7 @@ const pasos = [
   {
     id: 'bienvenida',
     titulo: 'Bienvenida',
-    descripcion: 'Te damos la bienvenida a HOMA',
+    descripcion: 'Te damos la bienvenida a Mio',
     icono: 'pi pi-home'
   },
   {
@@ -93,7 +93,7 @@ async function enviarFormulario() {
       toast.add({
         severity: 'success',
         summary: '¡Completado!',
-        detail: 'Tu perfil HOMA ha sido configurado exitosamente',
+        detail: 'Tu perfil Mio ha sido configurado exitosamente',
         life: 4000
       });
 
@@ -143,7 +143,7 @@ onMounted(() => {
     <div class="max-w-4xl mx-auto px-4">
       <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-black mb-2">Configuración HOMA</h1>
+        <h1 class="text-3xl font-bold text-black mb-2">Configuración Mio</h1>
         <p class="text-gray-600">Configure su perfil para comenzar a monitorear su salud</p>
       </div>
 
