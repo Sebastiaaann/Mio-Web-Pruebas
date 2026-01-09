@@ -113,6 +113,97 @@ src/
   ```
 - **Tema PrimeVue:** El preset Aura está configurado en `main.js`. Usar componentes de PrimeVue para elementos complejos de UI.
 
+### Patrones de Componentes Vue
+
+#### Componentes con <script setup>
+- **Preferir siempre** `<script setup>` sobre Options API
+- **Props:** Destructuring sin tipos TypeScript
+  ```javascript
+  const { titulo = 'Sin título', mostrar = true } = defineProps(['titulo', 'mostrar']);
+  ```
+- **Emits:** Array simple de eventos
+  ```javascript
+  const emit = defineEmits(['actualizar', 'cerrar', 'guardar']);
+  emit('actualizar', nuevoValor);
+  ```
+- **Slots:** Sintaxis corta `#header` no `v-slot:header`
+- **v-model:** Usar `defineModel()` para simplificar binding bidireccional
+  ```javascript
+  const titulo = defineModel(); // Reemplaza prop + emit manual
+  ```
+- **Shorthand:** `:contador` en lugar de `:contador="contador"`
+- **Dividir componentes >200 líneas** en componentes más pequeños o extraer lógica a composables
+
+#### Composables (Funciones use*)
+- **Naming:** Prefijo `use` + español: `useContador`, `useAutenticacion`, `useDatosUsuario`
+- **VueUse primero:** Verificar [vueuse.org](https://vueuse.org) antes de crear custom
+  - DOM: `useEventListener`, `useIntersectionObserver`
+  - State: `useLocalStorage`, `useSessionStorage`
+  - Sensors: `useMouse`, `useScroll`
+- **Retorno:** Usar `readonly()` para proteger estado de mutación externa
+- **Reglas críticas:**
+  - NO async composables (pierden contexto lifecycle)
+  - Llamar solo a nivel top (nunca en loops/condicionales)
+  - Cleanup con `onUnmounted` para listeners/timers
+
+#### Utilidades Puras
+- **Funciones puras:** Mismo input → mismo output, sin efectos secundarios
+- **Categorías y nombres en español:**
+  - Formatters: `formatearMoneda`, `formatearFecha`, `formatearRut`
+  - Validators: `validarEmail`, `validarRut`, `validarTelefono`
+  - Transformers: `slugificar`, `truncar`, `capitalizar`
+- **Organización:** `src/utils/` agrupado por categoría (formateadores.js, validadores.js)
+- **Cuándo NO usar:** Lógica con estado → usar composables, API calls → usar services
+
+**Ver ejemplos completos en:** `.github/skills/vue/references/componentes-es.md`, `composables-es.md`, `utilidades-es.md`
+
+### Ejemplos de Código Rápidos
+
+#### Componente Vue
+```vue
+<script setup>
+import { ref } from 'vue';
+import { unirClases } from '@/utils/UnirClases';
+
+const { nombre = 'Usuario', activo = true } = defineProps(['nombre', 'activo']);
+const emit = defineEmits(['editar']);
+
+const expandido = ref(false);
+</script>
+
+<template>
+  <div :class="unirClases('border p-4', activo ? 'bg-white' : 'bg-gray-100')">
+    <h3>{{ nombre }}</h3>
+    <button @click="expandido = !expandido">Toggle</button>
+    <slot name="acciones" />
+  </div>
+</template>
+```
+
+#### Composable
+```javascript
+// composables/useContador.js
+import { ref, readonly } from 'vue';
+
+export function useContador(inicial = 0) {
+  const contador = ref(inicial);
+  const incrementar = () => contador.value++;
+  return { contador: readonly(contador), incrementar };
+}
+```
+
+#### Utilidad (Validador RUT)
+```javascript
+// utils/validadores.js - Ver implementación completa en referencias
+export function validarRut(rut) {
+  const rutLimpio = rut.replace(/[^0-9kK]/g, '');
+  // ... algoritmo validación dígito verificador
+  return esValido;
+}
+```
+
+**Ejemplos completos:** Ver `.github/skills/vue/references/` para implementaciones detalladas.
+
 ### Idioma y Comentarios
 - **Código y Comentarios:** Escribir TODO en **Español**. Nombres descriptivos como `calcularIndiceSalud` o `usuarioStore`.
 - **Documentación:** Enfocarse en el *por qué* existe la lógica, no solo en *qué* hace.
@@ -162,3 +253,21 @@ Since there are no test scripts:
 - **NO subir secretos:** Verificar que `.env` y archivos sensibles estén en `.gitignore`.
 - **Commits pequeños:** Cada commit debe ser atómico y enfocado en una tarea.
 - **Revisar manualmente:** Sin tests automatizados, la revisión manual es crítica.
+
+---
+
+## Referencias Avanzadas de Vue
+
+Para patrones detallados, ejemplos completos y casos de uso avanzados:
+
+### Versiones en Español (JavaScript - Stack Mio-Web)
+- `.github/skills/vue/references/componentes-es.md` - Props, emits, slots, defineModel
+- `.github/skills/vue/references/composables-es.md` - Composables, lifecycle, VueUse
+- `.github/skills/vue/references/utilidades-es.md` - Formatters, validators, transformers
+
+### Versiones Originales (TypeScript - Solo Referencia)
+- `.github/skills/vue/references/components.md` - Patrones avanzados con TS
+- `.github/skills/vue/references/composables.md` - Composables tipados
+- `.github/skills/vue/references/testing.md` - Testing (no configurado aún)
+
+**Nota:** Usar siempre versiones `-es.md` para este proyecto. Las originales con TypeScript son solo para consulta técnica.
