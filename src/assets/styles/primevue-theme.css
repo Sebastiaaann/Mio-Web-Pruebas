@@ -1,7 +1,179 @@
-/* PrimeVue Theme Customizations */
+/* PrimeVue Theme Customizations - HOMA B/W */
 :root {
-  --primary-color: #42b983; /* Example primary color */
-  --secondary-color: #35495e; /* Example secondary color */
+  /* Colores primarios en B/W */
+  --p-primary-50: #F9F9F9;
+  --p-primary-100: #F0F0F0;
+  --p-primary-200: #E8E8E8;
+  --p-primary-300: #D1D1D1;
+  --p-primary-400: #B4B4B4;
+  --p-primary-500: #000000;  /* Negro como primario */
+  --p-primary-600: #1A1A1A;
+  --p-primary-700: #2D2D2D;
+  --p-primary-800: #4A4A4A;
+  --p-primary-900: #6B6B6B;
+  
+  /* Superficies */
+  --p-surface-0: #FFFFFF;
+  --p-surface-50: #F9F9F9;
+  --p-surface-100: #F0F0F0;
+  --p-surface-200: #E8E8E8;
+  --p-surface-300: #D1D1D1;
+  --p-surface-400: #B4B4B4;
+  --p-surface-500: #9A9A9A;
+  --p-surface-600: #6B6B6B;
+  --p-surface-700: #4A4A4A;
+  --p-surface-800: #2D2D2D;
+  --p-surface-900: #1A1A1A;
+  
+  /* Bordes minimalistas */
+  --p-content-border-radius: 6px;
+  --p-overlay-border: 1px solid #E8E8E8;
+  
+  /* Eliminar sombras pesadas */
+  --p-focus-ring-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.2);
+  --p-button-shadow: none;
+  --p-overlay-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Add more custom styles as needed */
+/* Personalización específica de componentes */
+.p-button {
+  box-shadow: none !important;
+  border: 1px solid #000000 !important;
+}
+
+.p-button:hover {
+  background-color: #2D2D2D !important;
+}
+
+.p-button-outlined {
+  background: transparent !important;
+  border: 1px solid #000000 !important;
+  color: #000000 !important;
+}
+
+.p-button-outlined:hover {
+  background-color: #F0F0F0 !important;
+}
+
+.p-inputtext {
+  border: 1px solid #D1D1D1 !important;
+  background: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.p-inputtext:focus {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Dropdown/Select específicos */
+.p-dropdown {
+  border: 1px solid #D1D1D1 !important;
+  background: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.p-dropdown:focus {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Checkbox personalización */
+.p-checkbox .p-checkbox-box {
+  border: 1px solid #D1D1D1 !important;
+  background: #FFFFFF !important;
+}
+
+.p-checkbox .p-checkbox-box.p-highlight {
+  background: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Stepper personalización B/N */
+.p-stepper-nav {
+  border-bottom: 1px solid #E8E8E8 !important;
+}
+
+.p-stepper-header {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.p-stepper-number {
+  background: #F0F0F0 !important;
+  border: 1px solid #D1D1D1 !important;
+  color: #6B6B6B !important;
+  font-weight: 600 !important;
+}
+
+.p-stepper-header.p-highlight .p-stepper-number {
+  background: #000000 !important;
+  border-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+.p-stepper-header.p-stepper-active .p-stepper-number {
+  background: #2D2D2D !important;
+  border-color: #2D2D2D !important;
+  color: #FFFFFF !important;
+}
+
+.p-stepper-title {
+  color: #6B6B6B !important;
+  font-weight: 500 !important;
+}
+
+.p-stepper-header.p-highlight .p-stepper-title,
+.p-stepper-header.p-stepper-active .p-stepper-title {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+.p-stepper-separator {
+  background: #E8E8E8 !important;
+}
+
+.p-stepper-header.p-highlight .p-stepper-separator {
+  background: #000000 !important;
+}
+
+/* Cards minimalistas */
+.p-card {
+  box-shadow: none !important;
+  border: 1px solid #E8E8E8 !important;
+  background: #FFFFFF !important;
+}
+
+.p-card .p-card-header {
+  border-bottom: 1px solid #E8E8E8 !important;
+  padding: 1rem 1.25rem !important;
+}
+
+.p-card .p-card-body {
+  padding: 1.25rem !important;
+}
+
+/* Input Number específico para agua */
+.p-inputnumber-input {
+  border: 1px solid #D1D1D1 !important;
+  background: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+.p-inputnumber-input:focus {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Mensajes de error en validación */
+.p-invalid .p-inputtext,
+.p-invalid .p-dropdown,
+.p-invalid .p-inputnumber-input {
+  border-color: #6B6B6B !important;
+}
+
+.error-message {
+  color: #6B6B6B;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}

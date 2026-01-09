@@ -1,14 +1,89 @@
 /* src/assets/styles/principal.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* HOMA Medical Palette */
+  --color-homa-primary: #0F766E;
+  /* teal-700 */
+  --color-homa-primary-light: #14B8A6;
+  /* teal-500 */
+  --color-homa-primary-soft: #CCFBF1;
+  /* teal-100 */
+
+  --color-homa-secondary: #0EA5E9;
+  /* sky-500 */
+  --color-homa-secondary-soft: #E0F2FE;
+  /* sky-100 */
+
+  --color-homa-surface: #FFFFFF;
+  --color-homa-background: #F8FAFC;
+  /* slate-50 */
+
+  --color-homa-text-primary: #1E293B;
+  /* slate-800 */
+  --color-homa-text-secondary: #64748B;
+  /* slate-500 */
+
+  --color-homa-border: #E2E8F0;
+  /* slate-200 */
+}
 
 :root {
-    font-family: "Inter", sans-serif; /* O la que prefieras */
+  font-family: "Inter", "Outfit", sans-serif;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: var(--color-homa-background);
+  color: var(--color-homa-text-primary);
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl;
+  }
+
+  .glass-sidebar {
+    @apply bg-white/80 backdrop-blur-md border-r border-slate-200/60;
+  }
+}
+
+@layer components {
+  .homa-card {
+    @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+  }
+
+  /* Primary Button */
+  .homa-button {
+    @apply bg-homa-primary text-white font-medium px-5 py-2.5 rounded-xl transition-all duration-200 hover:bg-homa-primary-light hover:shadow-lg hover:shadow-teal-500/30 active:scale-95;
+  }
+
+  /* Outline Button */
+  .homa-button-outline {
+    @apply bg-transparent text-homa-primary font-medium px-5 py-2.5 rounded-xl transition-all duration-200 border border-homa-primary/30 hover:bg-homa-primary-soft hover:border-homa-primary active:scale-95;
+  }
+
+  .homa-layout {
+    @apply min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex font-sans;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
