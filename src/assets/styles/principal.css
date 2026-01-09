@@ -1,0 +1,14 @@
+/* src/assets/styles/principal.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    font-family: "Inter", sans-serif; /* O la que prefieras */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
