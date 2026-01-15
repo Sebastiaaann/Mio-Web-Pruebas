@@ -10,8 +10,11 @@ import { useDark, useToggle, useThrottleFn } from '@vueuse/core';
 
 const route = useRoute();
 
-// Dark Mode Logic
-const isDark = useDark();
+// Dark Mode Logic - Light mode por defecto
+const isDark = useDark({
+  initialValue: false,
+  storageKey: 'mio-theme',
+});
 const toggleDark = useToggle(isDark);
 
 // Título dinámico basado en la ruta

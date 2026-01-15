@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 // Using simple headless UI pattern for modal/transitions if accessible or just simple v-if/v-show with CSS transitions
 // Icons
@@ -37,10 +37,23 @@ const handleRegisterSubmit = () => {
     router.push('/onboarding')
 }
 
-// Toggle Dark Mode (Simple implementation matching snippet logic)
+// Toggle Dark Mode - Sincronizado con localStorage (misma clave que dashboard)
 const isDark = ref(false)
+
+onMounted(() => {
+    // Leer preferencia guardada, por defecto false (light mode)
+    const savedTheme = localStorage.getItem('mio-theme')
+    isDark.value = savedTheme === 'dark'
+    if (isDark.value) {
+        document.documentElement.classList.add('dark')
+    } else {
+        document.documentElement.classList.remove('dark')
+    }
+})
+
 const toggleDarkMode = () => {
     isDark.value = !isDark.value
+    localStorage.setItem('mio-theme', isDark.value ? 'dark' : 'light')
     if (isDark.value) {
         document.documentElement.classList.add('dark')
     } else {
