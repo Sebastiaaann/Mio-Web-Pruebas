@@ -115,22 +115,22 @@ function handleEncuestaComplete(data) {
         <p class="text-purple-100 text-base md:text-lg leading-relaxed mb-6">
           Tu sistema integral de monitoreo de salud. Mantén un seguimiento de tus métricas vitales.
         </p>
-        <nav class="flex flex-wrap gap-3">
+        <nav class="flex flex-col sm:flex-row gap-3">
           <Button 
-            class="neu-button bg-white text-primary hover:bg-purple-50 px-5 py-2.5 rounded-xl font-semibold"
+            class="bg-white text-primary hover:bg-purple-50 px-6 py-3 rounded-xl font-semibold shadow-lg"
             aria-label="Abrir encuesta preventiva de salud"
             @click="abrirEncuesta"
           >
-            <FileEdit class="mr-2 h-4 w-4" aria-hidden="true" />
+            <FileEdit class="mr-2 h-5 w-5" aria-hidden="true" />
             Realizar Encuesta
           </Button>
           <Button 
             variant="ghost"
-            class="bg-white/20 text-white border border-white/30 hover:bg-white/30 px-5 py-2.5 rounded-xl font-medium transition-colors duration-200"
+            class="bg-white/20 text-white border border-white/30 hover:bg-white/30 px-6 py-3 rounded-xl font-medium transition-colors duration-200"
             aria-label="Ir a configuración de perfil"
             @click="irAOnboarding"
           >
-            <Settings class="mr-2 h-4 w-4" aria-hidden="true" />
+            <Settings class="mr-2 h-5 w-5" aria-hidden="true" />
             Configurar Perfil
           </Button>
         </nav>
