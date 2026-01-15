@@ -71,7 +71,7 @@ function handleControlClick(control) {
 }
 
 function handleControlSubmit(data) {
-  console.log('Datos enviados desde el dashboard:', data)
+  // console.log('Datos enviados desde el dashboard:', data)
   // Aquí podrías mostrar un toast de éxito
 }
 

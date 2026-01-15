@@ -46,7 +46,7 @@ const menuItems = [
     descripcion: 'Contacta con nuestro equipo de soporte',
     icon: Headphones,
     color: '#3B82F6',
-    action: () => { console.log('Asistencia MIO') }
+    action: () => { // console.log('Asistencia MIO') }
   },
   {
     id: 'ayuda-controles',

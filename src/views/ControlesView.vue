@@ -41,7 +41,7 @@ function handleControlClick(control) {
 }
 
 function handleControlSubmit(data) {
-  console.log('Control registrado desde ControlesView:', data)
+  // console.log('Control registrado desde ControlesView:', data)
 }
 </script>
 

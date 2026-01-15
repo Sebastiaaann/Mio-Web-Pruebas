@@ -91,7 +91,7 @@ const toggleProfileMenu = () => {
 };
 
 const handleSignOut = () => {
-    // console.log("Signing out...");
+    // // console.log("Signing out...");
     isProfileMenuOpen.value = false;
     router.push('/');
 };

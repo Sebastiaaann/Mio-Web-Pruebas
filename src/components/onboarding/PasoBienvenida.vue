@@ -4,7 +4,7 @@ import Card from 'primevue/card';
 
 // Opcional: efectos de entrada o configuraciones
 onMounted(() => {
-  console.log('🏠 Paso de bienvenida cargado');
+  // console.log('🏠 Paso de bienvenida cargado');
 });
 </script>
 

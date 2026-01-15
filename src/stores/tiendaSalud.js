@@ -117,7 +117,7 @@ export const useHealthStore = defineStore('health', () => {
             ]
 
             if (import.meta.env.DEV) {
-                console.log('✅ Controles cargados:', controlesProximos.value.length)
+                // console.log('✅ Controles cargados:', controlesProximos.value.length)
             }
         } catch (e) {
             error.value = e.message

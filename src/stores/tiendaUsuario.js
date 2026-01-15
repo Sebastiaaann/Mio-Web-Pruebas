@@ -50,7 +50,7 @@ export const useUserStore = defineStore('user', () => {
             }
 
             if (import.meta.env.DEV) {
-                console.log('✅ Login exitoso:', user.value)
+                // console.log('✅ Login exitoso:', user.value)
             }
             return { success: true }
         } catch (e) {

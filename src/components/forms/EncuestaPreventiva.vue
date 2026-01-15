@@ -93,7 +93,7 @@ function pasoAnterior() {
 }
 
 function completarEncuesta() {
-  console.log('📋 Encuesta completada:', formData.value)
+  // console.log('📋 Encuesta completada:', formData.value)
   emit('complete', formData.value)
   localVisible.value = false
   

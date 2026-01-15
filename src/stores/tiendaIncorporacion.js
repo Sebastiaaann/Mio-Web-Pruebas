@@ -144,7 +144,7 @@ export const useOnboardingStore = defineStore('onboarding', {
 
         // Para testing - mostrar en consola solo en desarrollo
         if (import.meta.env.DEV) {
-          console.log('📋 DATOS CONSOLIDADOS DEL ONBOARDING:', datosConsolidados);
+          // console.log('📋 DATOS CONSOLIDADOS DEL ONBOARDING:', datosConsolidados);
           console.log('📊 Datos Personales:', datosConsolidados.datosPersonales);
           console.log('🫀 Datos de Salud:', datosConsolidados.datosHabitos);
         }

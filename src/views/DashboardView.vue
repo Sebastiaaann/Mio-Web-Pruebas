@@ -56,7 +56,7 @@ const selectedControl = ref({})
 onMounted(() => {
   // Debug log solo en desarrollo
   if (import.meta.env.DEV) {
-    console.log('📊 Dashboard cargado')
+    // console.log('📊 Dashboard cargado')
   }
   
   // Mock login para desarrollo
