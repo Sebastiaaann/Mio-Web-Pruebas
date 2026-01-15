@@ -5,7 +5,7 @@
  * Migrado a Lucide icons
  */
 import { computed } from 'vue'
-import StatusIcon from '@/components/ui/StatusIcon.vue'
+import IconoEstado from '@/components/ui/IconoEstado.vue'
 import { 
   Heart, 
   Activity, 
@@ -116,7 +116,7 @@ function handleClick() {
         />
       </div>
       
-      <StatusIcon :status="estado" size="sm" />
+      <IconoEstado :status="estado" size="sm" />
     </div>
     
     <!-- Contenido -->

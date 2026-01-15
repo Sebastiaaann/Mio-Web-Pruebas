@@ -36,10 +36,7 @@ function volverAlDashboard() {
       <p class="text-gray-500 text-lg mb-6">
         No disponible por el momento
       </p>
-      <p class="text-gray-400 text-sm mb-8">
-        Estamos trabajando para habilitarte esta función muy pronto. 
-        Podrás recibir notificaciones y mensajes de tu equipo de salud.
-      </p>
+      
       
       <!-- Botón de acción -->
       <Button 

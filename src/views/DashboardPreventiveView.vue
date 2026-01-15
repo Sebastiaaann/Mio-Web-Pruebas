@@ -9,8 +9,8 @@
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/userStore'
-import { useHealthStore } from '@/stores/healthStore'
+import { useUserStore } from '@/stores/tiendaUsuario'
+import { useHealthStore } from '@/stores/tiendaSalud'
 
 // Shadcn components
 import { Button } from '@/components/ui/button'
@@ -36,8 +36,8 @@ import {
 } from 'lucide-vue-next'
 
 // Custom components
-import HealthCard from '@/components/health/HealthCard.vue'
-import StatusIcon from '@/components/ui/StatusIcon.vue'
+import TarjetaSalud from '@/components/health/TarjetaSalud.vue'
+import IconoEstado from '@/components/ui/IconoEstado.vue'
 // import ControlFormDialog from '@/components/health/ControlFormDialog.vue'
 
 const router = useRouter()
@@ -156,7 +156,7 @@ function playVideo(video) {
              </div>
              
              <div class="text-xs text-muted-foreground flex items-center gap-1">
-               <StatusIcon :status="ultimaMedicion?.estado || 'na'" size="sm" />
+               <IconoEstado :status="ultimaMedicion?.estado || 'na'" size="sm" />
                <span class="ml-1">Estado General</span>
              </div>
           </CardContent>
@@ -177,7 +177,7 @@ function playVideo(video) {
 
           <!-- Grid -->
           <div v-if="controlesProximos.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <HealthCard
+             <TarjetaSalud
               v-for="control in controlesProximos"
               :key="control.id"
               :titulo="control.nombre"

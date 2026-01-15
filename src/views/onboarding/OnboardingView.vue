@@ -6,7 +6,7 @@ import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
-import { useOnboardingStore } from '@/stores/onboardingStore';
+import { useOnboardingStore } from '@/stores/tiendaIncorporacion';
 
 // Componentes de los pasos
 import PasoBienvenida from '@/components/onboarding/PasoBienvenida.vue';

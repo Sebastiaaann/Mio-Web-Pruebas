@@ -7,8 +7,8 @@
 import { ref, onMounted, defineAsyncComponent } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/userStore'
-import { useHealthStore } from '@/stores/healthStore'
+import { useUserStore } from '@/stores/tiendaUsuario'
+import { useHealthStore } from '@/stores/tiendaSalud'
 
 // Shadcn components
 import { Button } from '@/components/ui/button'
@@ -30,8 +30,8 @@ import {
 } from 'lucide-vue-next'
 
 // Custom components
-import HealthCard from '@/components/health/HealthCard.vue'
-import StatusIcon from '@/components/ui/StatusIcon.vue'
+import TarjetaSalud from '@/components/health/TarjetaSalud.vue'
+import IconoEstado from '@/components/ui/IconoEstado.vue'
 
 // Lazy load para componentes de diálogo (solo se cargan cuando se necesitan)
 const EncuestaPreventiva = defineAsyncComponent(() => 
@@ -155,7 +155,7 @@ function handleEncuestaComplete(data) {
         <CardContent class="p-6">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
-              <StatusIcon :status="ultimaMedicion?.estado || 'na'" size="lg" />
+              <IconoEstado :status="ultimaMedicion?.estado || 'na'" size="lg" />
               <div>
                 <p class="font-semibold text-foreground">Estado General</p>
                 <p class="text-sm text-muted-foreground">
@@ -228,7 +228,7 @@ function handleEncuestaComplete(data) {
         v-else-if="controlesProximos.length > 0" 
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
       >
-        <HealthCard
+        <TarjetaSalud
           v-for="control in controlesProximos"
           :key="control.id"
           :titulo="control.nombre"

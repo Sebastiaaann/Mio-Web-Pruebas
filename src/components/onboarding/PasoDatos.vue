@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
-import { useOnboardingStore } from '@/stores/onboardingStore';
+import { useOnboardingStore } from '@/stores/tiendaIncorporacion';
 import InputRut from '@/components/forms/InputRut.vue';
 
 const onboardingStore = useOnboardingStore();

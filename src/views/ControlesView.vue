@@ -6,11 +6,11 @@
  */
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useHealthStore } from '@/stores/healthStore'
+import { useHealthStore } from '@/stores/tiendaSalud'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import HealthCard from '@/components/health/HealthCard.vue'
-import StatusIcon from '@/components/ui/StatusIcon.vue'
+import TarjetaSalud from '@/components/health/TarjetaSalud.vue'
+import IconoEstado from '@/components/ui/IconoEstado.vue'
 // import ControlFormDialog from '@/components/health/ControlFormDialog.vue'
 
 // Lucide icons
@@ -113,7 +113,7 @@ function handleControlSubmit(data) {
       
       <!-- Controls list -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <HealthCard
+        <TarjetaSalud
           v-for="control in controlesProximos"
           :key="control.id"
           :titulo="control.nombre"
@@ -139,7 +139,7 @@ function handleControlSubmit(data) {
           <div class="space-y-4">
             <!-- Timeline items -->
             <div class="timeline-item flex items-start space-x-4 pb-4 border-b border-gray-100 last:border-0">
-              <StatusIcon status="completado" size="md" />
+              <IconoEstado status="completado" size="md" />
               <div class="flex-1">
                 <p class="font-medium text-gray-800">Control de Peso realizado</p>
                 <p class="text-sm text-gray-500">Hace 3 días</p>
@@ -148,7 +148,7 @@ function handleControlSubmit(data) {
             </div>
             
             <div class="timeline-item flex items-start space-x-4 pb-4 border-b border-gray-100 last:border-0">
-              <StatusIcon status="completado" size="md" />
+              <IconoEstado status="completado" size="md" />
               <div class="flex-1">
                 <p class="font-medium text-gray-800">Presión Arterial medida</p>
                 <p class="text-sm text-gray-500">Hace 1 semana</p>
@@ -157,7 +157,7 @@ function handleControlSubmit(data) {
             </div>
             
             <div class="timeline-item flex items-start space-x-4 pb-4 last:border-0">
-              <StatusIcon status="na" size="md" />
+              <IconoEstado status="na" size="md" />
               <div class="flex-1">
                 <p class="font-medium text-gray-800">Glicemia</p>
                 <p class="text-sm text-gray-500">Sin registro previo</p>

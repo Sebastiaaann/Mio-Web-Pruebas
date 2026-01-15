@@ -2,7 +2,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import AppLayout from '@/layouts/AppLayout.vue';
+import DisposicionApp from '@/layouts/DisposicionApp.vue';
 
 const route = useRoute();
 
@@ -24,9 +24,9 @@ const usarLayout = computed(() => {
 
 <template>
   <!-- Con Layout Principal -->
-  <AppLayout v-if="usarLayout">
+  <DisposicionApp v-if="usarLayout">
     <router-view />
-  </AppLayout>
+  </DisposicionApp>
   
   <!-- Sin Layout (auth, onboarding, etc.) -->
   <router-view v-else />

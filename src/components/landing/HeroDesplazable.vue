@@ -2,9 +2,9 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Motion } from 'motion-v';
-import InteractiveHoverButton from '@/components/ui/InteractiveHoverButton.vue';
-import GooeyText from '@/components/ui/GooeyText.vue';
-import LoginModal from '@/components/auth/LoginModal.vue';
+import BotonInteractivo from '@/components/ui/BotonInteractivo.vue';
+import TextoGooey from '@/components/ui/TextoGooey.vue';
+import ModalAcceso from '@/components/auth/ModalAcceso.vue';
 
 const router = useRouter();
 const isLoginOpen = ref(false);
@@ -38,7 +38,7 @@ const isLoginOpen = ref(false);
 
         <!-- Gooey Text Morphing -->
         <div class="h-32 flex items-center justify-center w-full">
-            <GooeyText 
+            <TextoGooey 
                 :texts="['Gestiona', 'Monitorea', 'Controla', 'Optimiza']" 
                 class="w-full"
                 textClassName="text-4xl md:text-6xl font-black tracking-tight text-white drop-shadow-lg"
@@ -53,7 +53,7 @@ const isLoginOpen = ref(false);
             :animate="{ opacity: 1, y: 0 }"
             :transition="{ delay: 0.5, duration: 0.5 }"
         >
-            <InteractiveHoverButton 
+            <BotonInteractivo 
                 text="Ingresar"
                 @click="isLoginOpen = true"
                 class="w-48 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)]"
@@ -68,7 +68,7 @@ const isLoginOpen = ref(false);
       </div>
 
       <!-- Login Modal -->
-      <LoginModal 
+      <ModalAcceso 
         :isOpen="isLoginOpen" 
         @close="isLoginOpen = false" 
       />

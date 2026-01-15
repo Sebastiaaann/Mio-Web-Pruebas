@@ -6,7 +6,7 @@ import Dropdown from 'primevue/dropdown';
 import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
 import Divider from 'primevue/divider';
-import { useOnboardingStore } from '@/stores/onboardingStore';
+import { useOnboardingStore } from '@/stores/tiendaIncorporacion';
 
 const onboardingStore = useOnboardingStore();
 

@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useUserStore } from '@/stores/userStore'
-import { useHealthStore } from '@/stores/healthStore'
+import { useUserStore } from '@/stores/tiendaUsuario'
+import { useHealthStore } from '@/stores/tiendaSalud'
 
 // Components
 import BentoGrid from '@/components/ui/bento-grid/BentoGrid.vue'
