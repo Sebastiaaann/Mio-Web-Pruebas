@@ -1,136 +1,317 @@
 <script setup>
-import { onMounted } from 'vue';
-import Card from 'primevue/card';
-import Button from 'primevue/button';
-import { useRouter } from 'vue-router';
+/**
+ * DashboardView - Vista principal del Dashboard
+ * Incluye: Resumen de salud, Campañas, Próximos Controles y Videos
+ * Migrado a shadcn-vue con Lucide icons
+ */
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
+import { useHealthStore } from '@/stores/healthStore'
 
-const router = useRouter();
+// Shadcn components
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+
+// Lucide icons
+import { 
+  FileEdit, 
+  Settings, 
+  Heart, 
+  ArrowRight, 
+  Megaphone, 
+  Shield,
+  Calendar,
+  CalendarX,
+  Video,
+  Play,
+  Loader2
+} from 'lucide-vue-next'
+
+// Custom components
+import HealthCard from '@/components/health/HealthCard.vue'
+import StatusIcon from '@/components/ui/StatusIcon.vue'
+
+// Lazy load para componentes de diálogo (solo se cargan cuando se necesitan)
+const EncuestaPreventiva = defineAsyncComponent(() => 
+  import('@/components/forms/EncuestaPreventiva.vue')
+)
+// import ControlFormDialog from '@/components/health/ControlFormDialog.vue'
+
+const router = useRouter()
+const userStore = useUserStore()
+const healthStore = useHealthStore()
+
+const { firstName } = storeToRefs(userStore)
+const { ultimaMedicion, controlesProximos, campanhas, videos, loading } = storeToRefs(healthStore)
+
+// Modal de encuesta
+const showEncuesta = ref(false)
+
+// Dialog State
+const isControlDialogOpen = ref(false)
+const selectedControl = ref({})
 
 onMounted(() => {
-  console.log('📊 Dashboard cargado - ¡Onboarding completado exitosamente!');
-});
-
-function volverAInicio() {
-  router.push('/');
-}
+  // Debug log solo en desarrollo
+  if (import.meta.env.DEV) {
+    console.log('📊 Dashboard cargado')
+  }
+  
+  // Mock login para desarrollo
+  if (!userStore.isAuthenticated) {
+    userStore.mockLogin()
+  }
+  
+  // Cargar datos de salud
+  healthStore.initMockData()
+})
 
 function irAOnboarding() {
-  router.push('/onboarding');
+  router.push('/onboarding')
+}
+
+function abrirEncuesta() {
+  showEncuesta.value = true
+}
+
+function handleControlClick(control) {
+  selectedControl.value = control
+  isControlDialogOpen.value = true
+}
+
+function handleControlSubmit(data) {
+  if (import.meta.env.DEV) {
+    console.log('Control registrado desde Dashboard:', data)
+  }
+}
+
+function playVideo(video) {
+  if (import.meta.env.DEV) {
+    console.log('Reproducir video:', video.titulo)
+  }
+  // TODO: Implementar reproductor de video
+}
+
+function handleEncuestaComplete(data) {
+  if (import.meta.env.DEV) {
+    console.log('Encuesta completada:', data)
+  }
+  // TODO: Procesar resultados de encuesta
 }
 </script>
 
 <template>
-  <div class="space-y-8 pb-10">
-    <!-- Hero Section -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-homa-primary to-homa-primary-light p-8 md:p-12 shadow-2xl shadow-teal-900/20 text-white">
+  <div class="dashboard-view space-y-8 pb-6">
+    
+    <!-- Hero Section con Bienvenida -->
+    <header class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-indigo-600 p-6 md:p-10 shadow-xl text-white">
       <div class="relative z-10 max-w-2xl">
-        <h1 class="text-3xl md:text-5xl font-bold mb-4 tracking-tight">Bienvenido a MIO</h1>
-        <p class="text-teal-50 text-lg md:text-xl font-medium leading-relaxed mb-8">
-          Tu sistema integral de monitoreo de salud. Mantén un seguimiento de tus métricas vitales y recibe insights personalizados.
+        <p class="text-purple-200 font-medium mb-1">Buenos días</p>
+        <h1 class="text-2xl md:text-4xl font-bold mb-3 tracking-tight">
+          Hola, {{ firstName }}
+        </h1>
+        <p class="text-purple-100 text-base md:text-lg leading-relaxed mb-6">
+          Tu sistema integral de monitoreo de salud. Mantén un seguimiento de tus métricas vitales.
         </p>
-        <div class="flex flex-wrap gap-4">
+        <nav class="flex flex-wrap gap-3">
           <Button 
-            label="Ver Dashboard" 
-            icon="pi pi-chart-line" 
-            class="bg-white text-homa-primary border-none hover:bg-teal-50 px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/10 transition-transform active:scale-95"
-          />
+            class="neu-button bg-white text-primary hover:bg-purple-50 px-5 py-2.5 rounded-xl font-semibold"
+            aria-label="Abrir encuesta preventiva de salud"
+            @click="abrirEncuesta"
+          >
+            <FileEdit class="mr-2 h-4 w-4" aria-hidden="true" />
+            Realizar Encuesta
+          </Button>
           <Button 
-            label="Configurar Perfil" 
-            icon="pi pi-cog" 
-            class="bg-homa-primary-dark/30 text-white border border-white/30 hover:bg-white/10 px-6 py-3 rounded-xl font-medium backdrop-blur-sm transition-transform active:scale-95"
+            variant="ghost"
+            class="bg-white/20 text-white border border-white/30 hover:bg-white/30 px-5 py-2.5 rounded-xl font-medium transition-colors duration-200"
+            aria-label="Ir a configuración de perfil"
             @click="irAOnboarding"
-          />
-        </div>
+          >
+            <Settings class="mr-2 h-4 w-4" aria-hidden="true" />
+            Configurar Perfil
+          </Button>
+        </nav>
       </div>
       
-      <!-- Decorative Background Elements -->
-      <div class="absolute right-0 top-0 h-full w-1/2 opacity-10 pointer-events-none">
+      <!-- Decorativo -->
+      <div class="absolute right-0 top-0 h-full w-1/3 opacity-20 pointer-events-none">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="h-full w-full">
-          <path fill="#FFFFFF" d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.6,-46.6C91.4,-34.1,98.1,-19.2,95.8,-4.9C93.5,9.3,82.2,22.9,71.3,35.1C60.4,47.3,49.9,58.1,37.6,65.6C25.3,73.1,11.2,77.3,-2.6,81.8C-16.4,86.3,-29.9,91.2,-41.8,85.6C-53.7,80,-64,63.9,-71.6,49.3C-79.2,34.7,-84.1,21.6,-83.4,8.9C-82.7,-3.8,-76.4,-16.1,-68.4,-27.4C-60.4,-38.7,-50.7,-49,-39.3,-57.4C-27.9,-65.8,-14.8,-72.3,0.2,-72.7C15.2,-73,30.5,-67.2,44.7,-76.4Z" transform="translate(100 100)" />
+          <circle cx="100" cy="100" r="80" fill="currentColor" />
         </svg>
       </div>
-    </div>
+    </header>
 
-    <!-- Quick Actions Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Mediciones -->
-      <div class="homa-card group cursor-pointer" @click="router.push('/mediciones')">
-        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
+    <!-- Resumen de Última Medición -->
+    <section>
+      <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center">
+        <Heart class="mr-2 h-5 w-5 text-destructive" />
+        Resultado de tu última medición
+      </h2>
+      
+      <Card class="neu-card border border-border bg-card text-card-foreground">
+        <CardContent class="p-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <StatusIcon :status="ultimaMedicion?.estado || 'na'" size="lg" />
+              <div>
+                <p class="font-semibold text-foreground">Estado General</p>
+                <p class="text-sm text-muted-foreground">
+                  {{ ultimaMedicion?.estado === 'na' ? 'Sin mediciones recientes' : 'Última medición registrada' }}
+                </p>
+              </div>
+            </div>
+            <Button 
+              variant="secondary"
+              size="sm"
+              class="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              @click="router.push('/mediciones')"
+            >
+              Ver detalles
+              <ArrowRight class="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
+
+    <!-- Campañas de Salud -->
+    <section v-if="campanhas.length > 0">
+      <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center">
+        <Megaphone class="mr-2 h-5 w-5 text-primary" />
+        Campañas de Salud
+      </h2>
+      
+      <article 
+        v-for="campanha in campanhas" 
+        :key="campanha.id"
+        class="campaign-card relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-indigo-500 p-6 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+      >
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-bold mb-1">{{ campanha.nombre }}</h3>
+            <p class="text-white/90 text-sm">{{ campanha.descripcion }}</p>
+          </div>
+          <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+            <Shield class="h-7 w-7 text-white" />
+          </div>
         </div>
-        <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-homa-primary transition-colors">Mediciones</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">
-          Visualiza tus datos de salud con gráficos intuitivos y análisis detallados de tu progreso.
-        </p>
+      </article>
+    </section>
+
+    <!-- Próximos Controles -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-foreground flex items-center">
+          <Calendar class="mr-2 h-5 w-5 text-blue-500" />
+          Próximos Controles
+        </h2>
+        <Button 
+          variant="link"
+          class="text-primary text-sm"
+          @click="router.push('/controles')"
+        >
+          Ver todos
+          <ArrowRight class="ml-1 h-4 w-4" />
+        </Button>
       </div>
-
-      <!-- Recursos -->
-      <div class="homa-card group cursor-pointer" @click="router.push('/recursos')">
-        <div class="w-14 h-14 rounded-2xl bg-teal-50 text-homa-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-homa-primary transition-colors">Recursos</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">
-          Accede a guías, artículos y recursos educativos sobre salud y bienestar validados por expertos.
-        </p>
+      
+      <!-- Loading state -->
+      <div v-if="loading" class="flex justify-center py-8">
+        <Loader2 class="h-8 w-8 text-primary animate-spin" />
       </div>
-
-      <!-- Perfil -->
-      <div class="homa-card group cursor-pointer" @click="router.push('/perfil')">
-        <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-homa-primary transition-colors">Perfil</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">
-          Gestiona tu información personal, configuraciones del sistema y preferencias de notificaciones.
-        </p>
+      
+      <!-- Grid de controles (reemplaza carousel) -->
+      <div 
+        v-else-if="controlesProximos.length > 0" 
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      >
+        <HealthCard
+          v-for="control in controlesProximos"
+          :key="control.id"
+          :titulo="control.nombre"
+          :descripcion="control.descripcion"
+          :fecha="control.fechaProgramada"
+          :icono="control.icono"
+          :color="control.color"
+          :estado="control.estado"
+          @click="handleControlClick(control)"
+        />
       </div>
-    </div>
+      
+      <!-- Empty state -->
+      <Card v-else class="neu-inset border-dashed border-border bg-card">
+        <CardContent class="py-8 text-center">
+          <CalendarX class="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p class="text-muted-foreground">No tienes controles programados</p>
+        </CardContent>
+      </Card>
+    </section>
 
+    <!-- Videos Educativos -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-foreground flex items-center">
+          <Video class="mr-2 h-5 w-5 text-destructive" />
+          Explora nuestros videos
+        </h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <article 
+          v-for="video in videos" 
+          :key="video.id"
+          class="video-card relative overflow-hidden rounded-2xl bg-muted aspect-video cursor-pointer group"
+          @click="playVideo(video)"
+        >
+          <!-- Thumbnail placeholder -->
+          <div class="absolute inset-0 bg-gradient-to-br from-muted to-muted/80 flex items-center justify-center">
+            <Video class="h-10 w-10 text-muted-foreground" />
+          </div>
+          
+          <!-- Play overlay -->
+          <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-xl">
+              <Play class="h-6 w-6 text-primary ml-1" />
+            </div>
+          </div>
+          
+          <!-- Info -->
+          <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+            <h3 class="text-white font-semibold text-sm line-clamp-1">{{ video.titulo }}</h3>
+            <p class="text-white/70 text-xs">{{ video.duracion }}</p>
+          </div>
+        </article>
+      </div>
+    </section>
 
+    <!-- Encuesta Preventiva Dialog -->
+    <EncuestaPreventiva 
+      v-model:visible="showEncuesta"
+      @complete="handleEncuestaComplete"
+    />
+
+    <!-- Dialogo de Control -->
+    <!-- <ControlFormDialog 
+      v-model:open="isControlDialogOpen"
+      :control="selectedControl"
+      @submit="handleControlSubmit"
+    /> -->
   </div>
 </template>
 
 <style scoped>
-.dashboard-placeholder {
-  background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+.campaign-card {
+  background: linear-gradient(135deg, oklch(0.618 0.265 288) 0%, #6366F1 100%);
 }
 
-.success-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background-color: #f0fdf4;
-  border: 2px solid #bbf7d0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-.success-icon svg {
-  color: #000000;
-}
-
-/* Animación de entrada */
-.dashboard-placeholder {
-  animation: fadeIn 0.8s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>

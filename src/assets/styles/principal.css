@@ -1,8 +1,12 @@
 /* src/assets/styles/principal.css */
+
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Mio Medical Palette */
+  /* Mio Medical Palette - Original Teal */
   --color-homa-primary: #0F766E;
   /* teal-700 */
   --color-homa-primary-light: #14B8A6;
@@ -14,6 +18,16 @@
   /* sky-500 */
   --color-homa-secondary-soft: #E0F2FE;
   /* sky-100 */
+
+  /* Mio+ Purple Theme */
+  --color-mio-purple: #7B61FF;
+  --color-mio-purple-dark: #6B51EF;
+  --color-mio-purple-light: #A78BFA;
+  --color-mio-purple-soft: #EDE9FE;
+  /* violet-100 */
+
+  --color-mio-indigo: #6366F1;
+  --color-mio-indigo-soft: #E0E7FF;
 
   --color-homa-surface: #FFFFFF;
   --color-homa-background: #F8FAFC;
@@ -30,29 +44,193 @@
 
 :root {
   font-family: "Inter", "Outfit", sans-serif;
+  --radius: 1rem;
+
+  /* Modern Palette - Light Mode (#FDFBFF) */
+  --background: #FDFBFF;
+  --foreground: #1F2937;
+  /* slate-800 */
+
+  --card: #FFFFFF;
+  --card-foreground: #1F2937;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2937;
+
+  /* Primary Purple #8B5CF6 */
+  --primary: #8B5CF6;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #EDE9FE;
+  /* violet-100 */
+  --secondary-foreground: #4C1D95;
+  /* violet-900 */
+
+  --muted: #F3F4F6;
+  /* gray-100 */
+  --muted-foreground: #6B7280;
+  /* gray-500 */
+
+  --accent: #F5F3FF;
+  /* violet-50 */
+  --accent-foreground: #8B5CF6;
+
+  --destructive: #EF4444;
+  /* red-500 */
+  --border: #E5E7EB;
+  /* gray-200 */
+  --input: #E5E7EB;
+  --ring: #8B5CF6;
+
+  --chart-1: #8B5CF6;
+  --chart-2: #A78BFA;
+  --chart-3: #C4B5FD;
+  --chart-4: #DDD6FE;
+  --chart-5: #EDE9FE;
+
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1F2937;
+  --sidebar-primary: #8B5CF6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F3F4F6;
+  --sidebar-accent-foreground: #8B5CF6;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #8B5CF6;
+}
+
+.dark {
+  /* Modern Palette - Dark Mode (#1A1033) */
+  --background: #1A1033;
+  --foreground: #F3F4F6;
+  /* gray-100 */
+
+  --card: #2D1B4E;
+  /* Darker purple for cards */
+  --card-foreground: #F3F4F6;
+
+  --popover: #2D1B4E;
+  --popover-foreground: #F3F4F6;
+
+  --primary: #8B5CF6;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #4C1D95;
+  --secondary-foreground: #F3F4F6;
+
+  --muted: #2D1B4E;
+  --muted-foreground: #9CA3AF;
+
+  --accent: #2D1B4E;
+  --accent-foreground: #F3F4F6;
+
+  --destructive: #EF4444;
+  --border: #374151;
+  /* gray-700 */
+  --input: #374151;
+  --ring: #8B5CF6;
+
+  --chart-1: #8B5CF6;
+  --chart-2: #7C3AED;
+  --chart-3: #6D28D9;
+  --chart-4: #5B21B6;
+  --chart-5: #4C1D95;
+
+  --sidebar: #0B1121;
+  /* Keep sidebar dark or match theme #1A1033 if preferred. Keeping deep dark for contrast. */
+  --sidebar-foreground: #F3F4F6;
+  --sidebar-primary: #8B5CF6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #2D1B4E;
+  --sidebar-accent-foreground: #F3F4F6;
+  --sidebar-border: #1F2937;
+  --sidebar-ring: #8B5CF6;
 }
 
 body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-color: var(--color-homa-background);
-  color: var(--color-homa-text-primary);
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl;
+    @apply bg-white/60 backdrop-blur-2xl border border-white/60 shadow-xl shadow-purple-500/5 dark:bg-black/30 dark:border-white/10 dark:shadow-purple-900/20;
   }
 
   .glass-sidebar {
-    @apply bg-white/80 backdrop-blur-md border-r border-slate-200/60;
+    @apply bg-white/70 backdrop-blur-xl border-r border-white/50;
+  }
+
+  /* Neumorphism - Soft UI (Purple Theme) */
+  .neu-card {
+    background: var(--card);
+    border-radius: 1.25rem;
+    box-shadow:
+      8px 8px 20px rgba(139, 92, 246, 0.08),
+      -8px -8px 20px rgba(255, 255, 255, 0.9);
+    transition: box-shadow 0.3s ease-out, transform 0.2s ease-out;
+  }
+
+  .neu-card:hover {
+    box-shadow:
+      12px 12px 24px rgba(139, 92, 246, 0.12),
+      -12px -12px 24px rgba(255, 255, 255, 1);
+  }
+
+  .dark .neu-card {
+    box-shadow:
+      8px 8px 20px rgba(0, 0, 0, 0.3),
+      -8px -8px 20px rgba(75, 50, 120, 0.15);
+  }
+
+  .dark .neu-card:hover {
+    box-shadow:
+      12px 12px 24px rgba(0, 0, 0, 0.4),
+      -12px -12px 24px rgba(75, 50, 120, 0.2);
+  }
+
+  .neu-button {
+    background: linear-gradient(145deg, #9b6cf7, #7b4fe6);
+    border-radius: 0.875rem;
+    box-shadow:
+      4px 4px 10px rgba(139, 92, 246, 0.3),
+      -4px -4px 10px rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease-out;
+  }
+
+  .neu-button:hover {
+    box-shadow:
+      6px 6px 14px rgba(139, 92, 246, 0.4),
+      -6px -6px 14px rgba(255, 255, 255, 0.15);
+  }
+
+  .neu-button:active {
+    box-shadow:
+      inset 2px 2px 6px rgba(0, 0, 0, 0.15),
+      inset -2px -2px 6px rgba(255, 255, 255, 0.1);
+  }
+
+  .neu-inset {
+    box-shadow:
+      inset 4px 4px 10px rgba(139, 92, 246, 0.08),
+      inset -4px -4px 10px rgba(255, 255, 255, 0.9);
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+
+    .neu-card,
+    .neu-button {
+      transition: none;
+    }
   }
 }
 
 @layer components {
   .homa-card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+    @apply bg-white/80 backdrop-blur-sm rounded-[1.25rem] shadow-sm border border-white/60 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1;
   }
 
   /* Primary Button */
@@ -66,7 +244,7 @@ body {
   }
 
   .homa-layout {
-    @apply min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex font-sans;
+    @apply min-h-screen bg-background text-foreground flex font-sans;
   }
 }
 
@@ -86,4 +264,52 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }
