@@ -28,9 +28,11 @@ const menuSections = [
     title: 'Plataforma',
     list: [
       { name: 'Inicio', ruta: '/dashboard', icono: 'home' },
+      { name: 'Dashboard Bento', ruta: '/dashboard-bento', icono: 'grid' },
+      { name: 'Preventivo', ruta: '/dashboard-preventive', icono: 'activity' },
       { name: 'Mensajes', ruta: '/mensajes', icono: 'activity' },
       { name: 'Controles', ruta: '/controles', icono: 'book' },
-      { name: 'Help', ruta: '/help', icono: 'book' },
+      { name: 'Ayuda', ruta: '/ayuda', icono: 'book' },
     ]
   },
   {
@@ -130,13 +132,13 @@ onUnmounted(() => {
   
   <!-- Mobile Header -->
   <div 
-    class="md:hidden fixed top-0 left-0 right-0 h-16 z-40 flex items-center justify-between px-4 border-b border-slate-800 bg-[#0B1121]/95 backdrop-blur-md"
+    class="md:hidden fixed top-0 left-0 right-0 h-16 z-40 flex items-center justify-between px-4 border-b border-sidebar-border bg-sidebar/95 backdrop-blur-md"
   >
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8B5CF6] to-violet-700 grid place-items-center text-white font-bold">M</div>
-      <span class="font-bold text-lg text-white tracking-wide">MIO+</span>
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-violet-700 grid place-items-center text-primary-foreground font-bold">M</div>
+      <span class="font-bold text-lg text-sidebar-foreground tracking-wide">MIO+</span>
     </div>
-    <button @click="openMobileMenu" class="text-slate-400 hover:text-white">
+    <button @click="openMobileMenu" class="text-sidebar-foreground hover:text-primary">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
     </button>
   </div>
@@ -151,7 +153,7 @@ onUnmounted(() => {
       x: isMobileOpen ? 0 : 0
     }"
     :transition="{ duration: 0.3, ease: 'easeInOut' }"
-    class="fixed inset-y-0 left-0 z-50 flex flex-col h-full border-r border-slate-800/50 bg-[#0B1121] text-slate-300 transition-transform duration-300 md:translate-x-0"
+    class="fixed inset-y-0 left-0 z-50 flex flex-col h-full border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 md:translate-x-0"
     :class="isMobileOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <!-- Sidebar Header -->
@@ -171,13 +173,13 @@ onUnmounted(() => {
 
       <button
         @click="emit('toggle')"
-        class="hidden md:flex absolute -right-3 top-9 bg-[#8B5CF6] text-white rounded-full p-1 border border-slate-900 hover:bg-[#7C3AED] transition-colors shadow-lg z-50"
+        class="hidden md:flex absolute -right-3 top-9 bg-primary text-primary-foreground rounded-full p-1 border border-sidebar-border hover:bg-primary/90 transition-colors shadow-lg z-50"
       >
         <svg v-if="collapsed" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
       
-      <button @click="closeMobile" class="md:hidden absolute right-4 text-slate-400 hover:text-white">
+      <button @click="closeMobile" class="md:hidden absolute right-4 text-sidebar-foreground hover:text-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -187,12 +189,12 @@ onUnmounted(() => {
         <div
             role="button"
             :tabindex="collapsed ? 0 : -1"
-            class="flex items-center rounded-xl overflow-hidden transition-all duration-300 focus:outline-none h-[48px] w-full bg-[#1A2035] border border-transparent focus-within:border-[#8B5CF6]/50"
+            class="flex items-center rounded-xl overflow-hidden transition-all duration-300 focus:outline-none h-[48px] w-full bg-sidebar-accent border border-transparent focus-within:border-primary/50"
             :style="{ cursor: collapsed ? 'pointer' : 'text' }"
             @click="handleSearchClick"
             @keydown="handleSearchKeyDown"
         >
-            <div class="w-12 h-full flex items-center justify-center flex-shrink-0 pointer-events-none text-slate-500">
+            <div class="w-12 h-full flex items-center justify-center flex-shrink-0 pointer-events-none text-muted-foreground">
                 <i class="pi pi-search text-lg"></i>
             </div>
 
@@ -201,7 +203,7 @@ onUnmounted(() => {
                 :tabindex="collapsed ? -1 : 0"
                 type="search"
                 placeholder="Buscar..."
-                class="bg-transparent border-none outline-none text-slate-300 placeholder-slate-500 text-sm h-full w-full pr-3 transition-all duration-300 ease-in-out origin-left font-medium"
+                class="bg-transparent border-none outline-none text-sidebar-foreground placeholder-muted-foreground text-sm h-full w-full pr-3 transition-all duration-300 ease-in-out origin-left font-medium"
                 :class="collapsed ? 'opacity-0 scale-x-0 w-0 p-0' : 'opacity-100 scale-x-100'"
             />
         </div>
@@ -210,10 +212,10 @@ onUnmounted(() => {
     <!-- Menu -->
     <div class="flex-1 overflow-y-auto scrollbar-hide px-4 py-2 space-y-8">
       <div v-for="(section, idx) in menuSections" :key="idx">
-        <div v-if="collapsed" class="my-4 h-px bg-slate-800/50 mx-2"></div>
+        <div v-if="collapsed" class="my-4 h-px bg-sidebar-border mx-2"></div>
         <h2 
           v-else 
-          class="px-2 mb-3 text-[11px] font-bold uppercase tracking-widest text-[#64748B] animate-fade-in whitespace-nowrap"
+          class="px-2 mb-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground animate-fade-in whitespace-nowrap"
         >
           {{ section.title }}
         </h2>
@@ -226,14 +228,15 @@ onUnmounted(() => {
               class="group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 relative overflow-hidden"
               :class="[
                 esRutaActiva(item.ruta)
-                  ? 'text-white font-semibold'
-                  : 'text-[#94A3B8] hover:text-white hover:bg-[#1A2035] font-medium'
+                  ? 'text-sidebar-primary-foreground bg-sidebar-primary font-semibold shadow-md shadow-primary/20'
+                  : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent font-medium'
               ]"
             >
                <span class="relative z-10 shrink-0 text-xl transition-all duration-300 group-hover:scale-105" 
-                  :class="[collapsed ? 'mx-auto' : '', esRutaActiva(item.ruta) ? 'text-[#8B5CF6]' : 'text-current']"
+                  :class="[collapsed ? 'mx-auto' : '', esRutaActiva(item.ruta) ? 'text-sidebar-primary-foreground' : 'text-current']"
                >
                  <i v-if="item.icono === 'home'" class="pi pi-home"></i>
+                 <i v-if="item.icono === 'grid'" class="pi pi-th-large"></i>
                  <i v-if="item.icono === 'activity'" class="pi pi-chart-line"></i>
                  <i v-if="item.icono === 'book'" class="pi pi-book"></i>
                  <i v-if="item.icono === 'user'" class="pi pi-user"></i>
@@ -259,7 +262,7 @@ onUnmounted(() => {
     <!-- Profile Footer with Context Menu -->
     <div 
         ref="profileContainerRef"
-        class="p-5 border-t border-slate-800/50 bg-[#0B1121] shrink-0 mt-auto relative"
+        class="p-5 border-t border-sidebar-border bg-sidebar shrink-0 mt-auto relative"
     >
          <!-- Context Menu -->
          <AnimatePresence>
@@ -269,12 +272,12 @@ onUnmounted(() => {
                 :animate="{ opacity: 1, y: 0, scale: 1 }"
                 :exit="{ opacity: 0, y: 10, scale: 0.95 }"
                 :transition="{ duration: 0.2 }"
-                class="absolute bottom-full mb-4 bg-[#1e293b] border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden z-50 w-64"
+                class="absolute bottom-full mb-4 bg-popover border border-sidebar-border rounded-xl shadow-2xl overflow-hidden z-50 w-64"
                 :style="collapsed ? 'left-20' : 'left-4 right-4'"
             >
                 <div class="py-2">
-                    <div class="px-4 py-2 border-b border-slate-700/50 mb-1">
-                        <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Mi Cuenta</p>
+                    <div class="px-4 py-2 border-b border-sidebar-border mb-1">
+                        <p class="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Mi Cuenta</p>
                     </div>
 
                     <a 
@@ -282,18 +285,18 @@ onUnmounted(() => {
                         :key="item.label"
                         :href="item.href"
                         @click="isProfileMenuOpen = false"
-                        class="group flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700/50 hover:text-white transition-colors relative"
+                        class="group flex items-center gap-3 px-4 py-2.5 text-sm text-popover-foreground hover:bg-sidebar-accent transition-colors relative"
                     >
-                        <i :class="item.icon" class="text-lg text-[#8B5CF6] transition-colors"></i>
+                        <i :class="item.icon" class="text-lg text-primary transition-colors"></i>
                         <span class="font-medium">{{ item.label }}</span>
-                        <span v-if="item.badge" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#8B5CF6]/10 text-[#8B5CF6] border border-[#8B5CF6]/20">{{ item.badge }}</span>
+                        <span v-if="item.badge" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{{ item.badge }}</span>
                     </a>
 
-                    <div class="h-px bg-slate-700/50 my-1 mx-2"></div>
+                    <div class="h-px bg-sidebar-border my-1 mx-2"></div>
 
                     <button 
                         @click="handleSignOut"
-                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                     >
                         <i class="pi pi-sign-out text-lg"></i>
                         <span>Cerrar Sesión</span>
@@ -313,25 +316,25 @@ onUnmounted(() => {
                     class="w-10 h-10 rounded-full overflow-hidden ring-2 transition-all duration-300 ease-out bg-white bg-cover grayscale group-hover:grayscale-0"
                     :class="[
                         isProfileMenuOpen 
-                            ? 'ring-[#8B5CF6]' 
+                            ? 'ring-primary' 
                             : 'ring-transparent'
                     ]"
                  ></div>
-                 <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-[#0B1121] rounded-full"></div>
+                 <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-sidebar rounded-full"></div>
              </div>
              
              <div v-show="!collapsed" class="flex-1 overflow-hidden transition-opacity duration-300">
                  <p 
-                    class="text-sm font-bold truncate transition-colors text-white"
+                    class="text-sm font-bold truncate transition-colors text-sidebar-foreground"
                  >
                     Usuario Demo
                  </p>
-                 <p class="text-xs text-[#64748B] font-medium truncate">demo@mio.cl</p>
+                 <p class="text-xs text-muted-foreground font-medium truncate">demo@mio.cl</p>
              </div>
              
              <i 
                 v-show="!collapsed" 
-                class="pi pi-ellipsis-v text-slate-500 hover:text-white transition-colors"
+                class="pi pi-ellipsis-v text-muted-foreground hover:text-sidebar-foreground transition-colors"
              ></i>
          </div>
     </div>
