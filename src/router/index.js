@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from "vue-router";
-import InicioView from "../views/InicioView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,7 +7,7 @@ const router = createRouter({
     {
       path: "/",
       name: "inicio",
-      component: InicioView,
+      component: () => import("../views/InicioViewModern.vue"),
       meta: { requiresLayout: false, title: 'Inicio - Mio' }
     },
     {
@@ -53,6 +52,58 @@ const router = createRouter({
         requiresLayout: true,
         title: 'Dashboard - Mio',
         description: 'Panel principal de monitoreo'
+      }
+    },
+    {
+      path: "/dashboard-bento",
+      name: "dashboard-bento",
+      component: () => import("../views/DashboardBentoView.vue"),
+      meta: {
+        requiresLayout: true,
+        title: 'Dashboard Bento - Mio',
+        description: 'Nueva vista de panel'
+      }
+    },
+    {
+      path: "/dashboard-preventive",
+      name: "dashboard-preventive",
+      component: () => import("../views/DashboardPreventiveView.vue"),
+      meta: {
+        requiresLayout: true,
+        title: 'Preventivo - Mio',
+        description: 'Panel de monitoreo preventivo'
+      }
+    },
+
+    // Nuevas rutas de navegación
+    {
+      path: "/mensajes",
+      name: "mensajes",
+      component: () => import("../views/MensajesView.vue"),
+      meta: {
+        requiresLayout: true,
+        title: 'Mensajes - Mio',
+        description: 'Bandeja de mensajes'
+      }
+    },
+    {
+      path: "/controles",
+      name: "controles",
+      component: () => import("../views/ControlesView.vue"),
+      meta: {
+        requiresLayout: true,
+        title: 'Controles - Mio',
+        description: 'Gestión de controles de salud'
+      }
+    },
+    {
+      path: "/ayuda",
+      name: "ayuda",
+      component: () => import("../views/AyudaView.vue"),
+      meta: {
+        requiresLayout: true,
+        title: 'Ayuda - Mio',
+        description: 'Centro de ayuda y soporte'
       }
     }
   ],
