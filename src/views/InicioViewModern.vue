@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 // Using simple headless UI pattern for modal/transitions if accessible or just simple v-if/v-show with CSS transitions
 // Icons
 import { CreditCard, Mail, CheckCircle2, X } from 'lucide-vue-next'
-import ThemeToggle from '@/components/ui/ThemeToggle.vue'
+import AlternarTema from '@/components/ui/AlternarTema.vue'
 
 const router = useRouter()
 
@@ -164,7 +164,7 @@ const toggleDarkMode = () => {
 
     <!-- Dark Mode Toggle -->
     <div class="absolute bottom-4 right-4 z-50">
-        <ThemeToggle :isDark="isDark" @toggle="toggleDarkMode" />
+        <AlternarTema :isDark="isDark" @toggle="toggleDarkMode" />
     </div>
 
     <!-- AUTH MODAL OVERLAY -->
