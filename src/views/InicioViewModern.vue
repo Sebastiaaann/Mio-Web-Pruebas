@@ -201,7 +201,7 @@ const toggleDarkMode = () => {
                              />
                             <div class="absolute -right-2 -bottom-2 p-2 rounded-full shadow-md border bg-white dark:bg-gray-800 border-purple-50 dark:border-gray-700">
                                 <span class="text-[#8B5CF6] text-xl font-bold material-icons-round">
-                                    {{ authMode === 'register' ? 'badge' : 'login' }}
+                                    {{ authMode === 'register' ? 'Registro' : 'Inicio' }}
                                 </span>
                             </div>
                         </div>
@@ -263,6 +263,16 @@ const toggleDarkMode = () => {
                             CONTINUAR
                         </button>
                     </div>
+                    
+                    <!-- Link para iniciar sesión -->
+                    <div class="mt-4 text-center">
+                        <p class="text-sm" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
+                            ¿Ya tienes cuenta? 
+                            <button type="button" @click="authMode = 'login'" class="text-[#8B5CF6] font-semibold hover:underline">
+                                Inicia sesión
+                            </button>
+                        </p>
+                    </div>
                 </form>
 
                 <!-- LOGIN FORM -->
@@ -299,6 +309,16 @@ const toggleDarkMode = () => {
                                 class="w-full sm:w-1/2 flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[#8B5CF6] hover:bg-[#7C3AED] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8B5CF6] shadow-lg shadow-purple-200 dark:shadow-none transition-all duration-200">
                             INGRESAR
                         </button>
+                    </div>
+                    
+                    <!-- Link para registrarse -->
+                    <div class="mt-4 text-center">
+                        <p class="text-sm" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
+                            ¿No tienes cuenta? 
+                            <button type="button" @click="authMode = 'register'" class="text-[#8B5CF6] font-semibold hover:underline">
+                                Regístrate aquí
+                            </button>
+                        </p>
                     </div>
                  </form>
 
