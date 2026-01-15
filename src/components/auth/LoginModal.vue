@@ -63,7 +63,7 @@ const switchToLogin = () => {
         :initial="{ scale: 0.9, opacity: 0, y: 20 }"
         :animate="{ scale: 1, opacity: 1, y: 0 }"
         :transition="{ type: 'spring', damping: 25, stiffness: 300 }"
-        class="bg-white rounded-[2rem] w-full max-w-md p-8 relative flex flex-col items-center shadow-2xl overflow-hidden"
+        class="bg-white rounded-4xl w-full max-w-md p-8 relative flex flex-col items-center shadow-2xl overflow-hidden"
     >
         <!-- Close Button -->
         <button 
@@ -73,14 +73,14 @@ const switchToLogin = () => {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
 
-        <!-- Robot Header (Common) -->
+        <!-- Robot Header -->
         <div class="mb-4 relative">
              <img 
               src="/assets/robot_mascot.png" 
               alt="MIO Agent" 
               class="h-28 object-contain drop-shadow-lg"
             />
-             <!-- Chat Bubble: Changes based on view -->
+             <!-- Chat Bubble-->
             <div 
                 class="absolute -right-4 top-0 bg-purple-100 p-2 rounded-xl rounded-bl-none shadow-sm animate-bounce-slow"
                 v-if="currentView === 'login'"
@@ -95,30 +95,30 @@ const switchToLogin = () => {
             </div>
         </div>
 
-        <!-- VIEW: LOGIN -->
+        <!-- View login -->
         <div v-if="currentView === 'login'" class="w-full flex flex-col items-center animate-in fade-in slide-in-from-left-4 duration-300">
-            <!-- Title -->
+            <!-- Titulo -->
             <div class="text-center mb-6">
                 <h2 class="text-3xl font-bold text-slate-400/80 mb-1">¡Hola!</h2>
                 <h1 class="text-3xl font-bold text-[#8B5CF6]">Iniciemos sesión</h1>
             </div>
 
-            <!-- Form -->
+            <!-- Formulario -->
             <form class="w-full space-y-5" @submit.prevent="handleLogin">
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Ingresa tu correo electrónico</label>
-                    <InputText v-model="email" placeholder="micorreo@mail.com" class="w-full !rounded-xl !border-slate-200 focus:!border-[#8B5CF6] !bg-slate-50 !py-3 !text-lg !text-slate-600 placeholder:!text-slate-300 shadow-none !ring-0" />
+                    <InputText v-model="email" placeholder="micorreo@mail.com" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
                 </div>
 
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Ingresa tu contraseña</label>
                     <div class="relative">
-                        <InputText v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••••••" class="w-full !rounded-xl !border-slate-200 focus:!border-[#8B5CF6] !bg-slate-50 !py-3 !text-lg !text-slate-600 placeholder:!text-slate-300 shadow-none !ring-0" />
+                        <InputText v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••••••" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 ml-1">
-                    <Checkbox v-model="showPassword" :binary="true" inputId="showPass" class="!border-slate-300" />
+                    <Checkbox v-model="showPassword" :binary="true" inputId="showPass" class="border-slate-300!" />
                     <label for="showPass" class="text-slate-600 cursor-pointer select-none">Ver contraseña</label>
                 </div>
 
@@ -131,9 +131,9 @@ const switchToLogin = () => {
             </form>
         </div>
 
-        <!-- VIEW: REGISTER -->
+        <!-- vista registro -->
         <div v-else class="w-full flex flex-col items-center animate-in fade-in slide-in-from-right-4 duration-300">
-             <!-- Title -->
+             <!-- Titulo-->
             <div class="text-center mb-6">
                 <h2 class="text-2xl font-bold text-[#8B5CF6] mb-1">¡Oh! ¿Eres nuevo?</h2>
                 <h1 class="text-3xl font-bold text-[#8B5CF6]/70">Crear cuenta</h1>
@@ -143,19 +143,19 @@ const switchToLogin = () => {
                  <!-- RUT -->
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">RUT</label>
-                    <InputText v-model="rut" placeholder="Ingresa tu RUT" class="w-full !rounded-xl !border-slate-200 focus:!border-[#8B5CF6] !bg-slate-50 !py-3 !text-lg !text-slate-600 placeholder:!text-slate-300 shadow-none !ring-0" />
+                    <InputText v-model="rut" placeholder="Ingresa tu RUT" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
                 </div>
 
                  <!-- Email -->
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Correo electrónico</label>
-                    <InputText v-model="registerEmail" placeholder="micorreo@mail.com" class="w-full !rounded-xl !border-slate-200 focus:!border-[#8B5CF6] !bg-slate-50 !py-3 !text-lg !text-slate-600 placeholder:!text-slate-300 shadow-none !ring-0" />
+                    <InputText v-model="registerEmail" placeholder="micorreo@mail.com" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
                 </div>
 
-                 <!-- Confirm Email -->
+                 <!-- Confirmar email -->
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Reingresa tu Correo electrónico</label>
-                    <InputText v-model="confirmEmail" placeholder="Vuelve a ingresar tu email" class="w-full !rounded-xl !border-slate-200 focus:!border-[#8B5CF6] !bg-slate-50 !py-3 !text-lg !text-slate-600 placeholder:!text-slate-300 shadow-none !ring-0" />
+                    <InputText v-model="confirmEmail" placeholder="Vuelve a ingresar tu email" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
                 </div>
 
                 <!-- Actions -->

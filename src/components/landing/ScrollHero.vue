@@ -58,6 +58,11 @@ const isLoginOpen = ref(false);
                 @click="isLoginOpen = true"
                 class="w-48 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)]"
             />
+            <div class="mt-8">
+                <router-link to="/inicio-modern" class="text-white/30 hover:text-white/80 text-xs uppercase tracking-widest transition-all">
+                    Ver Versión Alternativa
+                </router-link>
+            </div>
         </Motion>
 
       </div>
