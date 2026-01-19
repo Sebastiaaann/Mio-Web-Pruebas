@@ -59,6 +59,9 @@ export const useHealthStore = defineStore('health', () => {
     const loading = ref(false)
     const error = ref(null)
 
+    /** @type {import('vue').Ref<Record<string, Medicion[]>>} */
+    const historialMediciones = ref({})
+
     // Getters
     const controlesActivos = computed(() =>
         controlesProximos.value.filter(c => c.estado === 'pendiente')
@@ -72,20 +75,44 @@ export const useHealthStore = defineStore('health', () => {
         ultimaMedicion.value?.estado || 'na'
     )
 
+    const getHistorial = (controlId) => computed(() => 
+        historialMediciones.value[controlId] || []
+    )
+
     // Actions
+
+    /**
+     * Agregar nueva medición al historial
+     * @param {string} controlId 
+     * @param {Medicion} medicion 
+     */
+    function addMedicion(controlId, medicion) {
+        if (!historialMediciones.value[controlId]) {
+            historialMediciones.value[controlId] = []
+        }
+        
+        // Add to history
+        historialMediciones.value[controlId].unshift(medicion)
+        
+        // Update latest if it's new
+        ultimaMedicion.value = medicion
+        
+        if (import.meta.env.DEV) {
+            console.log('📊 Medición agregada:', controlId, medicion)
+        }
+    }
 
     /**
      * Cargar controles próximos
      */
     async function fetchControles() {
+        // ... (existing fetchControles logic)
         loading.value = true
         error.value = null
 
         try {
-            // Simular API call
             await new Promise(resolve => setTimeout(resolve, 500))
 
-            // Mock data
             controlesProximos.value = [
                 {
                     id: '1',
@@ -111,30 +138,21 @@ export const useHealthStore = defineStore('health', () => {
                     descripcion: 'Medición de glucosa en sangre',
                     icono: 'pi pi-bolt',
                     color: '#10B981',
-                    fechaProgramada: '2026-01-25',
+                    fechaProgramada: '2026-01-24',
                     estado: 'pendiente'
                 }
             ]
-
-            if (import.meta.env.DEV) {
-                // console.log('✅ Controles cargados:', controlesProximos.value.length)
-            }
         } catch (e) {
             error.value = e.message
-            console.error('❌ Error cargando controles:', e)
         } finally {
             loading.value = false
         }
     }
 
-    /**
-     * Cargar videos educativos
-     */
+    // ... (existing fetchVideos and fetchCampanhas)
     async function fetchVideos() {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 300))
-
-            videos.value = [
+        // ... same as before
+        videos.value = [
                 {
                     id: '1',
                     titulo: 'Cómo medir tu presión arterial',
@@ -160,49 +178,18 @@ export const useHealthStore = defineStore('health', () => {
                     duracion: '4:15'
                 }
             ]
-
-            if (import.meta.env.DEV) {
-                console.log('✅ Videos cargados:', videos.value.length)
-            }
-        } catch (e) {
-            console.error('❌ Error cargando videos:', e)
-        }
     }
 
-    /**
-     * Cargar campañas activas
-     */
     async function fetchCampanhas() {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 300))
-
-            campanhas.value = [
-                {
-                    id: '1',
-                    nombre: 'MIO Te Protege',
-                    descripcion: 'Programa de prevención cardiovascular',
-                    imagenUrl: '/assets/campanha-mio-protege.jpg',
-                    activa: true
-                }
-            ]
-
-            if (import.meta.env.DEV) {
-                console.log('✅ Campañas cargadas:', campanhas.value.length)
+        campanhas.value = [
+            {
+                id: '1',
+                nombre: 'MIO Te Protege',
+                descripcion: 'Programa de prevención cardiovascular',
+                imagenUrl: '/assets/campanha-mio-protege.jpg',
+                activa: true
             }
-        } catch (e) {
-            console.error('❌ Error cargando campañas:', e)
-        }
-    }
-
-    /**
-     * Actualizar última medición
-     * @param {Medicion} medicion
-     */
-    function actualizarMedicion(medicion) {
-        ultimaMedicion.value = medicion
-        if (import.meta.env.DEV) {
-            console.log('📊 Medición actualizada:', medicion)
-        }
+        ]
     }
 
     /**
@@ -220,6 +207,23 @@ export const useHealthStore = defineStore('health', () => {
      * Inicializar con datos mock
      */
     function initMockData() {
+        // Init histories
+        historialMediciones.value = {
+            '1': [ // Presión
+                { fecha: '2026-01-15', valor: '120/80', unidad: 'mmHg', estado: 'normal' },
+                { fecha: '2026-01-08', valor: '122/82', unidad: 'mmHg', estado: 'normal' },
+                { fecha: '2026-01-01', valor: '130/85', unidad: 'mmHg', estado: 'alerta' }
+            ],
+            '2': [ // Peso
+                { fecha: '2026-01-18', valor: '72.5', unidad: 'kg', estado: 'normal' },
+                { fecha: '2026-01-10', valor: '73.0', unidad: 'kg', estado: 'normal' },
+                { fecha: '2025-12-28', valor: '73.8', unidad: 'kg', estado: 'normal' }
+            ],
+            '3': [ // Glicemia
+                 { fecha: '2025-12-20', valor: '95', unidad: 'mg/dL', estado: 'normal' }
+            ]
+        }
+
         ultimaMedicion.value = {
             id: '0',
             tipo: 'general',
@@ -232,6 +236,10 @@ export const useHealthStore = defineStore('health', () => {
         fetchAllHealthData()
     }
 
+    function actualizarMedicion(medicion) {
+         ultimaMedicion.value = medicion
+    }
+
     return {
         // State
         ultimaMedicion,
@@ -240,15 +248,18 @@ export const useHealthStore = defineStore('health', () => {
         videos,
         loading,
         error,
+        historialMediciones,
         // Getters
         controlesActivos,
         tieneControlesPendientes,
         estadoSalud,
+        getHistorial,
         // Actions
         fetchControles,
         fetchVideos,
         fetchCampanhas,
         actualizarMedicion,
+        addMedicion,
         fetchAllHealthData,
         initMockData
     }
