@@ -34,7 +34,7 @@ const {
 });
 
 const clases = unirClases(
-  'font-medium rounded-md transition-colors duration-200 border inline-flex items-center justify-center',
+  'font-medium rounded-full transition-colors duration-200 border inline-flex items-center justify-center',
   {
     'homa-button': variant === 'primario',
     'homa-button-outline': variant === 'secundario',

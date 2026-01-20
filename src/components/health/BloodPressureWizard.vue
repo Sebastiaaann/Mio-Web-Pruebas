@@ -1,21 +1,19 @@
 <script setup>
-import { ref, computed, onMounted, h, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
 import { useHealthStore } from '@/stores/tiendaSalud'
+import { useMensajesStore } from '@/stores/tiendaMensajes'
 import { 
-  ArrowLeft, Check, AlertCircle, Heart, Activity, Thermometer, ChevronRight
+  ArrowLeft, Check, AlertCircle, Heart, Activity, ChevronRight, ClipboardCheck
 } from 'lucide-vue-next'
-import { useDateFormat, useElementSize } from '@vueuse/core'
+import { useElementSize } from '@vueuse/core'
 import { Motion } from 'motion-v'
-import AnimatedStepper from '@/components/ui/AnimatedStepper.vue'
 
-// UI Components
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-const router = useRouter()
 const healthStore = useHealthStore()
+const mensajesStore = useMensajesStore()
 const emit = defineEmits(['close'])
 
 // --- State ---
@@ -73,14 +71,7 @@ const prevStep = () => {
   else emit('close')
 }
 
-import { useMensajesStore } from '@/stores/tiendaMensajes'
-import { ClipboardCheck } from 'lucide-vue-next'
 
-// ... existing code ...
-
-const mensajesStore = useMensajesStore()
-
-// ... existing code ...
 
 const saveMeasurement = async () => {
   isSubmitting.value = true
@@ -101,23 +92,23 @@ const saveMeasurement = async () => {
   // Use store to add
   healthStore.addMedicion('1', newMeasurement)
   
-  // --- ADD MESSAGE TO INBOX ---
-  // 1. Add Result
-  mensajesStore.addMessage('results', {
-      id: `RES-${Date.now().toString().slice(-4)}`,
-      title: 'Medición de Presión Arterial',
-      description: `Registro completado: ${newMeasurement.valor} mmHg - ${status.value}`,
+  // --- ADD/UPDATE MESSAGE TO INBOX ---
+  // 1. Upsert Result (uses fixed ID so it updates, not duplicates)
+  mensajesStore.upsertMessage('results', {
+      id: 'RES-BP-LATEST', // Fixed ID for blood pressure results
+      title: 'Última Medición: Presión Arterial',
+      description: `${newMeasurement.valor} mmHg - ${status.value} (${new Date().toLocaleDateString('es-CL')})`,
       icon: ClipboardCheck,
       iconColor: 'text-indigo-500',
       iconBg: 'bg-indigo-100 dark:bg-indigo-900/30'
   })
 
-  // 2. Add Alert if Abnormal
+  // 2. Upsert Alert if Abnormal (also fixed ID)
   if (status.value !== 'Normal') {
-      mensajesStore.addMessage('alerts', {
-          id: `ALT-${Date.now().toString().slice(-4)}`,
+      mensajesStore.upsertMessage('alerts', {
+          id: 'ALT-BP-LATEST', // Fixed ID for blood pressure alerts
           title: `Alerta: Presión ${status.value}`,
-          description: `Se ha detectado una presión ${status.value} (${newMeasurement.valor}). Por favor revisa las recomendaciones.`,
+          description: `Última lectura: ${newMeasurement.valor}. Por favor revisa las recomendaciones.`,
           icon: AlertCircle,
           iconColor: 'text-red-500',
           iconBg: 'bg-red-100 dark:bg-red-900/30'
@@ -157,15 +148,15 @@ function handleKeydown(e) {
     class="flex items-center justify-center font-sans text-gray-900"
     @keydown="handleKeydown"
   >
-    <!-- Main Card Container (Light Modern Style) -->
-    <!-- We animate the height of this container based on the content -->
+    <!-- Main Card Container -->
     <Motion
+        is="article"
         class="relative w-full max-w-[600px] z-10 bg-white border border-gray-100 rounded-[2rem] shadow-xl overflow-hidden flex flex-col will-change-[height]"
         :animate="{ height: height > 0 ? (height + headerHeight + paddingHeight) + 'px' : 'auto' }"
         :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
     >
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 h-[60px]">
+        <header class="flex items-center justify-between px-6 py-5 border-b border-gray-100 h-[60px]">
             <button 
                 @click="prevStep" 
                 class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -178,8 +169,8 @@ function handleKeydown(e) {
                 {{ step === 1 ? 'Nueva Medición' : (step === 2 ? 'Estado' : (step === 3 ? 'Valores' : 'Resumen')) }}
             </h1>
             
-            <div class="w-8"></div> <!-- Spacer -->
-        </div>
+            <div class="w-8" aria-hidden="true"></div>
+        </header>
 
         <!-- Content Area -->
         <!-- We use a ref here to measure height -->

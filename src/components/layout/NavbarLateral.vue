@@ -3,6 +3,25 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Motion, AnimatePresence } from 'motion-v';
+import { 
+  Home, 
+  Activity, 
+  BookOpen, 
+  Inbox, 
+  HelpCircle, 
+  User,
+  Search,
+  ChevronRight,
+  ChevronLeft,
+  Menu,
+  X,
+  MoreVertical,
+  Settings,
+  LogOut,
+  Calendar
+} from 'lucide-vue-next';
+
+import { useUserStore } from '@/stores/tiendaUsuario';
 
 // Props handling
 const props = defineProps({
@@ -14,6 +33,7 @@ const emit = defineEmits(['toggle', 'update:mobileOpen']);
 
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 
 // --- STATE ---
 const openSubmenus = ref({});
@@ -22,30 +42,32 @@ const isProfileMenuOpen = ref(false);
 const searchInputRef = ref(null);
 const profileContainerRef = ref(null);
 
+
+
 // --- MENU DATA ---
 const menuSections = [
   {
     title: 'Plataforma',
     list: [
-      { name: 'Inicio', ruta: '/dashboard', icono: 'home' },
-      { name: 'Dashboard Bento', ruta: '/dashboard-bento', icono: 'grid' },
-      { name: 'Preventivo', ruta: '/dashboard-preventive', icono: 'activity' },
-      { name: 'Mensajes', ruta: '/mensajes', icono: 'activity' },
-      { name: 'Controles', ruta: '/controles', icono: 'book' },
-      { name: 'Ayuda', ruta: '/ayuda', icono: 'book' },
+      { name: 'Inicio', ruta: '/home', icono: Home },
+      { name: 'Preventivo', ruta: '/dashboard-preventive', icono: Activity },
+      { name: 'Controles', ruta: '/controles', icono: BookOpen },
+      { name: 'Citas', ruta: '/citas', icono: Calendar },
+      { name: 'Mensajes', ruta: '/mensajes', icono: Inbox },
+      { name: 'Ayuda', ruta: '/ayuda', icono: HelpCircle },
     ]
   },
   {
     title: 'Cuenta',
     list: [
-      { name: 'Perfil', ruta: '/perfil', icono: 'user' },
+      { name: 'Perfil', ruta: '/perfil', icono: User },
     ]
   }
 ];
 
 const profileMenuItems = [
-  { label: 'Ver Perfil', href: '#', icon: 'pi pi-user' },
-  { label: 'Configuración de la cuenta', href: '#', icon: 'pi pi-cog' },
+  { label: 'Ver Perfil', href: '#', icon: User },
+  { label: 'Configuración de la cuenta', href: '#', icon: Settings },
 ];
 
 // --- METHODS ---
@@ -91,7 +113,7 @@ const toggleProfileMenu = () => {
 };
 
 const handleSignOut = () => {
-    // // console.log("Signing out...");
+    userStore.logout();
     isProfileMenuOpen.value = false;
     router.push('/');
 };
@@ -139,7 +161,7 @@ onUnmounted(() => {
       <span class="font-bold text-lg text-sidebar-foreground tracking-wide">MIO+</span>
     </div>
     <button @click="openMobileMenu" class="text-sidebar-foreground hover:text-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      <Menu :size="24" :stroke-width="2" />
     </button>
   </div>
 
@@ -175,12 +197,12 @@ onUnmounted(() => {
         @click="emit('toggle')"
         class="hidden md:flex absolute -right-3 top-9 bg-primary text-primary-foreground rounded-full p-1 border border-sidebar-border hover:bg-primary/90 transition-colors shadow-lg z-50"
       >
-        <svg v-if="collapsed" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-        <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <ChevronRight v-if="collapsed" :size="14" :stroke-width="2" />
+        <ChevronLeft v-else :size="14" :stroke-width="2" />
       </button>
       
       <button @click="closeMobile" class="md:hidden absolute right-4 text-sidebar-foreground hover:text-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <X :size="24" :stroke-width="2" />
       </button>
     </div>
 
@@ -195,7 +217,7 @@ onUnmounted(() => {
             @keydown="handleSearchKeyDown"
         >
             <div class="w-12 h-full flex items-center justify-center flex-shrink-0 pointer-events-none text-muted-foreground">
-                <i class="pi pi-search text-lg"></i>
+                <Search :size="18" />
             </div>
 
             <input
@@ -210,7 +232,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Menu -->
-    <div class="flex-1 overflow-y-auto scrollbar-hide px-4 py-2 space-y-8">
+    <nav aria-label="Menú principal" class="flex-1 overflow-y-auto scrollbar-hide px-4 py-2 space-y-8">
       <div v-for="(section, idx) in menuSections" :key="idx">
         <div v-if="collapsed" class="my-4 h-px bg-sidebar-border mx-2"></div>
         <h2 
@@ -225,21 +247,34 @@ onUnmounted(() => {
             <router-link
               :to="item.ruta"
               @click="closeMobile"
-              class="group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 relative overflow-hidden"
+              class="group flex items-center gap-3 px-3 py-3 rounded-xl transition-colors duration-200 relative"
               :class="[
                 esRutaActiva(item.ruta)
-                  ? 'text-sidebar-primary-foreground bg-sidebar-primary font-semibold shadow-md shadow-primary/20'
+                  ? 'text-sidebar-primary-foreground font-semibold'
                   : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent font-medium'
               ]"
             >
-               <span class="relative z-10 shrink-0 text-xl transition-all duration-300 group-hover:scale-105" 
+               <!-- Shared Background -->
+               <Motion
+                  v-if="esRutaActiva(item.ruta)"
+                  layoutId="sidebar-active-item"
+                  class="absolute inset-0 bg-sidebar-primary rounded-xl shadow-md shadow-primary/20 z-0"
+                  :initial="false"
+                  :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
+               />
+               
+               <!-- Inactive Hover Effect -->
+               <Motion
+                  v-if="!esRutaActiva(item.ruta)"
+                  class="absolute inset-0 bg-sidebar-accent/50 rounded-xl z-0 opacity-0"
+                  :whileHover="{ opacity: 1, scale: 0.98 }"
+                  :transition="{ duration: 0.2 }"
+               />
+
+               <span class="relative z-10 shrink-0 transition-all duration-300 group-hover:scale-105" 
                   :class="[collapsed ? 'mx-auto' : '', esRutaActiva(item.ruta) ? 'text-sidebar-primary-foreground' : 'text-current']"
                >
-                 <i v-if="item.icono === 'home'" class="pi pi-home"></i>
-                 <i v-if="item.icono === 'grid'" class="pi pi-th-large"></i>
-                 <i v-if="item.icono === 'activity'" class="pi pi-chart-line"></i>
-                 <i v-if="item.icono === 'book'" class="pi pi-book"></i>
-                 <i v-if="item.icono === 'user'" class="pi pi-user"></i>
+                 <component :is="item.icono" :size="20" :stroke-width="2" />
                </span>
 
                <AnimatePresence>
@@ -248,7 +283,7 @@ onUnmounted(() => {
                     :initial="{ opacity: 0, x: -10 }"
                     :animate="{ opacity: 1, x: 0 }"
                     :exit="{ opacity: 0, x: -10 }"
-                    class="whitespace-nowrap"
+                    class="whitespace-nowrap z-10 relative"
                  >
                    {{ item.name }}
                  </Motion>
@@ -257,7 +292,7 @@ onUnmounted(() => {
           </li>
         </ul>
       </div>
-    </div>
+    </nav>
 
     <!-- Profile Footer with Context Menu -->
     <div 
@@ -287,7 +322,7 @@ onUnmounted(() => {
                         @click="isProfileMenuOpen = false"
                         class="group flex items-center gap-3 px-4 py-2.5 text-sm text-popover-foreground hover:bg-sidebar-accent transition-colors relative"
                     >
-                        <i :class="item.icon" class="text-lg text-primary transition-colors"></i>
+                        <component :is="item.icon" :size="18" class="text-primary transition-colors" />
                         <span class="font-medium">{{ item.label }}</span>
                         <span v-if="item.badge" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{{ item.badge }}</span>
                     </a>
@@ -298,7 +333,7 @@ onUnmounted(() => {
                         @click="handleSignOut"
                         class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                     >
-                        <i class="pi pi-sign-out text-lg"></i>
+                        <LogOut :size="18" :stroke-width="2" />
                         <span>Cerrar Sesión</span>
                     </button>
                 </div>
@@ -332,10 +367,11 @@ onUnmounted(() => {
                  <p class="text-xs text-muted-foreground font-medium truncate">demo@mio.cl</p>
              </div>
              
-             <i 
+             <MoreVertical 
                 v-show="!collapsed" 
-                class="pi pi-ellipsis-v text-muted-foreground hover:text-sidebar-foreground transition-colors"
-             ></i>
+                :size="18"
+                class="text-muted-foreground hover:text-sidebar-foreground transition-colors"
+             />
          </div>
     </div>
 

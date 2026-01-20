@@ -1,19 +1,19 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useHealthStore } from '@/stores/tiendaSalud'
+import { useMensajesStore } from '@/stores/tiendaMensajes'
 import { 
-  ArrowLeft, Check, AlertCircle, Weight, Scale, ChevronRight
+  ArrowLeft, Check, AlertCircle, Weight, Scale, ChevronRight, ClipboardCheck
 } from 'lucide-vue-next'
 import { useElementSize } from '@vueuse/core'
 import { Motion } from 'motion-v'
 
-// UI Components
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const healthStore = useHealthStore()
+const mensajesStore = useMensajesStore()
 const emit = defineEmits(['close'])
 
 // --- State ---
@@ -60,14 +60,7 @@ const prevStep = () => {
   else emit('close')
 }
 
-import { useMensajesStore } from '@/stores/tiendaMensajes'
-import { ClipboardCheck } from 'lucide-vue-next'
 
-// ... existing code ...
-
-const mensajesStore = useMensajesStore()
-
-// ... existing code ...
 
 const saveMeasurement = async () => {
   isSubmitting.value = true
@@ -85,11 +78,11 @@ const saveMeasurement = async () => {
 
   healthStore.addMedicion('2', newMeasurement) // '2' is usually weight control ID
   
-  // --- ADD MESSAGE TO INBOX ---
-  mensajesStore.addMessage('results', {
-      id: `RES-${Date.now().toString().slice(-4)}`,
-      title: 'Registro de Peso',
-      description: `Nuevo peso registrado: ${newMeasurement.valor} kg.`,
+  // --- UPSERT MESSAGE TO INBOX (updates if exists) ---
+  mensajesStore.upsertMessage('results', {
+      id: 'RES-WEIGHT-LATEST', // Fixed ID for weight results
+      title: 'Última Medición: Peso',
+      description: `${newMeasurement.valor} kg (${new Date().toLocaleDateString('es-CL')})`,
       icon: ClipboardCheck,
       iconColor: 'text-blue-500',
       iconBg: 'bg-blue-100 dark:bg-blue-900/30'
@@ -120,23 +113,24 @@ function handleKeydown(e) {
 <template>
   <div class="flex items-center justify-center font-sans text-gray-900" @keydown="handleKeydown">
     <Motion
+        is="article"
         class="relative w-full max-w-[600px] z-10 bg-white border border-gray-100 rounded-[2rem] shadow-xl overflow-hidden flex flex-col will-change-[height]"
         :animate="{ height: height > 0 ? (height + headerHeight + paddingHeight) + 'px' : 'auto' }"
         :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
     >
-        <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 h-[60px]">
+        <header class="flex items-center justify-between px-6 py-5 border-b border-gray-100 h-[60px]">
             <button 
                 @click="prevStep" 
                 class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Volver"
             >
                 <ArrowLeft class="w-5 h-5" />
             </button>
             <h1 class="text-base font-semibold text-gray-900 tracking-tight">
                 {{ step === 1 ? 'Nuevo Registro' : (step === 2 ? 'Estado' : (step === 3 ? 'Peso' : 'Resumen')) }}
             </h1>
-            <div class="w-8"></div>
-        </div>
+            <div class="w-8" aria-hidden="true"></div>
+        </header>
 
         <div ref="contentRef" class="p-6">
             <Transition 

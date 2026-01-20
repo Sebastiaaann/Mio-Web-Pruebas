@@ -11,6 +11,7 @@ const props = defineProps({
   description: { type: String, required: true },
   href: { type: String, required: true },
   cta: { type: String, required: true },
+  contentClass: { type: String, default: '' },
 });
 
 // We accept slots for background to allow flexibility
@@ -19,42 +20,33 @@ const props = defineProps({
 <template>
   <div
     :class="cn(
-      'group relative col-span-3 flex flex-col justify-between overflow-hidden rounded-xl',
+      'group relative flex flex-col justify-between overflow-hidden rounded-3xl',
       // light styles
-      'bg-white [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]',
+      'bg-white dark:bg-gray-800 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1',
       // dark styles
-      'transform-gpu dark:bg-black dark:[border:1px_solid_rgba(255,255,255,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset]',
+      'dark:border dark:border-gray-700',
       props.class
     )"
   >
     <!-- Background Slot -->
-    <div>
+    <div class="absolute inset-0 z-0">
       <slot name="background" />
     </div>
 
-    <div class="pointer-events-none z-10 flex transform-gpu flex-col gap-1 p-6 transition-all duration-300 group-hover:-translate-y-10">
-      <component :is="icon" class="h-12 w-12 origin-left transform-gpu text-neutral-700 dark:text-neutral-300 transition-all duration-300 ease-in-out group-hover:scale-75" />
-      <h3 class="text-xl font-semibold text-neutral-700 dark:text-neutral-300">
+    <div :class="cn('relative z-10 flex flex-col gap-1 p-8 mt-auto', props.contentClass)">
+      <div class="mb-4 inline-flex items-center justify-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-2xl text-gray-900 dark:text-white border border-gray-100 dark:border-gray-600 w-fit">
+         <component :is="icon" class="h-8 w-8 text-neutral-900 dark:text-white" />
+      </div>
+      
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
         {{ name }}
       </h3>
-      <p class="max-w-lg text-neutral-400">
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
         {{ description }}
       </p>
     </div>
-
-    <div
-      :class="cn(
-        'absolute bottom-0 flex w-full translate-y-10 transform-gpu flex-row items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100'
-      )"
-    >
-      <Button variant="ghost" size="sm" class="pointer-events-auto cursor-pointer" asChild>
-        <router-link :to="href">
-          {{ cta }}
-          <ArrowRight class="ml-2 h-4 w-4" />
-        </router-link>
-      </Button>
-    </div>
     
-    <div class="pointer-events-none absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-black/[.03] group-hover:dark:bg-neutral-800/10" />
+    <!-- Link overlay -->
+    <router-link :to="href" class="absolute inset-0 z-20" aria-label="Open"></router-link>
   </div>
 </template>

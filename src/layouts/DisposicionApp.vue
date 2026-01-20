@@ -1,12 +1,13 @@
-<!-- src/layouts/AppLayout.vue -->
+<!-- src/layouts/DisposicionApp.vue -->
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import NavbarLateral from '@/components/layout/NavbarLateral.vue';
 import NavegacionInferior from '@/components/layout/NavegacionInferior.vue';
 import { unirClases } from '@/utils/UnirClases';
 import AlternarTema from '@/components/ui/AlternarTema.vue';
-import { useDark, useToggle, useThrottleFn } from '@vueuse/core';
+import { useDark, useToggle } from '@vueuse/core';
+import { useMobileDetection } from '@/composables/useMobileDetection';
 
 const route = useRoute();
 
@@ -33,38 +34,28 @@ const pageTitle = computed(() => {
   return titles[route.name] || 'Mio+'
 });
 
+// Rutas inmersivas donde se oculta el header
+const isImmersiveRoute = computed(() => {
+  const immersiveRoutes = ['dashboard-preventive'];
+  return immersiveRoutes.includes(route.name);
+});
+
 const sidebarVisible = ref(true);
-const isMobile = ref(false);
 
-const checkMobile = () => {
-  if (typeof window !== 'undefined') {
-    isMobile.value = window.innerWidth < 768;
-  }
-};
-
-// Throttle resize handler para mejorar performance
-const throttledCheckMobile = useThrottleFn(checkMobile, 200);
+// Usar composable para detectar móvil (evita código duplicado)
+const { isMobile } = useMobileDetection();
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value;
 };
-
-onMounted(() => {
-  checkMobile();
-  if (typeof window !== 'undefined') {
-    window.addEventListener('resize', throttledCheckMobile);
-  }
-});
-
-onUnmounted(() => {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('resize', throttledCheckMobile);
-  }
-});
 </script>
 
 <template>
   <div class="homa-layout">
+    
+   
+
+    <!-- Sidebar (Self-contained fixed positioning) -->
     <!-- Sidebar (Self-contained fixed positioning) -->
     <NavbarLateral 
       :visible="true" 
@@ -82,14 +73,14 @@ onUnmounted(() => {
         sidebarVisible ? 'md:ml-72' : 'md:ml-20'
       )"
     >
-      <!-- Header Flotante -->
-      <header class="sticky top-0 z-30 px-6 py-4">
+      <!-- Header Flotante (Oculto en rutas inmersivas) -->
+      <header v-if="!isImmersiveRoute" class="sticky top-0 z-30 px-6 py-4">
         <div class="glass-panel rounded-2xl px-4 py-3 flex items-center justify-between bg-card/60 backdrop-blur-md border border-border/50">
           <div class="flex items-center">
             <button 
               @click="toggleSidebar"
               class="p-2 text-muted-foreground hover:bg-accent hover:text-primary rounded-lg transition-colors mr-4"
-              aria-label="Toggle sidebar"
+              aria-label="Alternar barra lateral"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
@@ -107,8 +98,11 @@ onUnmounted(() => {
       </header>
       
       <!-- Área de contenido con scroll -->
-      <!-- pb-20 en mobile para dejar espacio al bottom navigation -->
-      <div class="flex-1 overflow-y-auto p-6 pt-2 pb-20 md:pb-6">
+      <!-- En modo inmersivo, sin padding extra -->
+      <div 
+        id="contenido-principal"
+        tabindex="-1"
+        :class="isImmersiveRoute ? 'flex-1 outline-none' : 'flex-1 overflow-y-auto p-6 pt-2 pb-20 md:pb-6 outline-none'">
         <router-view v-slot="{ Component }">
           <transition 
             enter-active-class="transition duration-300 ease-out"
