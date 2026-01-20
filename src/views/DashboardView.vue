@@ -187,7 +187,7 @@ function handleEncuestaComplete(data) {
       <article 
         v-for="campanha in campanhas" 
         :key="campanha.id"
-        class="campaign-card relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-indigo-500 p-6 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+        class="campaign-card relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-indigo-500 p-6 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
       >
         <div class="flex items-center justify-between">
           <div>
@@ -263,7 +263,7 @@ function handleEncuestaComplete(data) {
         <article 
           v-for="video in videos" 
           :key="video.id"
-          class="video-card relative overflow-hidden rounded-2xl bg-muted aspect-video cursor-pointer group"
+          class="video-card relative overflow-hidden rounded-3xl bg-muted aspect-video cursor-pointer group"
           @click="playVideo(video)"
         >
           <!-- Thumbnail placeholder -->

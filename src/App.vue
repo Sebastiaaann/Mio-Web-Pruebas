@@ -3,6 +3,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DisposicionApp from '@/layouts/DisposicionApp.vue';
+import { Motion, AnimatePresence } from 'motion-v';
 
 const route = useRoute();
 const router = useRouter();
@@ -41,11 +42,37 @@ const usarLayout = computed(() => {
   
   <!-- Con Layout Principal -->
   <DisposicionApp v-else-if="usarLayout">
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <AnimatePresence mode="wait">
+        <Motion 
+          v-if="Component" 
+          :key="route.path"
+          :initial="{ opacity: 0, y: 10 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :exit="{ opacity: 0, y: -10 }"
+          :transition="{ duration: 0.2 }"
+        >
+          <component :is="Component" />
+        </Motion>
+      </AnimatePresence>
+    </router-view>
   </DisposicionApp>
   
   <!-- Sin Layout (inicio, auth, onboarding) -->
-  <router-view v-else />
+  <router-view v-else v-slot="{ Component }">
+      <AnimatePresence mode="wait">
+        <Motion 
+          v-if="Component" 
+          :key="route.path"
+          :initial="{ opacity: 0 }"
+          :animate="{ opacity: 1 }"
+          :exit="{ opacity: 0 }"
+          :transition="{ duration: 0.3 }"
+        >
+          <component :is="Component" />
+        </Motion>
+      </AnimatePresence>
+  </router-view>
 </template>
 
 <style>
