@@ -10,7 +10,14 @@ import router from "./router";
 const app = createApp(App);
 
 // Inicializamos los módulos
-app.use(createPinia());
+const pinia = createPinia();
+app.use(pinia);
+
+// Restaurar sesión antes de montar el router
+import { useTiendaUsuario } from "@/stores/tiendaUsuario";
+const userStore = useTiendaUsuario();
+userStore.restaurarSesion();
+
 app.use(router);
 
 app.mount("#app");

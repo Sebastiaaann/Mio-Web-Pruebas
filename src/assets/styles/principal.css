@@ -7,38 +7,38 @@
 
 @theme {
   /* Mio Medical Palette - Original Teal */
-  --color-homa-primary: #0F766E;
+  --color-homa-primary: #0f766e;
   /* teal-700 */
-  --color-homa-primary-light: #14B8A6;
+  --color-homa-primary-light: #14b8a6;
   /* teal-500 */
-  --color-homa-primary-soft: #CCFBF1;
+  --color-homa-primary-soft: #ccfbf1;
   /* teal-100 */
 
-  --color-homa-secondary: #0EA5E9;
+  --color-homa-secondary: #0ea5e9;
   /* sky-500 */
-  --color-homa-secondary-soft: #E0F2FE;
+  --color-homa-secondary-soft: #e0f2fe;
   /* sky-100 */
 
   /* Mio+ Purple Theme */
-  --color-mio-purple: #7B61FF;
-  --color-mio-purple-dark: #6B51EF;
-  --color-mio-purple-light: #A78BFA;
-  --color-mio-purple-soft: #EDE9FE;
+  --color-mio-purple: #7b61ff;
+  --color-mio-purple-dark: #6b51ef;
+  --color-mio-purple-light: #a78bfa;
+  --color-mio-purple-soft: #ede9fe;
   /* violet-100 */
 
-  --color-mio-indigo: #6366F1;
-  --color-mio-indigo-soft: #E0E7FF;
+  --color-mio-indigo: #6366f1;
+  --color-mio-indigo-soft: #e0e7ff;
 
-  --color-homa-surface: #FFFFFF;
-  --color-homa-background: #F8FAFC;
+  --color-homa-surface: #ffffff;
+  --color-homa-background: #f8fafc;
   /* slate-50 */
 
-  --color-homa-text-primary: #1E293B;
+  --color-homa-text-primary: #1e293b;
   /* slate-800 */
-  --color-homa-text-secondary: #64748B;
+  --color-homa-text-secondary: #64748b;
   /* slate-500 */
 
-  --color-homa-border: #E2E8F0;
+  --color-homa-border: #e2e8f0;
   /* slate-200 */
 }
 
@@ -47,103 +47,103 @@
   --radius: 1rem;
 
   /* Modern Palette - Light Mode (#FDFBFF) */
-  --background: #FDFBFF;
-  --foreground: #1F2937;
+  --background: #fdfbff;
+  --foreground: #1f2937;
   /* slate-800 */
 
-  --card: #FFFFFF;
-  --card-foreground: #1F2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
 
-  --popover: #FFFFFF;
-  --popover-foreground: #1F2937;
+  --popover: #ffffff;
+  --popover-foreground: #1f2937;
 
   /* Primary Purple #8B5CF6 */
-  --primary: #8B5CF6;
-  --primary-foreground: #FFFFFF;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
 
-  --secondary: #EDE9FE;
+  --secondary: #ede9fe;
   /* violet-100 */
-  --secondary-foreground: #4C1D95;
+  --secondary-foreground: #4c1d95;
   /* violet-900 */
 
-  --muted: #F3F4F6;
+  --muted: #f3f4f6;
   /* gray-100 */
-  --muted-foreground: #6B7280;
+  --muted-foreground: #6b7280;
   /* gray-500 */
 
-  --accent: #F5F3FF;
+  --accent: #f5f3ff;
   /* violet-50 */
-  --accent-foreground: #8B5CF6;
+  --accent-foreground: #8b5cf6;
 
-  --destructive: #EF4444;
+  --destructive: #ef4444;
   /* red-500 */
-  --border: #E5E7EB;
+  --border: #e5e7eb;
   /* gray-200 */
-  --input: #E5E7EB;
-  --ring: #8B5CF6;
+  --input: #e5e7eb;
+  --ring: #8b5cf6;
 
-  --chart-1: #8B5CF6;
-  --chart-2: #A78BFA;
-  --chart-3: #C4B5FD;
-  --chart-4: #DDD6FE;
-  --chart-5: #EDE9FE;
+  --chart-1: #8b5cf6;
+  --chart-2: #a78bfa;
+  --chart-3: #c4b5fd;
+  --chart-4: #ddd6fe;
+  --chart-5: #ede9fe;
 
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #1F2937;
-  --sidebar-primary: #8B5CF6;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F3F4F6;
-  --sidebar-accent-foreground: #8B5CF6;
-  --sidebar-border: #E5E7EB;
-  --sidebar-ring: #8B5CF6;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #8b5cf6;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #8b5cf6;
 }
 
 .dark {
   /* Modern Palette - Dark Mode (#1A1033) */
-  --background: #1A1033;
-  --foreground: #F3F4F6;
+  --background: #1a1033;
+  --foreground: #f3f4f6;
   /* gray-100 */
 
-  --card: #2D1B4E;
+  --card: #2d1b4e;
   /* Darker purple for cards */
-  --card-foreground: #F3F4F6;
+  --card-foreground: #f3f4f6;
 
-  --popover: #2D1B4E;
-  --popover-foreground: #F3F4F6;
+  --popover: #2d1b4e;
+  --popover-foreground: #f3f4f6;
 
-  --primary: #8B5CF6;
-  --primary-foreground: #FFFFFF;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
 
-  --secondary: #4C1D95;
-  --secondary-foreground: #F3F4F6;
+  --secondary: #4c1d95;
+  --secondary-foreground: #f3f4f6;
 
-  --muted: #2D1B4E;
-  --muted-foreground: #9CA3AF;
+  --muted: #2d1b4e;
+  --muted-foreground: #9ca3af;
 
-  --accent: #2D1B4E;
-  --accent-foreground: #F3F4F6;
+  --accent: #2d1b4e;
+  --accent-foreground: #f3f4f6;
 
-  --destructive: #EF4444;
+  --destructive: #ef4444;
   --border: #374151;
   /* gray-700 */
   --input: #374151;
-  --ring: #8B5CF6;
+  --ring: #8b5cf6;
 
-  --chart-1: #8B5CF6;
-  --chart-2: #7C3AED;
-  --chart-3: #6D28D9;
-  --chart-4: #5B21B6;
-  --chart-5: #4C1D95;
+  --chart-1: #8b5cf6;
+  --chart-2: #7c3aed;
+  --chart-3: #6d28d9;
+  --chart-4: #5b21b6;
+  --chart-5: #4c1d95;
 
-  --sidebar: #0B1121;
+  --sidebar: #0b1121;
   /* Keep sidebar dark or match theme #1A1033 if preferred. Keeping deep dark for contrast. */
-  --sidebar-foreground: #F3F4F6;
-  --sidebar-primary: #8B5CF6;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #2D1B4E;
-  --sidebar-accent-foreground: #F3F4F6;
-  --sidebar-border: #1F2937;
-  --sidebar-ring: #8B5CF6;
+  --sidebar-foreground: #f3f4f6;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2d1b4e;
+  --sidebar-accent-foreground: #f3f4f6;
+  --sidebar-border: #1f2937;
+  --sidebar-ring: #8b5cf6;
 }
 
 body {
@@ -170,7 +170,9 @@ body {
     box-shadow:
       8px 8px 20px rgba(139, 92, 246, 0.08),
       -8px -8px 20px rgba(255, 255, 255, 0.9);
-    transition: box-shadow 0.3s ease-out, transform 0.2s ease-out;
+    transition:
+      box-shadow 0.3s ease-out,
+      transform 0.2s ease-out;
   }
 
   .neu-card:hover {
@@ -220,7 +222,6 @@ body {
 
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
-
     .neu-card,
     .neu-button {
       transition: none;
@@ -246,6 +247,32 @@ body {
   .homa-layout {
     @apply min-h-screen bg-background text-foreground flex font-sans;
   }
+
+  /* Screen Reader Only - Solo visible para lectores de pantalla */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Visible cuando tiene foco (para skip links) */
+  .sr-only-focusable:focus,
+  .sr-only-focusable:focus-within {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: inherit;
+  }
 }
 
 /* Custom Scrollbar */
@@ -258,12 +285,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #94a3b8;
 }
 
 @theme inline {
