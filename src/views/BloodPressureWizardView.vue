@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, h, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHealthStore } from '@/stores/tiendaSalud'
+import { useUserStore } from '@/stores/tiendaUsuario'
 import { 
-  ArrowLeft, Check, AlertCircle, Heart, Activity, Thermometer, ChevronRight
+  ArrowLeft, Check, AlertCircle, Heart, Activity, ChevronRight
 } from 'lucide-vue-next'
-import { useDateFormat, useElementSize } from '@vueuse/core'
+import { useElementSize } from '@vueuse/core'
 import { Motion } from 'motion-v'
 import AnimatedStepper from '@/components/ui/AnimatedStepper.vue'
 
@@ -16,6 +17,11 @@ import { Label } from '@/components/ui/label'
 
 const router = useRouter()
 const healthStore = useHealthStore()
+const userStore = useUserStore()
+
+// Constantes de layout
+const HEADER_HEIGHT = 60
+const PADDING_HEIGHT = 48
 
 // --- State ---
 const step = ref(1)
@@ -36,8 +42,6 @@ const isSubmitting = ref(false)
 // --- Height Animation Logic ---
 const contentRef = ref(null)
 const { height } = useElementSize(contentRef)
-const headerHeight = 60 // Approximate header height to add to the content
-const paddingHeight = 48 // Approximate padding
 
 // --- Validation ---
 const canProceedFromStep2 = computed(() => !!form.value.feeling)
@@ -131,14 +135,14 @@ function handleKeydown(e) {
     </div>
 
     <!-- Main Card Container (Light Modern Style) -->
-    <!-- We animate the height of this container based on the content -->
     <Motion
+        is="article"
         class="relative w-full max-w-[600px] z-10 bg-white border border-gray-100 rounded-[2rem] shadow-xl overflow-hidden flex flex-col will-change-[height]"
-        :animate="{ height: height > 0 ? (height + headerHeight + paddingHeight) + 'px' : 'auto' }"
+        :animate="{ height: height > 0 ? (height + HEADER_HEIGHT + PADDING_HEIGHT) + 'px' : 'auto' }"
         :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
     >
         <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 h-[60px]">
+        <header class="flex items-center justify-between px-6 py-5 border-b border-gray-100 h-[60px]">
             <button 
                 @click="prevStep" 
                 class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -151,8 +155,8 @@ function handleKeydown(e) {
                 {{ step === 1 ? 'Nueva Medición' : (step === 2 ? 'Estado' : (step === 3 ? 'Valores' : 'Resumen')) }}
             </h1>
             
-            <div class="w-8"></div> <!-- Spacer -->
-        </div>
+            <div class="w-8" aria-hidden="true"></div>
+        </header>
 
         <!-- Content Area -->
         <!-- We use a ref here to measure height -->
@@ -179,7 +183,7 @@ function handleKeydown(e) {
                     </div>
                     
                     <div class="space-y-2">
-                        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Hola, Sebastián</h2>
+                        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Hola, {{ userStore.firstName || 'Usuario' }}</h2>
                         <p class="text-gray-500 text-sm leading-relaxed px-4">
                             Vamos a registrar tu presión arterial. <br>Asegúrate de estar sentado y relajado.
                         </p>

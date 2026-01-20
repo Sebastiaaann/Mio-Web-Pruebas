@@ -1,30 +1,14 @@
 <script setup>
 /**
  * MensajesView - Bandeja de Mensajes estilo Inbox
- * Vista de mensajes colapsables con animaciones estilo "Jakub"
- * Adaptada para el contexto de salud de Mio+
  */
-import { ref, storeToRefs } from 'vue'
+import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { Motion, AnimatePresence } from 'motion-v'
 import { useMensajesStore } from '@/stores/tiendaMensajes'
-import { 
-  ChevronRight, 
-  Inbox,
-  FileText,
-  ClipboardCheck,
-  AlertCircle,
-  HeartPulse,
-  Bell,
-  Calendar,
-  Sparkles,
-  Info,
-  Activity,
-  Stethoscope,
-  Pill,
-  Droplets
-} from 'lucide-vue-next'
+import { useHealthStore } from '@/stores/tiendaSalud'
+import { ChevronRight, Inbox } from 'lucide-vue-next'
 
-// Configuración de transición estilo "Jakub" (Suave pero firme, bounce: 0)
 const springTransition = {
   type: "spring",
   duration: 0.5,
@@ -32,10 +16,16 @@ const springTransition = {
 }
 
 const mensajesStore = useMensajesStore()
+const healthStore = useHealthStore()
 const { sections: SECTIONS } = storeToRefs(mensajesStore)
 
+onMounted(async () => {
+  await healthStore.fetchControles()
+  mensajesStore.initFromControls()
+})
+
 // Secciones abiertas (por defecto "alertas" y "recordatorios")
-const openSections = ref(['alerts', 'results'])
+const openSections = ref(['alerts', 'results', 'reminders'])
 
 function toggleSection(id) {
   if (openSections.value.includes(id)) {
