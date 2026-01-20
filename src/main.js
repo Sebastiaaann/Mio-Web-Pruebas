@@ -20,4 +20,11 @@ userStore.restaurarSesion();
 
 app.use(router);
 
+// Enforce Light Mode Default
+// Si no hay preferencia guardada, forzamos 'light' para evitar que useDark tome la preferencia del sistema (dark) por defecto
+if (localStorage.getItem('mio-theme') === null) {
+  localStorage.setItem('mio-theme', 'light');
+  document.documentElement.classList.remove('dark');
+}
+
 app.mount("#app");
