@@ -18,7 +18,7 @@ const {
 });
 
 const clases = unirClases(
-  'bg-homa-blanco border border-homa-gris-200 rounded-lg',
+  'bg-homa-blanco border border-homa-gris-200 rounded-3xl',
   {
     'p-0': padding === 'none',
     'p-3': padding === 'small', 
