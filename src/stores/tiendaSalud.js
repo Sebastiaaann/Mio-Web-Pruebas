@@ -1,6 +1,6 @@
-// stores/healthStore.js
+// stores/tiendaSalud.js - Store de salud del usuario
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, shallowRef, computed } from 'vue'
 
 /**
  * @typedef {Object} Medicion
@@ -59,8 +59,9 @@ export const useHealthStore = defineStore('health', () => {
     const loading = ref(false)
     const error = ref(null)
 
-    /** @type {import('vue').Ref<Record<string, Medicion[]>>} */
-    const historialMediciones = ref({})
+    // shallowRef para datos grandes que no necesitan reactividad profunda
+    /** @type {import('vue').ShallowRef<Record<string, Medicion[]>>} */
+    const historialMediciones = shallowRef({})
 
     // Getters
     const controlesActivos = computed(() =>
