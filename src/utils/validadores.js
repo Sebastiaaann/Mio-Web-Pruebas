@@ -95,3 +95,19 @@ export function validarLongitud(texto, min, max) {
   const longitud = texto.length;
   return longitud >= min && longitud <= max;
 }
+
+// Re-exportar funciones de RUT desde rutValidator para consolidar en un solo archivo
+// Esto mantiene compatibilidad con imports existentes
+export {
+  limpiarRut,
+  calcularDv,
+  formatearRut,
+  formatRutOnInput,
+  obtenerNumeroRut,
+  obtenerDvRut,
+  validarYFormatearRut,
+  validateRut,
+  formatRut,
+  cleanRut,
+  calculateDv
+} from './rutValidator.js';
