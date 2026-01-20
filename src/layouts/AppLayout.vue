@@ -12,7 +12,9 @@ const route = useRoute();
 
 // Dark Mode Logic - Light mode por defecto
 const isDark = useDark({
-  initialValue: false,
+  initialValue: 'light', // Force light as initial value string
+  valueDark: 'dark',
+  valueLight: 'light',
   storageKey: 'mio-theme',
 });
 const toggleDark = useToggle(isDark);
