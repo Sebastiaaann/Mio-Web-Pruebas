@@ -2,6 +2,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { authService } from '@/services/authService';
+import { pacienteService } from '@/services/pacienteService';
+import { logger } from '@/utils/logger';
 
 /**
  * Store de Usuario - Maneja autenticación y sesión
@@ -18,47 +20,62 @@ export const useTiendaUsuario = defineStore('usuario', () => {
   
   const nombreCompleto = computed(() => {
     if (!usuario.value) return '';
-    return `${usuario.value.nombre} ${usuario.value.apellido}`.trim();
+    // Intentar obtener del objeto usuario o de propiedades sueltas
+    const nombre = usuario.value.nombre || usuario.value.firstName || '';
+    const apellido = usuario.value.apellido || usuario.value.lastName || '';
+    
+    // Si tiene fullName directo (Legacy/Firebase)
+    if (usuario.value.fullName) return usuario.value.fullName;
+    
+    return `${nombre} ${apellido}`.trim();
   });
 
   const iniciales = computed(() => {
     if (!usuario.value) return '';
-    const nombre = usuario.value.nombre?.[0] || '';
-    const apellido = usuario.value.apellido?.[0] || '';
-    return (nombre + apellido).toUpperCase();
+    const nombre = usuario.value.nombre || usuario.value.firstName || '';
+    const apellido = usuario.value.apellido || usuario.value.lastName || '';
+    
+    const n = nombre ? nombre[0] : '';
+    const a = apellido ? apellido[0] : '';
+    
+    return (n + a).toUpperCase();
   });
 
   // Getter para primer nombre (compatibilidad con HomeView)
   const firstName = computed(() => {
     if (!usuario.value) return '';
-    return usuario.value.nombre || '';
+    return usuario.value.nombre || usuario.value.firstName || '';
   });
 
   // Actions
 
   /**
    * Iniciar sesión
-   * @param {string} rut - RUT del usuario
+   * @param {string} email - Email del usuario
    * @param {string} password - Contraseña
    * @returns {Promise<{success: boolean, error?: string}>}
    */
-  async function iniciarSesion(rut, password) {
+  async function iniciarSesion(email, password) {
     cargando.value = true;
     error.value = null;
 
     try {
-      const resultado = await authService.login(rut, password);
+      const resultado = await authService.iniciarSesion(email, password);
 
       if (resultado.success) {
         token.value = resultado.token;
         usuario.value = resultado.user;
         
-        // Guardar sesión en localStorage
-        authService.saveSession(resultado.token, resultado.user);
+        // La persistencia segura ya la maneja authService.guardarSesion
+        // nosotros solo pasamos los datos
+        authService.guardarSesion(resultado.token, resultado.user);
 
-        if (import.meta.env.DEV) {
-          console.log('✅ Sesión iniciada:', usuario.value);
+        // Si tenemos patient_id, intentar hidratar el perfil completo en segundo plano
+        if (resultado.user.patient_id) {
+            hidratarPerfil(resultado.user.patient_id);
         }
+
+        logger.info('✅ Sesión iniciada para usuario:', { patient_id: resultado.user.patient_id });
 
         return { success: true };
       } else {
@@ -67,11 +84,27 @@ export const useTiendaUsuario = defineStore('usuario', () => {
       }
     } catch (e) {
       error.value = e.message || 'Error al iniciar sesión';
-      console.error('❌ Error en login:', e);
+      logger.error('❌ Error en login:', e);
       return { success: false, error: error.value };
     } finally {
       cargando.value = false;
     }
+  }
+
+  /**
+   * Hidratar perfil desde API (Safe Hydration)
+   */
+  async function hidratarPerfil(patientId) {
+      try {
+          const resp = await pacienteService.obtenerPerfil(patientId);
+          if (resp.success && resp.paciente) {
+              // Mezclamos lo que ya tenemos (token, uid) con los datos frescos del perfil
+              usuario.value = { ...usuario.value, ...resp.paciente };
+              logger.info('✅ Perfil hidratado con datos médicos');
+          }
+      } catch (e) {
+          logger.warn('No se pudo hidratar el perfil completo', e);
+      }
   }
 
   /**
@@ -82,25 +115,31 @@ export const useTiendaUsuario = defineStore('usuario', () => {
     token.value = null;
     error.value = null;
     
-    authService.logout();
-
-    if (import.meta.env.DEV) {
-      console.log('👋 Sesión cerrada');
-    }
+    authService.cerrarSesion();
+    logger.info('👋 Sesión cerrada');
   }
 
   /**
    * Restaurar sesión desde localStorage
    */
   function restaurarSesion() {
-    const sesion = authService.restoreSession();
+    const sesion = authService.restaurarSesion();
     
     if (sesion) {
       token.value = sesion.token;
       usuario.value = sesion.user;
 
-      if (import.meta.env.DEV) {
-        console.log('🔄 Sesión restaurada:', usuario.value);
+      logger.info('🔄 Sesión básica restaurada');
+
+      // Si es una sesión legacy o solo tiene metadatos, hidratar perfil
+      if (sesion.isLegacy || sesion.user.patient_id) {
+          // Actualizamos almacenamiento a formato seguro si era legacy
+          if (sesion.isLegacy) {
+              authService.guardarSesion(token.value, sesion.user);
+          }
+          
+          // Hidratamos datos en segundo plano
+          hidratarPerfil(sesion.user.patient_id);
       }
 
       return true;
@@ -115,28 +154,9 @@ export const useTiendaUsuario = defineStore('usuario', () => {
    * @returns {Promise<{success: boolean, error?: string}>}
    */
   async function registrarUsuario(datosUsuario) {
-    cargando.value = true;
-    error.value = null;
-
-    try {
-      const resultado = await authService.register(datosUsuario);
-
-      if (resultado.success) {
-        if (import.meta.env.DEV) {
-          console.log('✅ Usuario registrado');
-        }
-        return { success: true };
-      } else {
-        error.value = resultado.error;
-        return { success: false, error: resultado.error };
-      }
-    } catch (e) {
-      error.value = e.message || 'Error al registrar usuario';
-      console.error('❌ Error en registro:', e);
-      return { success: false, error: error.value };
-    } finally {
-      cargando.value = false;
-    }
+    // Implementación pendiente en authService para registro
+    // Por ahora mantenemos estructura
+    return { success: false, error: "Registro no implementado en backend actual" };
   }
 
   /**
@@ -147,12 +167,10 @@ export const useTiendaUsuario = defineStore('usuario', () => {
     if (usuario.value) {
       usuario.value = { ...usuario.value, ...datosActualizados };
       
-      // Actualizar en localStorage
-      authService.saveSession(token.value, usuario.value);
-
-      if (import.meta.env.DEV) {
-        console.log('📝 Usuario actualizado:', usuario.value);
-      }
+      // Actualizar persistencia llamando a authService
+      authService.guardarSesion(token.value, usuario.value);
+      
+      logger.info('📝 Usuario actualizado localmente');
     }
   }
 

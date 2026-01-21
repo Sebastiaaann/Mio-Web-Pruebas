@@ -45,10 +45,27 @@ export const useTiendaServicios = defineStore('servicios', () => {
       const resultado = await serviciosService.obtenerServicios();
 
       if (resultado.success) {
-        servicios.value = resultado.servicios.sort((a, b) => a.orden - b.orden);
+        // Manejar diferentes formatos de respuesta
+        let listaServicios = resultado.servicios;
+        
+        // Si es un objeto, intentar extraer el array
+        if (listaServicios && typeof listaServicios === 'object' && !Array.isArray(listaServicios)) {
+          // Posibles claves donde podría estar el array
+          listaServicios = listaServicios.data || listaServicios.items || listaServicios.services || [];
+          console.log('📦 Formato de respuesta diferente, extrayendo:', listaServicios);
+        }
+        
+        // Asegurar que es un array
+        if (!Array.isArray(listaServicios)) {
+          console.warn('⚠️ La respuesta de servicios no es un array, usando fallback');
+          listaServicios = [];
+        }
+        
+        // Ordenar si tiene la propiedad orden
+        servicios.value = listaServicios.sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
         if (import.meta.env.DEV) {
-          console.log('✅ Servicios cargados:', servicios.value.length);
+          console.log('✅ Servicios cargados:', servicios.value.length, servicios.value);
         }
       } else {
         error.value = resultado.error;

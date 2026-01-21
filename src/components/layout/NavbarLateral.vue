@@ -188,7 +188,11 @@ onUnmounted(() => {
         <img 
           src="/assets/logo_mio_purple.png" 
           alt="MIO Logo" 
-          class="h-12 object-contain transition-all duration-300"
+          width="48"
+          height="48"
+          loading="lazy"
+          decoding="async"
+          class="h-12 w-auto object-contain transition-all duration-300"
           :class="collapsed ? 'scale-110' : ''"
         />
       </div>
@@ -362,9 +366,9 @@ onUnmounted(() => {
                  <p 
                     class="text-sm font-bold truncate transition-colors text-sidebar-foreground"
                  >
-                    Usuario Demo
+                    {{ userStore.usuario?.fullName || userStore.usuario?.email?.split('@')[0] || 'Usuario' }}
                  </p>
-                 <p class="text-xs text-muted-foreground font-medium truncate">demo@mio.cl</p>
+                 <p class="text-xs text-muted-foreground font-medium truncate">{{ userStore.usuario?.email || '' }}</p>
              </div>
              
              <MoreVertical 

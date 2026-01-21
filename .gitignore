@@ -34,3 +34,10 @@ coverage
 
 # Vitest
 __screenshots__/
+
+# Firebase Admin SDK credentials (NEVER commit these)
+*-firebase-adminsdk-*.json
+homa-prod-*.json
+
+# Agent Skills (Local only)
+.agent/skills/
