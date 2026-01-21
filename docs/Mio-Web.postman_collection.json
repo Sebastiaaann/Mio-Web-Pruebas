@@ -1,0 +1,165 @@
+{
+	"info": {
+		"_postman_id": "mio-web-homa-collection",
+		"name": "Mio-Web HOMA API",
+		"description": "Colección para probar la integración de Mio-Web con la API HOMA backend.\n\nInstrucciones:\n1. Configura las variables de colección 'email' y 'firebase_uid'.\n2. Ejecuta 'Login HOMA' para obtener el token automáticamente.\n3. Prueba los demás endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "1. Login HOMA (Intercambio Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    pm.collectionVariables.set(\"patient_id\", jsonData.patient_id);",
+									"    console.log(\"Token y Patient ID actualizados\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{email}}\",\n    \"UID\": \"{{firebase_uid}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/authorizations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"authorizations"
+							]
+						},
+						"description": "Intercambia el UID de Firebase y Email por un token de sesión HOMA."
+					}
+				}
+			]
+		},
+		{
+			"name": "Pacientes",
+			"item": [
+				{
+					"name": "2. Obtener Perfil",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"{{patient_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. Obtener Servicios",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/{{patient_id}}/services",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"{{patient_id}}",
+								"services"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. Obtener Planes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/plans/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"plans",
+								"{{patient_id}}"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://apihoma.homa.cl:7200",
+			"type": "string"
+		},
+		{
+			"key": "email",
+			"value": "sebastian.almo9@gmail.com",
+			"type": "string"
+		},
+		{
+			"key": "firebase_uid",
+			"value": "ZptrTFb5HMcRyu7Tq92WOP2uZoP2",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "patient_id",
+			"value": "75863",
+			"type": "string"
+		}
+	]
+}
