@@ -1,19 +1,42 @@
 <!-- src/App.vue -->
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DisposicionApp from '@/layouts/DisposicionApp.vue';
 import { Motion, AnimatePresence } from 'motion-v';
 
+import { useConfigStore } from '@/stores/tiendaConfig';
+import { useUserStore } from '@/stores/tiendaUsuario';
+
 const route = useRoute();
 const router = useRouter();
+const configStore = useConfigStore();
+const userStore = useUserStore();
 
 // Esperar a que el router esté listo para evitar flash de contenido incorrecto
 const isRouterReady = ref(false);
 
+const manejarSesionExpirada = () => {
+  userStore.logout();
+  router.push('/');
+};
+
 onMounted(async () => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('auth:session-expired', manejarSesionExpirada);
+  }
+
   await router.isReady();
   isRouterReady.value = true;
+  
+  // Inicializar tema por defecto (Homa)
+  configStore.loadPreset('homa');
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('auth:session-expired', manejarSesionExpirada);
+  }
 });
 
 // Determinar qué layout usar basado en la ruta
