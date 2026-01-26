@@ -150,41 +150,6 @@ function handleSurveyComplete() {
         Realizar Encuesta
       </Button>
     </header>
-
-    <!-- Campañas Activas -->
-    <section v-if="campanhas.length > 0" class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-        <Megaphone class="mr-2 h-5 w-5 text-primary" />
-        Campañas Activas
-      </h2>
-      
-      <div 
-        v-for="campanha in campanhas" 
-        :key="campanha.id"
-        class="campaign-card relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-indigo-600 p-6 text-white shadow-lg"
-      >
-        <div class="relative z-10">
-          <h3 class="text-xl font-bold mb-2">{{ campanha.nombre }}</h3>
-          <p class="text-purple-100 mb-4">{{ campanha.descripcion }}</p>
-          <Button 
-            variant="secondary"
-            size="sm"
-            class="bg-white/20 hover:bg-white/30 text-white border-none"
-          >
-            Ver detalles
-            <ArrowRight class="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-        
-        <!-- Decorative pattern -->
-        <div class="absolute right-0 top-0 w-32 h-32 opacity-20">
-          <svg viewBox="0 0 100 100" class="w-full h-full">
-            <circle cx="50" cy="50" r="40" fill="currentColor" />
-          </svg>
-        </div>
-      </div>
-    </section>
-
     <!-- Próximos Controles -->
     <section>
       <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
@@ -267,7 +232,7 @@ function handleSurveyComplete() {
             </div>
 
             <!-- List Content -->
-            <div class="max-h-[400px] overflow-y-auto">
+            <div class="max-h-100 overflow-y-auto">
               <Motion
                 v-if="activityHistory.length > 0"
                 class="flex flex-col"
@@ -346,7 +311,7 @@ function handleSurveyComplete() {
 
     <!-- Wizard Generico (Light Mode) -->
     <Dialog :open="!!activeWizard" @update:open="(val) => !val && (activeWizard = null)">
-      <DialogContent class="sm:max-w-[600px] p-0 bg-transparent border-none shadow-none text-foreground [&>button]:hidden">
+      <DialogContent class="sm:max-w-150 p-0 bg-transparent border-none shadow-none text-foreground [&>button]:hidden">
         <DialogTitle class="hidden">Nueva Medición</DialogTitle>
         
         <BloodPressureWizard v-if="activeWizard === 'pressure'" @close="activeWizard = null" />

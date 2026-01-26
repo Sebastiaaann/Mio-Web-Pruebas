@@ -47,6 +47,7 @@ export const useTiendaServicios = defineStore('servicios', () => {
       if (resultado.success) {
         // Manejar diferentes formatos de respuesta
         let listaServicios = resultado.servicios;
+        console.log('🔍 RAW Servicios response:', typeof listaServicios, Array.isArray(listaServicios), JSON.stringify(listaServicios).slice(0, 200));
         
         // Si es un objeto, intentar extraer el array
         if (listaServicios && typeof listaServicios === 'object' && !Array.isArray(listaServicios)) {

@@ -150,7 +150,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
 </script>
 
 <template>
-  <div class="chat-view flex flex-col h-full bg-gradient-to-br from-purple-50 via-white to-purple-100">
+  <div class="chat-view flex flex-col h-full bg-linear-to-br from-purple-50 via-white to-purple-100">
     <!-- Header -->
     <Motion
       :initial="{ opacity: 0, y: -20 }"
@@ -166,7 +166,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
             >
               <ArrowLeft class="w-5 h-5 text-gray-600" />
             </button>
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
+            <div class="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
               <Bot class="w-5 h-5 text-white" />
             </div>
             <div>
@@ -210,7 +210,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
             <!-- Bot Avatar -->
             <div 
               v-if="mensaje.tipo === 'bot'"
-              class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0"
+              class="w-8 h-8 rounded-lg bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0"
             >
               <Bot class="w-4 h-4 text-white" />
             </div>
@@ -220,7 +220,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
               class="max-w-[80%] rounded-2xl px-4 py-3 shadow-sm"
               :class="[
                 mensaje.tipo === 'usuario' 
-                  ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-br-sm' 
+                  ? 'bg-linear-to-r from-purple-600 to-purple-500 text-white rounded-br-sm' 
                   : mensaje.error 
                     ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-sm'
                     : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
@@ -238,7 +238,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
             <!-- User Avatar -->
             <div 
               v-if="mensaje.tipo === 'usuario'"
-              class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0"
+              class="w-8 h-8 rounded-lg bg-linear-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0"
             >
               <User class="w-4 h-4 text-white" />
             </div>
@@ -252,7 +252,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
           :animate="{ opacity: 1, y: 0 }"
         >
           <div class="flex gap-3 justify-start">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-lg bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
               <Bot class="w-4 h-4 text-white" />
             </div>
             <div class="bg-white rounded-2xl rounded-bl-sm px-4 py-3 border border-gray-100 shadow-sm">
@@ -306,7 +306,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
           <button
             type="submit"
             :disabled="!puedeEnviar"
-            class="p-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-300/40 hover:shadow-purple-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            class="p-3 rounded-xl bg-linear-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-300/40 hover:shadow-purple-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
             <Loader2 v-if="enviando" class="w-5 h-5 animate-spin" />
             <Send v-else class="w-5 h-5" />

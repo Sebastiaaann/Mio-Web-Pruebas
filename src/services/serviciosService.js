@@ -59,7 +59,7 @@ export const serviciosService = {
         headers: {
           "Content-Type": "application/json",
           // El token de autorización se obtuvo en el login de HOMA
-          "Authorization": `Bearer ${authService.obtenerToken()}`
+          "X-API-KEY": authService.obtenerToken()
         },
         signal: controller.signal,
       });
@@ -73,11 +73,53 @@ export const serviciosService = {
 
       const data = await response.json();
       
-      // Hacemos el mapeo si es necesario, o devolvemos crudo
-      // Asumimos que la API devuelve un array de servicios compatible o adaptable
+      // Extracción robusta del array de servicios
+      let servicesArray = [];
+      if (Array.isArray(data)) {
+          servicesArray = data;
+      } else if (Array.isArray(data.services)) {
+          servicesArray = data.services;
+      } else if (Array.isArray(data.servicios)) {
+          servicesArray = data.servicios;
+      } else if (data.data) {
+          if (Array.isArray(data.data)) {
+              servicesArray = data.data;
+          } else if (Array.isArray(data.data.services)) {
+              servicesArray = data.data.services;
+          } else if (Array.isArray(data.data.servicios)) {
+               servicesArray = data.data.servicios;
+          }
+      }
+      
+      // Normalización de datos (Mapping English API -> Spanish App Model)
+      const serviciosNormalizados = servicesArray.map(s => {
+        // Mapeo seguro de propiedades
+        return {
+            ...s, // Mantener propiedades originales
+            // Mapeo a español que espera el frontend
+            id: s.id,
+            nombre: s.name || s.nombre || s.title || 'Servicio sin nombre',
+            descripcion: s.description || s.descripcion || '',
+            // Manejo de posición/orden
+            orden: s.home_position ? parseInt(s.home_position, 10) : (s.orden || 99),
+            // Activo por defecto si no viene
+            activo: s.active !== undefined ? s.active : true,
+            // Normalizar items/opciones si existen
+            items: (s.options || s.items || []).map(opt => ({
+                ...opt,
+                nombre: opt.plan_name || opt.name || opt.nombre,
+                titulo: opt.title || opt.titulo,
+                descripcion: opt.description || opt.descripcion || opt.plan_description,
+                tipo_mensaje: opt.type_message || opt.tipo_mensaje
+            }))
+        };
+      });
+
+      console.log('✅ Servicios extraídos y normalizados:', serviciosNormalizados.length);
+
       return {
         success: true,
-        servicios: data.servicios || data, // Ajustar según estructura real
+        servicios: serviciosNormalizados,
       };
 
     } catch (error) {

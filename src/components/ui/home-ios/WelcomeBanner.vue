@@ -21,20 +21,24 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
     :animate="{ opacity: 1, y: 0 }"
     :transition="{ duration: 0.6, ease: 'easeOut' }"
   >
-    <div class="glass-card rounded-3xl p-8 shadow-xl shadow-purple-100/30 overflow-hidden relative">
+    <div class="glass-card rounded-3xl p-10 shadow-xl shadow-black/5 overflow-hidden relative">
       <!-- Decorative gradient -->
-      <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-200/40 to-transparent rounded-full blur-2xl pointer-events-none" />
+      <div class="absolute top-0 right-0 w-72 h-72 bg-linear-to-bl from-emerald-100/60 to-transparent rounded-full blur-2xl pointer-events-none" />
       
       <div class="relative flex items-center justify-between">
         <div class="flex-1">
-         
+          <!-- Greeting -->
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">👋</span>
+            <p class="text-emerald-600 font-medium text-sm">{{ saludo }}</p>
+          </div>
           
           <!-- Name -->
-          <h2 class="text-3xl text-gray-800 mb-2" style="font-weight: 425;">
-            Bienvenido, <span class="gradient-text font-bold">{{ nombre }}</span>
+          <h2 class="text-3xl font-bold text-gray-900 mb-2">
+            Bienvenido, <span class="text-violet-600">{{ nombre }}</span>
           </h2>
           
-          <p class="text-gray-500 max-w-lg">
+          <p class="text-gray-600 max-w-xl">
             Tu bienestar es nuestra prioridad. Accede a todos tus servicios de salud desde un solo lugar.
           </p>
           
@@ -42,14 +46,14 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
           <div class="flex items-center gap-4 mt-6">
             <button 
               @click="emit('nuevaCita')"
-              class="shine-effect inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl font-medium shadow-lg shadow-purple-300/40 hover:shadow-purple-400/50 transition-all duration-300 hover:scale-105"
+              class="shine-effect inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-lg font-semibold shadow-lg shadow-black/10 hover:bg-violet-700 transition-all duration-300 hover:scale-[1.02]"
             >
               <CalendarPlus class="w-5 h-5" />
               Nueva Cita
             </button>
             <button 
               @click="emit('verHistorial')"
-              class="inline-flex items-center gap-2 px-6 py-3 bg-white/80 text-purple-600 rounded-xl font-medium border border-purple-200 hover:bg-purple-50 transition-all duration-300"
+              class="inline-flex items-center gap-2 px-6 py-3 bg-white/90 text-gray-700 rounded-lg font-semibold border border-stone-200 hover:bg-stone-50 transition-all duration-300"
             >
               <FileText class="w-5 h-5" />
               Ver Historial
@@ -64,8 +68,8 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
               :animate="{ y: [0, -10, 0] }"
               :transition="{ duration: 6, repeat: Infinity, ease: 'easeInOut' }"
             >
-              <div class="w-48 h-48 rounded-3xl bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
-                <Stethoscope class="w-20 h-20 text-purple-500" />
+              <div class="w-52 h-40 rounded-3xl bg-linear-to-br from-violet-100 to-emerald-100 flex items-center justify-center">
+                <Stethoscope class="w-16 h-16 text-violet-600" />
               </div>
             </Motion>
             <Motion
@@ -73,8 +77,8 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
               :transition="{ duration: 2, repeat: Infinity, ease: 'easeInOut' }"
               class="absolute -bottom-2 -right-2"
             >
-              <div class="w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center">
-                <Heart class="w-7 h-7 text-red-400" />
+              <div class="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                <Heart class="w-6 h-6 text-rose-500" />
               </div>
             </Motion>
           </div>
@@ -86,17 +90,10 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
 
 <style scoped>
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .shine-effect {

@@ -41,6 +41,10 @@ homa-prod-*.json
 
 # Agent Skills (Local only)
 .agent/skills/
+.github/skills/
+.sisyphus/skills/
+.mcp-server
+
 
 # Environment variables
 .env

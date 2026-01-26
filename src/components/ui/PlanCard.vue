@@ -41,10 +41,17 @@ function handleSelect() {
 
     <!-- Header Section -->
     <div class="mb-6">
-      <!-- Logo placeholder if desired, or just title -->
-      <div class="mb-4">
-        <!-- Mio+ Logo Placeholder -->
-        <span class="text-2xl font-black tracking-tighter text-gray-400 opacity-60">mio<sup class="text-sm align-top">+</sup></span>
+      <!-- Logo -->
+      <div class="mb-4 h-12 flex items-center">
+        <img 
+          v-if="plan.logo" 
+          :src="plan.logo" 
+          :alt="plan.subtitle || 'Logo del plan'"
+          class="h-full w-auto object-contain"
+        />
+        <span v-else class="text-2xl font-black tracking-tighter text-gray-400 opacity-60">
+          mio<sup class="text-sm align-top">+</sup>
+        </span>
       </div>
       
       <!-- Plan Name -->
