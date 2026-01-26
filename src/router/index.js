@@ -81,6 +81,12 @@ const router = createRouter({
       path: "/citas",
       name: "citas",
       component: () => import("@/views/citas/CitasView.vue"),
+      meta: { requiresAuth: true, requiresLayout: false },
+    },
+    {
+      path: "/chat",
+      name: "chat",
+      component: () => import("@/views/chat/ChatView.vue"),
       meta: { requiresAuth: true },
     },
     {

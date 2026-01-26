@@ -34,6 +34,11 @@ const emit = defineEmits(['toggle', 'update:mobileOpen']);
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+import { useConfigStore } from '@/stores/tiendaConfig';
+const configStore = useConfigStore();
+import { computed } from 'vue';
+
+const clientName = computed(() => configStore.clientName || 'MIO+');
 
 // --- STATE ---
 const openSubmenus = ref({});
@@ -65,9 +70,13 @@ const menuSections = [
   }
 ];
 
+import ProfileOverlay from '@/components/profile/ProfileOverlay.vue';
+
+const showProfileOverlay = ref(false);
+
 const profileMenuItems = [
-  { label: 'Ver Perfil', href: '#', icon: User },
-  { label: 'Configuración de la cuenta', href: '#', icon: Settings },
+  { label: 'Ver Perfil', action: 'profile', icon: User },
+  { label: 'Configuración de la cuenta', action: 'settings', icon: Settings },
 ];
 
 // --- METHODS ---
@@ -125,6 +134,19 @@ const handleClickOutside = (event) => {
   }
 };
 
+const handleProfileItemClick = (item) => {
+    isProfileMenuOpen.value = false;
+    
+    if (item.action === 'profile') {
+        showProfileOverlay.value = true;
+    } else if (item.action === 'settings') {
+        // Por ahora redirige a perfil, luego implementar settings
+        router.push('/perfil');
+    } else if (item.href) {
+        window.location.href = item.href;
+    }
+};
+
 onMounted(() => {
   if (typeof window !== 'undefined') {
     document.addEventListener('mousedown', handleClickOutside);
@@ -157,8 +179,8 @@ onUnmounted(() => {
     class="md:hidden fixed top-0 left-0 right-0 h-16 z-40 flex items-center justify-between px-4 border-b border-sidebar-border bg-sidebar/95 backdrop-blur-md"
   >
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-violet-700 grid place-items-center text-primary-foreground font-bold">M</div>
-      <span class="font-bold text-lg text-sidebar-foreground tracking-wide">MIO+</span>
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary grid place-items-center text-primary-foreground font-bold">M</div>
+      <span class="font-bold text-lg text-sidebar-foreground tracking-wide">{{ clientName }}</span>
     </div>
     <button @click="openMobileMenu" class="text-sidebar-foreground hover:text-primary">
       <Menu :size="24" :stroke-width="2" />
@@ -319,17 +341,16 @@ onUnmounted(() => {
                         <p class="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Mi Cuenta</p>
                     </div>
 
-                    <a 
+                    <button 
                         v-for="item in profileMenuItems" 
                         :key="item.label"
-                        :href="item.href"
-                        @click="isProfileMenuOpen = false"
-                        class="group flex items-center gap-3 px-4 py-2.5 text-sm text-popover-foreground hover:bg-sidebar-accent transition-colors relative"
+                        @click="handleProfileItemClick(item)"
+                        class="w-full text-left group flex items-center gap-3 px-4 py-2.5 text-sm text-popover-foreground hover:bg-sidebar-accent transition-colors relative"
                     >
                         <component :is="item.icon" :size="18" class="text-primary transition-colors" />
                         <span class="font-medium">{{ item.label }}</span>
                         <span v-if="item.badge" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">{{ item.badge }}</span>
-                    </a>
+                    </button>
 
                     <div class="h-px bg-sidebar-border my-1 mx-2"></div>
 
@@ -358,7 +379,12 @@ onUnmounted(() => {
                             ? 'ring-primary' 
                             : 'ring-transparent'
                     ]"
-                 ></div>
+                 >
+                     <img v-if="userStore.usuario?.avatar" :src="userStore.usuario.avatar" class="w-full h-full object-cover" />
+                     <div v-else class="w-full h-full bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center text-violet-600 font-bold">
+                        {{ userStore.iniciales }}
+                     </div>
+                 </div>
                  <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-sidebar rounded-full"></div>
              </div>
              
@@ -366,7 +392,7 @@ onUnmounted(() => {
                  <p 
                     class="text-sm font-bold truncate transition-colors text-sidebar-foreground"
                  >
-                    {{ userStore.usuario?.fullName || userStore.usuario?.email?.split('@')[0] || 'Usuario' }}
+                    {{ userStore.nombreCompleto }}
                  </p>
                  <p class="text-xs text-muted-foreground font-medium truncate">{{ userStore.usuario?.email || '' }}</p>
              </div>
@@ -379,6 +405,7 @@ onUnmounted(() => {
          </div>
     </div>
 
+    <ProfileOverlay v-model:open="showProfileOverlay" />
   </Motion>
 </template>
 

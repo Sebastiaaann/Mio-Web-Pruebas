@@ -77,7 +77,7 @@ onUnmounted(stopAutoplay)
           :href="banner.url || '#'"
           target="_blank"
           rel="noopener noreferrer"
-          class="group relative overflow-hidden rounded-2xl aspect-[16/9] md:aspect-[21/9] lg:aspect-[24/9] card-hover"
+          class="group relative overflow-hidden rounded-2xl aspect-video md:aspect-21/9 lg:aspect-24/9 card-hover"
           :style="{ 
             background: `linear-gradient(135deg, ${banner.colorFrom || '#9333ea'}, ${banner.colorTo || '#7c3aed'})`
           }"
@@ -90,18 +90,12 @@ onUnmounted(stopAutoplay)
             :alt="banner.title"
             class="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-500"
           />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
           <div class="absolute bottom-3 left-3 right-3">
             <p class="text-white font-semibold text-sm">{{ banner.title }}</p>
             <p v-if="banner.description" class="text-white/70 text-xs">{{ banner.description }}</p>
           </div>
-          <!-- Live badge -->
-          <div v-if="banner.live" class="absolute top-3 right-3">
-            <span class="px-2 py-1 bg-red-500 text-white text-xs rounded-full font-medium flex items-center gap-1">
-              <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              LIVE
-            </span>
-          </div>
+          
         </a>
       </div>
     </div>

@@ -302,16 +302,15 @@ onUnmounted(() => {
                      <Avatar class="h-20 w-20 border-4 border-background shadow-lg">
                        <AvatarImage :src="user?.avatar" alt="Avatar" />
                        <AvatarFallback class="bg-primary/10 text-primary text-xl font-bold">
-                         {{ firstName?.charAt(0) || 'U' }}
+                         {{ userStore.iniciales || 'U' }}
                        </AvatarFallback>
                      </Avatar>
-                     <div class="absolute bottom-0 right-0 bg-emerald-500 rounded-full p-1 border-2 border-card">
-                       <div class="w-2 h-2 bg-white rounded-full"></div>
-                     </div>
+                     <div class="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 border-4 border-card rounded-full"></div>
                   </div>
                   
-                  <h2 class="text-lg font-bold text-foreground mb-1">{{ fullName }}</h2>
-                  <p class="text-xs text-muted-foreground uppercase tracking-wider mb-3">ID: #48291</p>
+                  <h2 class="text-lg font-bold text-foreground mb-0.5">{{ fullName }}</h2>
+                  <p v-if="user?.email" class="text-xs text-muted-foreground mb-1">{{ user.email }}</p>
+                  <p v-if="user?.patient_id" class="text-xs text-muted-foreground uppercase tracking-wider mb-3">ID: #{{ user.patient_id }}</p>
                   
                   <Badge variant="secondary" class="bg-primary/10 text-primary hover:bg-primary/20 mb-4">Usuario MIO+</Badge>
 
@@ -328,25 +327,7 @@ onUnmounted(() => {
                 </CardContent>
               </Card>
 
-              <!-- Campañas Activas (movida aquí) -->
-              <section v-if="campanhas.length > 0" class="flex-1">
-                 <article 
-                   v-for="campanha in campanhas" 
-                   :key="campanha.id"
-                   class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-violet-600 to-indigo-700 p-4 text-white shadow-lg cursor-pointer hover:scale-[1.01] transition-transform"
-                 >
-                    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
-                    
-                    <div class="relative z-10">
-                       <Badge class="bg-white/20 text-white border-none text-[10px] mb-2">Novedad</Badge>
-                       <h3 class="text-base font-bold mb-1">{{ campanha.nombre }}</h3>
-                       <p class="text-white/80 text-xs">{{ campanha.descripcion }}</p>
-                       <div class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center mt-2">
-                           <Megaphone class="h-4 w-4 text-white" />
-                       </div>
-                    </div>
-                 </article>
-              </section>
+             
             </div>
 
             <!-- COLUMNA CENTRAL (7/12) -->
@@ -469,30 +450,7 @@ onUnmounted(() => {
               <p class="text-muted-foreground text-sm">Gestiona tus controles de salud y revisa tu historial</p>
             </header>
 
-            <!-- Campañas Activas -->
-            <section v-if="campanhas.length > 0">
-              <h2 class="text-base font-semibold text-foreground mb-3 flex items-center">
-                <Megaphone class="mr-2 h-4 w-4 text-primary" />
-                Campañas Activas
-              </h2>
-              
-              <div 
-                v-for="campanha in campanhas" 
-                :key="campanha.id"
-                class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-indigo-600 p-5 text-white shadow-lg"
-              >
-                <div class="relative z-10">
-                  <h3 class="text-lg font-bold mb-1">{{ campanha.nombre }}</h3>
-                  <p class="text-purple-100 text-sm mb-3">{{ campanha.descripcion }}</p>
-                  <Button size="sm" class="bg-white/20 hover:bg-white/30 text-white border-none">
-                    Ver detalles <ArrowRight class="ml-1 h-3 w-3" />
-                  </Button>
-                </div>
-                <div class="absolute right-4 top-4 w-16 h-16 opacity-20">
-                  <svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="40" fill="currentColor" /></svg>
-                </div>
-              </div>
-            </section>
+        
 
             <!-- Próximos Controles -->
             <section>

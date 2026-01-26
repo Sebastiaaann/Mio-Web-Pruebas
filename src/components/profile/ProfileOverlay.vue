@@ -58,6 +58,17 @@ const memberSince = computed(() => {
   return date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })
 })
 
+// Profile Data
+const rut = computed(() => userStore.usuario?.rut || '')
+const birthDate = computed(() => {
+    if (!userStore.usuario?.birthdate) return ''
+    return new Date(userStore.usuario.birthdate).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+})
+const planName = computed(() => userStore.usuario?.plan_name || 'Plan Básico')
+const planColor = computed(() => userStore.usuario?.plan_color || '#8B5CF6')
+const activeClients = computed(() => userStore.usuario?.clients || [])
+const planDescription = computed(() => userStore.usuario?.plan_description || '')
+
 // Health stats
 const totalMediciones = computed(() => {
   let count = 0
@@ -98,7 +109,7 @@ function goToSettings() {
         initial="hidden"
         animate="visible"
         exit="exit"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        class="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         @click.self="close"
       >
         <Motion
@@ -122,7 +133,6 @@ function goToSettings() {
             <p class="text-sm text-gray-500 dark:text-gray-400">Miembro desde {{ memberSince }}</p>
           </header>
 
-          <!-- Avatar & Info -->
           <div class="px-6 pb-4">
             <div class="flex items-center gap-4">
               <div class="relative">
@@ -137,13 +147,41 @@ function goToSettings() {
               <div>
                 <h2 class="text-xl font-bold text-gray-900 dark:text-foreground">{{ userName }}</h2>
                 <p class="text-sm text-gray-500 dark:text-muted-foreground">{{ userEmail }}</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <span v-if="rut" class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">{{ rut }}</span>
+                    <span v-if="birthDate" class="text-xs text-gray-400">{{ birthDate }}</span>
+                </div>
               </div>
             </div>
           </div>
 
+          <!-- Plan Info -->
+          <div v-if="planName" class="mx-6 mb-4 p-4 rounded-2xl border border-gray-100 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+             <div class="flex justify-between items-start mb-2">
+                 <div>
+                     <p class="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Tu Plan Actual</p>
+                     <h3 class="font-bold text-gray-800 dark:text-gray-200" :style="{ color: planColor }">{{ planName }}</h3>
+                 </div>
+                 <div class="flex -space-x-2">
+                     <template v-for="(client, i) in activeClients" :key="client.client_id">
+                        <div 
+                            class="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600 shadow-sm"
+                            :title="client.name"
+                            :style="{ zIndex: 10 - i }"
+                        >
+                            {{ client.name[0] }}
+                        </div>
+                     </template>
+                 </div>
+             </div>
+             <p v-if="planDescription" class="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                 {{ planDescription }}
+             </p>
+          </div>
+
           <!-- Health Stats Card -->
           <div class="mx-6 mb-4 rounded-2xl overflow-hidden">
-            <div class="relative bg-gradient-to-br from-primary/10 via-violet-50 to-indigo-50 dark:from-primary/20 dark:via-violet-900/20 dark:to-indigo-900/20 p-4">
+            <div class="relative bg-linear-to-br from-primary/10 via-violet-50 to-indigo-50 dark:from-primary/20 dark:via-violet-900/20 dark:to-indigo-900/20 p-4">
               <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur flex items-center justify-center shadow-sm">
                   <Heart class="w-5 h-5 text-primary" />

@@ -5,6 +5,13 @@ export const useConfigStore = defineStore('config', () => {
   // State
   const clientName = ref('Homa')
   const clientBrand = ref('homa')
+  const planActivo = ref('esencial') // Plan activo del usuario (esencial, mutual, vital, etc.)
+  
+  // Cargar plan desde localStorage al iniciar
+  const planGuardado = localStorage.getItem('mio-plan-activo')
+  if (planGuardado) {
+    planActivo.value = planGuardado
+  }
   
   // Configuración por defecto (Homa)
   const defaultConfig = {
@@ -117,12 +124,20 @@ export const useConfigStore = defineStore('config', () => {
       }
   }
 
+  // Actualizar plan activo
+  function setPlanActivo(plan) {
+    planActivo.value = plan.toLowerCase()
+    localStorage.setItem('mio-plan-activo', planActivo.value)
+  }
+
   return {
     clientName,
     clientBrand,
     currentConfig,
+    planActivo,
     setClientConfig,
     loadPreset,
+    setPlanActivo,
     presets
   }
 })
