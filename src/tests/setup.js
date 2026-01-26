@@ -14,16 +14,21 @@ vi.mock('@/services/authService', () => ({
   }
 }))
 
-// Mock de localStorage
+// Mock de localStorage en memoria
+const memoriaStorage = new Map()
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn()
+  getItem: (key) => (memoriaStorage.has(key) ? memoriaStorage.get(key) : null),
+  setItem: (key, value) => { memoriaStorage.set(key, String(value)) },
+  removeItem: (key) => { memoriaStorage.delete(key) },
+  clear: () => { memoriaStorage.clear() }
 }
-Object.defineProperty(global, 'localStorage', { value: localStorageMock })
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock,
+  configurable: true
+})
 
 // Configuración global para componentes
 beforeEach(() => {
   vi.clearAllMocks()
+  localStorage.clear()
 })
