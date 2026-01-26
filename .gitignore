@@ -41,3 +41,8 @@ homa-prod-*.json
 
 # Agent Skills (Local only)
 .agent/skills/
+
+# Environment variables
+.env
+.env.*
+!.env.example
