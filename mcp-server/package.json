@@ -1,0 +1,14 @@
+{
+  "name": "homa-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for MIO/HOMA API",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "dotenv": "^16.4.5"
+  }
+}
