@@ -1,5 +1,8 @@
 /* src/assets/styles/principal.css */
 
+/* Cabinet Grotesk Font */
+@import url('/css/cabinet-grotesk.css');
+
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
@@ -40,6 +43,9 @@
 
   --color-homa-border: #e2e8f0;
   /* slate-200 */
+
+  /* Cabinet Grotesk Font Family */
+  --font-family-cabinet: 'CabinetGrotesk-Variable', sans-serif;
 }
 
 :root {

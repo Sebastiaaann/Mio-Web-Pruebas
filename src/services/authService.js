@@ -8,6 +8,30 @@ const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 10000;
 // MODO DESARROLLO: Cambiar a false para usar backend real
 const USE_MOCK = false;
 
+// Constantes para mensajes de error (centralizados)
+const MENSAJES_ERROR = {
+  GENERICOS: 'Ocurrió un error inesperado al iniciar sesión.',
+  EMAIL_INVALIDO: 'El formato del email no es válido.',
+  CUENTA_DESHABILITADA: 'Su cuenta ha sido deshabilitada.',
+  CREDENCIALES_INVALIDAS: 'Credenciales incorrectas.',
+  TIMEOUT: 'La solicitud tomó demasiado tiempo. Intente nuevamente.'
+};
+
+/**
+ * Helper: Crear fetch con timeout (DRY)
+ * @private
+ */
+const crearFetchConTimeout = (url, opciones = {}) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+  
+  return {
+    controller,
+    timeoutId,
+    fetch: fetch(url, { ...opciones, signal: controller.signal })
+  };
+};
+
 // Event Bus simple usando Window (para desacolar sin librerías extra)
 export const AUTH_EVENTS = {
   LOGIN_SUCCESS: 'auth:login-success',
@@ -24,115 +48,157 @@ export const authService = {
    */
   async iniciarSesion(email, password) {
     if (USE_MOCK) {
-      // MOCK: Simular llamada a API
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          if (password) {
-            const mockUser = {
-              id: "mock-uid-123",
-              patient_id: 12345,
-              email: email,
-              firstName: "Usuario",
-              lastName: "Demo",
-              fullName: "Usuario Demo"
-            };
-            
-            this.emitirEvento(AUTH_EVENTS.LOGIN_SUCCESS, { uid: mockUser.id });
-            
-            resolve({
-              success: true,
-              token: "mock-jwt-token-" + Date.now(),
-              user: mockUser,
-            });
-          } else {
-            resolve({ success: false, error: "Credenciales inválidas" });
-          }
-        }, 800);
-      });
+      return this._loginMock(email, password);
     }
 
     try {
-      // 1. Autenticación con Firebase Client
-      // Esto valida email/pass y nos da el UID
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      const uid = firebaseUser.uid;
+      // 1. Autenticación con Firebase
+      const firebaseUser = await this._autenticarConFirebase(email, password);
       
-      logger.info("Firebase Auth Success. UID masked.");
-
       // 2. Autorización con API HOMA
-      // Enviamos email + UID para obtener el token de sesión y patient_id
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-      const response = await fetch(`${API_HOMA_URL}/api/v1/authorizations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          email: firebaseUser.email, 
-          UID: uid 
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Error HOMA: ${response.status}`);
-      }
-
-      const homaData = await response.json();
+      const datosHoma = await this._autorizarConHoma(firebaseUser);
       
-      if (!homaData.success) {
-        throw new Error(homaData.error || "Error en autorización HOMA");
-      }
+      // 3. Estructurar usuario
+      const usuario = this._construirObjetoUsuario(firebaseUser, datosHoma);
 
-      // Estructuramos el usuario con datos combinados
-      // NOTA: Este objeto es para uso en memoria, NO guardar completo en localStorage
-      const user = {
-        uid: uid,
-        patient_id: homaData.patient_id,
-        email: firebaseUser.email,
-        fullName: firebaseUser.displayName || email.split('@')[0],
-      };
-
-      // Emitir evento de éxito (para analytics, logs, etc)
+      // 4. Emitir evento de éxito
       this.emitirEvento(AUTH_EVENTS.LOGIN_SUCCESS, { 
-        patient_id: user.patient_id 
+        patient_id: usuario.patient_id 
       });
 
       return {
         success: true,
-        token: homaData.token,
-        user: user,
+        token: datosHoma.token,
+        user: usuario,
       };
 
     } catch (error) {
       logger.error("Login Error", error);
-      
-      // Mensaje genérico para el usuario (OWASP A09)
-      let errorMessage = "Ocurrió un error inesperado al iniciar sesión.";
-      
-      if (error.code) {
-        // Errores conocidos de Firebase
-        switch (error.code) {
-          case 'auth/invalid-email': errorMessage = 'El formato del email no es válido.'; break;
-          case 'auth/user-disabled': errorMessage = 'Su cuenta ha sido deshabilitada.'; break;
-          case 'auth/user-not-found': 
-          case 'auth/wrong-password': 
-          case 'auth/invalid-credential':
-             errorMessage = 'Credenciales incorrectas.'; 
-             break;
-        }
-      }
-
       return {
         success: false,
-        error: errorMessage
+        error: this._obtenerMensajeError(error)
       };
     }
+  },
+
+  /**
+   * Autenticar con Firebase (SRP)
+   * @private
+   */
+  async _autenticarConFirebase(email, password) {
+    const credenciales = await signInWithEmailAndPassword(auth, email, password);
+    logger.info("Firebase Auth Success. UID masked.");
+    return credenciales.user;
+  },
+
+  /**
+   * Autorizar con API HOMA (SRP)
+   * @private
+   */
+  async _autorizarConHoma(firebaseUser) {
+    const { controller, timeoutId, fetch: peticion } = crearFetchConTimeout(
+      `${API_HOMA_URL}/api/v1/authorizations`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          email: firebaseUser.email, 
+          UID: firebaseUser.uid 
+        })
+      }
+    );
+
+    try {
+      const respuesta = await peticion;
+      clearTimeout(timeoutId);
+
+      if (!respuesta.ok) {
+        throw new Error(`Error HOMA: ${respuesta.status}`);
+      }
+
+      const datos = await respuesta.json();
+      
+      if (!datos.success) {
+        throw new Error(datos.error || "Error en autorización HOMA");
+      }
+
+      return datos;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  },
+
+  /**
+   * Construir objeto usuario (SRP)
+   * @private
+   */
+  _construirObjetoUsuario(firebaseUser, datosHoma) {
+    const healthPlanId = datosHoma?.health_plan_id
+      || datosHoma?.plan_id
+      || datosHoma?.data?.health_plan_id
+      || datosHoma?.data?.plan_id
+      || datosHoma?.data?.current_plan?.id
+
+    return {
+      uid: firebaseUser.uid,
+      patient_id: datosHoma.patient_id,
+      health_plan_id: healthPlanId || null,
+      email: firebaseUser.email,
+      fullName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+    };
+  },
+
+  /**
+   * Obtener mensaje de error user-friendly (OWASP A09)
+   * @private
+   */
+  _obtenerMensajeError(error) {
+    // Timeout
+    if (error.name === 'AbortError') {
+      return MENSAJES_ERROR.TIMEOUT;
+    }
+
+    // Errores de Firebase
+    const mapaErrores = {
+      'auth/invalid-email': MENSAJES_ERROR.EMAIL_INVALIDO,
+      'auth/user-disabled': MENSAJES_ERROR.CUENTA_DESHABILITADA,
+      'auth/user-not-found': MENSAJES_ERROR.CREDENCIALES_INVALIDAS,
+      'auth/wrong-password': MENSAJES_ERROR.CREDENCIALES_INVALIDAS,
+      'auth/invalid-credential': MENSAJES_ERROR.CREDENCIALES_INVALIDAS,
+    };
+
+    return mapaErrores[error.code] || MENSAJES_ERROR.GENERICOS;
+  },
+
+  /**
+   * Mock para desarrollo (SRP)
+   * @private
+   */
+  _loginMock(email, password) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (password) {
+          const mockUser = {
+            id: "mock-uid-123",
+            patient_id: 12345,
+            email,
+            firstName: "Usuario",
+            lastName: "Demo",
+            fullName: "Usuario Demo"
+          };
+          
+          this.emitirEvento(AUTH_EVENTS.LOGIN_SUCCESS, { uid: mockUser.id });
+          resolve({
+            success: true,
+            token: "mock-jwt-token-" + Date.now(),
+            user: mockUser,
+          });
+        } else {
+          resolve({ success: false, error: MENSAJES_ERROR.CREDENCIALES_INVALIDAS });
+        }
+      }, 800);
+    });
   },
 
   /**
@@ -177,6 +243,16 @@ export const authService = {
   },
 
   /**
+   * Obtener usuario actual
+   * @returns {object|null}
+   */
+  obtenerUsuario() {
+    // Intentar recuperar de localStorage si no hay estado en memoria (este servicio es stateless por ahora)
+    const session = this.restaurarSesion();
+    return session ? session.user : null;
+  },
+
+  /**
    * Guardar sesión de forma segura (Minimizar PII)
    */
   guardarSesion(token, user) {
@@ -187,6 +263,7 @@ export const authService = {
     const sessionMeta = {
       uid: user.uid, // Necesario para identificar
       patient_id: user.patient_id, // Necesario para bootstrap de datos
+      health_plan_id: user.health_plan_id || user.healthplan_id || user.plan_id || null,
       lastLogin: Date.now()
     };
     

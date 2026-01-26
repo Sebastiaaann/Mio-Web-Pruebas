@@ -20,9 +20,9 @@ export const useTiendaUsuario = defineStore('usuario', () => {
   
   const nombreCompleto = computed(() => {
     if (!usuario.value) return '';
-    // Intentar obtener del objeto usuario o de propiedades sueltas
-    const nombre = usuario.value.nombre || usuario.value.firstName || '';
-    const apellido = usuario.value.apellido || usuario.value.lastName || '';
+    // Intentar obtener del objeto usuario (API Homa usa name/lastname, estandarizamos a esto)
+    const nombre = usuario.value.name || usuario.value.nombre || usuario.value.firstName || '';
+    const apellido = usuario.value.lastname || usuario.value.apellido || usuario.value.lastName || '';
     
     // Si tiene fullName directo (Legacy/Firebase)
     if (usuario.value.fullName) return usuario.value.fullName;
@@ -32,8 +32,8 @@ export const useTiendaUsuario = defineStore('usuario', () => {
 
   const iniciales = computed(() => {
     if (!usuario.value) return '';
-    const nombre = usuario.value.nombre || usuario.value.firstName || '';
-    const apellido = usuario.value.apellido || usuario.value.lastName || '';
+    const nombre = usuario.value.name || usuario.value.nombre || usuario.value.firstName || '';
+    const apellido = usuario.value.lastname || usuario.value.apellido || usuario.value.lastName || '';
     
     const n = nombre ? nombre[0] : '';
     const a = apellido ? apellido[0] : '';
@@ -44,7 +44,15 @@ export const useTiendaUsuario = defineStore('usuario', () => {
   // Getter para primer nombre (compatibilidad con HomeView)
   const firstName = computed(() => {
     if (!usuario.value) return '';
-    return usuario.value.nombre || usuario.value.firstName || '';
+    // Prioridad a 'name' que viene de la API
+    if (usuario.value.name) return usuario.value.name;
+    if (usuario.value.nombre || usuario.value.firstName) return usuario.value.nombre || usuario.value.firstName;
+    
+    // Fallback: extraer de fullName
+    if (usuario.value.fullName) {
+        return usuario.value.fullName.split(' ')[0];
+    }
+    return '';
   });
 
   // Actions
