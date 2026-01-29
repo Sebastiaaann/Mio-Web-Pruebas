@@ -550,7 +550,7 @@ onUnmounted(() => {
           :aria-label="'Ir a ' + page.title"
         >
           <div
-            class="w-2 h-2 rounded-full transition-all duration-300"
+            class="w-2 h-2 rounded-full transition-colors duration-300"
             :class="currentPage === index 
               ? 'bg-primary scale-125' 
               : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'"

@@ -1,49 +1,11 @@
 <!-- src/layouts/DisposicionApp.vue -->
 <script setup>
-import { ref, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref } from 'vue';
 import NavbarLateral from '@/components/layout/NavbarLateral.vue';
 import NavegacionInferior from '@/components/layout/NavegacionInferior.vue';
 import { unirClases } from '@/utils/UnirClases';
-import AlternarTema from '@/components/ui/AlternarTema.vue';
-import { useDark, useToggle } from '@vueuse/core';
-import { useMobileDetection } from '@/composables/useMobileDetection';
-
-const route = useRoute();
-
-// Dark Mode Logic - Light mode por defecto
-const isDark = useDark({
-  storageKey: 'mio-theme',
-  valueDark: 'dark',
-  valueLight: 'light',
-});
-const toggleDark = useToggle(isDark);
-
-// Título dinámico basado en la ruta
-const pageTitle = computed(() => {
-  const titles = {
-    'dashboard': 'Dashboard',
-    'dashboard-bento': 'Dashboard V2',
-    'mensajes': 'Mensajes',
-    'controles': 'Controles',
-    'ayuda': 'Ayuda',
-    'perfil': 'Perfil',
-    'mediciones': 'Mediciones',
-    'recursos': 'Recursos'
-  }
-  return titles[route.name] || 'Mio+'
-});
-
-// Rutas inmersivas donde se oculta el header
-const isImmersiveRoute = computed(() => {
-  const immersiveRoutes = ['dashboard-preventive'];
-  return immersiveRoutes.includes(route.name);
-});
 
 const sidebarVisible = ref(true);
-
-// Usar composable para detectar móvil (evita código duplicado)
-const { isMobile } = useMobileDetection();
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value;
@@ -73,49 +35,14 @@ const toggleSidebar = () => {
         sidebarVisible ? 'md:ml-72' : 'md:ml-20'
       )"
     >
-      <!-- Header Flotante (Oculto en rutas inmersivas) -->
-      <header v-if="!isImmersiveRoute" class="sticky top-0 z-30 px-6 py-4">
-        <div class="glass-panel rounded-2xl px-4 py-3 flex items-center justify-between bg-card/60 backdrop-blur-md border border-border/50">
-          <div class="flex items-center">
-            <button 
-              @click="toggleSidebar"
-              class="p-2 text-muted-foreground hover:bg-accent hover:text-primary rounded-lg transition-colors mr-4"
-              aria-label="Alternar barra lateral"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            </button>
-            
-            <h1 class="text-xl font-bold text-foreground tracking-tight">{{ pageTitle }}</h1>
-          </div>
 
-          <div class="flex items-center space-x-4">
-              <AlternarTema :isDark="isDark" @toggle="toggleDark()" />
-              
-              <!-- Placeholder para notificaciones/perfil -->
-              <div class="w-8 h-8 rounded-full bg-muted border border-border"></div>
-          </div>
-        </div>
-      </header>
       
       <!-- Área de contenido con scroll -->
-      <!-- En modo inmersivo, sin padding extra -->
       <div 
         id="contenido-principal"
         tabindex="-1"
-        :class="isImmersiveRoute ? 'flex-1 outline-none' : 'flex-1 overflow-y-auto p-6 pt-2 pb-20 md:pb-6 outline-none'">
-        <router-view v-slot="{ Component }">
-          <transition 
-            enter-active-class="transition duration-300 ease-out"
-            enter-from-class="transform opacity-0 translate-y-4"
-            enter-to-class="transform opacity-100 translate-y-0"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="transform opacity-100 translate-y-0"
-            leave-to-class="transform opacity-0 -translate-y-4"
-            mode="out-in"
-          >
-            <component :is="Component" />
-          </transition>
-        </router-view>
+        class="flex-1 overflow-y-auto outline-none">
+        <slot />
       </div>
     </main>
     
