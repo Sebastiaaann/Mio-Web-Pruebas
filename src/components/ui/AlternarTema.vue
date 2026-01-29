@@ -1,6 +1,10 @@
 <script setup>
 import { computed } from 'vue';
 
+defineOptions({
+  inheritAttrs: false
+});
+
 const props = defineProps({
   isDark: {
     type: Boolean,
@@ -10,17 +14,17 @@ const props = defineProps({
 
 defineEmits(['toggle']);
 
-// Styles for transitions
+// Estilos para transiciones
 const transitionClass = "transition-all duration-700 ease-in-out origin-center";
 
-// Sun State: Visible when NOT dark
+// Estado Sol: visible cuando NO está oscuro
 const sunClass = computed(() => {
     return props.isDark 
         ? "scale-0 opacity-0 rotate-90" 
         : "scale-100 opacity-100 rotate-0";
 });
 
-// Moon State: Visible when dark
+// Estado Luna: visible cuando está oscuro
 const moonClass = computed(() => {
     return props.isDark 
         ? "scale-100 opacity-100 rotate-0" 
@@ -31,10 +35,10 @@ const moonClass = computed(() => {
 
 <template>
   <button
+    v-bind="$attrs"
     @click="$emit('toggle')"
     class="relative flex items-center justify-center p-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-primary dark:text-gray-200 shadow-sm transition-colors cursor-pointer w-10 h-10 overflow-hidden"
-    :class="$attrs.class"
-    aria-label="Toggle Theme"
+    aria-label="Alternar tema"
   >
     <svg
       width="24"
@@ -61,8 +65,8 @@ const moonClass = computed(() => {
       </g>
 
       <!-- MOON (Overlay) -->
-      <!-- We position it absolute relative to the SVG viewbox by using a group transformation or simply overlaying it. 
-           Since standard SVG doesn't support absolute positioning of paths easily, we keep it in the same flow but transform it. -->
+      <!-- La posicionamos en el mismo flujo con transformaciones.
+           SVG estándar no soporta posicionamiento absoluto “tipo div” de forma simple, así que la mantenemos en el flujo. -->
       <g :class="[transitionClass, moonClass]">
         <path
             d="M21.1918 13.2013C21.0345 14.9035 20.3957 16.5257 19.35 17.8781C18.3044 19.2305 16.8953 20.2571 15.2875 20.8379C13.6797 21.4186 11.9398 21.5294 10.2713 21.1574C8.60281 20.7854 7.07479 19.9459 5.86602 18.7371C4.65725 17.5283 3.81774 16.0003 3.4457 14.3318C3.07367 12.6633 3.18451 10.9234 3.76526 9.31561C4.346 7.70783 5.37263 6.29868 6.72501 5.25307C8.07739 4.20746 9.69959 3.56862 11.4018 3.41132C10.4052 4.75958 9.92564 6.42077 10.0503 8.09273C10.175 9.76469 10.8957 11.3364 12.0812 12.5219C13.2667 13.7075 14.8384 14.4281 16.5104 14.5528C18.1823 14.6775 19.8435 14.1979 21.1918 13.2013Z"
@@ -77,10 +81,10 @@ const moonClass = computed(() => {
 </template>
 
 <style scoped>
-/* Ensure the groups stack on top of each other by default if not transformed away. 
-   SVG 'g' elements don't strictly support absolute positioning like divs, 
-   but since one scales to 0, they won't visually overlap in a messy way. 
-   However, we should ensure the transformation origin is correct. */
+/* Asegura que los grupos se apilen correctamente si no están transformados.
+   Los elementos 'g' de SVG no soportan posicionamiento absoluto como divs,
+   pero al escalar a 0 uno de ellos, no se superponen de forma visible.
+   Aun así, aseguramos que el origen de transformación sea el correcto. */
    
 g {
     transform-box: fill-box;

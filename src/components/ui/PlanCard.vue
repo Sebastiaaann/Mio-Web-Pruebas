@@ -47,6 +47,8 @@ function handleSelect() {
           v-if="plan.logo" 
           :src="plan.logo" 
           :alt="plan.subtitle || 'Logo del plan'"
+          width="120" height="48"
+          loading="lazy" decoding="async"
           class="h-full w-auto object-contain"
         />
         <span v-else class="text-2xl font-black tracking-tighter text-gray-400 opacity-60">
@@ -81,7 +83,7 @@ function handleSelect() {
       <button 
         @click="handleSelect"
         :style="{ backgroundColor: accentColor }"
-        class="w-full rounded-full py-3 px-6 text-white font-bold tracking-wide uppercase shadow-lg hover:opacity-90 active:scale-95 transition-all"
+        class="w-full rounded-full py-3 px-6 text-white font-bold tracking-wide uppercase shadow-lg hover:opacity-90 active:scale-95 transition-colors transition-transform"
       >
         OBTENER
       </button>
