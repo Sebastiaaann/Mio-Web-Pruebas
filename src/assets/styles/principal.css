@@ -1,7 +1,7 @@
 /* src/assets/styles/principal.css */
 
 /* Cabinet Grotesk Font */
-@import url('/css/cabinet-grotesk.css');
+@import url("/css/cabinet-grotesk.css");
 
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
@@ -45,7 +45,36 @@
   /* slate-200 */
 
   /* Cabinet Grotesk Font Family */
-  --font-family-cabinet: 'CabinetGrotesk-Variable', sans-serif;
+  --font-family-cabinet: "CabinetGrotesk-Variable", sans-serif;
+
+  /* Redesign Colors */
+  --color-primary: #ff9500;
+  --color-health-green: #10b981;
+  --color-alert-red: #dc2626;
+  --color-gray-bg: #f3f4f6;
+  --color-gray-border: #e5e7eb;
+  --color-gray-text: #374151;
+  --color-gray-text-light: #6b7280;
+
+  /* Redesign Fonts */
+  --font-display: "Cabinet Grotesk", sans-serif;
+  --font-body: "Satoshi", sans-serif;
+  --font-label: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* Custom Base Styles for Fonts */
+.font-display {
+  font-family: "Cabinet Grotesk", sans-serif;
+}
+.font-label {
+  font-family: "Space Grotesk", sans-serif;
+}
+.font-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+.font-body {
+  font-family: "Satoshi", sans-serif;
 }
 
 :root {
@@ -205,7 +234,10 @@ body {
     box-shadow:
       4px 4px 10px rgba(139, 92, 246, 0.3),
       -4px -4px 10px rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease-out;
+    transition:
+      box-shadow 0.2s ease-out,
+      transform 0.2s ease-out,
+      background-color 0.2s ease-out;
   }
 
   .neu-button:hover {
@@ -237,17 +269,20 @@ body {
 
 @layer components {
   .homa-card {
-    @apply bg-white/80 backdrop-blur-sm rounded-[1.25rem] shadow-sm border border-white/60 p-6 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1;
+    @apply bg-white/80 backdrop-blur-sm rounded-[1.25rem] shadow-sm border border-white/60 p-6;
+    @apply transition-transform transition-shadow transition-colors duration-300;
   }
 
   /* Primary Button */
   .homa-button {
-    @apply bg-homa-primary text-white font-medium px-5 py-2.5 rounded-xl transition-all duration-200 hover:bg-homa-primary-light hover:shadow-lg hover:shadow-teal-500/30 active:scale-95;
+    @apply bg-homa-primary text-white font-medium px-5 py-2.5 rounded-xl;
+    @apply transition-colors transition-transform transition-shadow duration-200 hover:bg-homa-primary-light hover:shadow-lg hover:shadow-teal-500/30 active:scale-95;
   }
 
   /* Outline Button */
   .homa-button-outline {
-    @apply bg-transparent text-homa-primary font-medium px-5 py-2.5 rounded-xl transition-all duration-200 border border-homa-primary/30 hover:bg-homa-primary-soft hover:border-homa-primary active:scale-95;
+    @apply bg-transparent text-homa-primary font-medium px-5 py-2.5 rounded-xl border border-homa-primary/30;
+    @apply transition-colors transition-transform duration-200 hover:bg-homa-primary-soft hover:border-homa-primary active:scale-95;
   }
 
   .homa-layout {
@@ -344,5 +379,18 @@ body {
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Respect user's reduced motion preference for floating animations and smooth scroll */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-slow,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  html {
+    scroll-behavior: auto !important;
   }
 }

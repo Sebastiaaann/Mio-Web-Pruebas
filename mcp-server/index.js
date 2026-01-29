@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import dotenv from "dotenv";
+import { writeFileSync } from 'fs';
 
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -12,18 +13,30 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
 
 const API_HOMA_URL = process.env.API_HOMA_URL || "https://apihoma.homa.cl:7200";
-const HOMA_API_KEY = process.env.HOMA_API_KEY;
+let HOMA_API_KEY = process.env.HOMA_API_KEY;
 
-if (!HOMA_API_KEY) {
-  console.error("Error: HOMA_API_KEY environment variable is required.");
-  process.exit(1);
-}
+// Variable para almacenar el token actual
+let currentToken = HOMA_API_KEY;
 
 // Create server instance
 const server = new McpServer({
   name: "homa-api-server",
   version: "1.0.0",
 });
+
+// Helper function to update token in .env file
+function updateEnvToken(newToken) {
+  try {
+    const envPath = join(__dirname, '.env');
+    const envContent = `API_HOMA_URL=${API_HOMA_URL}\nHOMA_API_KEY=${newToken}\n\n\nTEST_PATIENT_ID=${process.env.TEST_PATIENT_ID || '75863'}`;
+    writeFileSync(envPath, envContent);
+    currentToken = newToken;
+    HOMA_API_KEY = newToken;
+    console.error(`Token updated successfully`);
+  } catch (error) {
+    console.error(`Error updating token: ${error.message}`);
+  }
+}
 
 // Helper function for GET API requests
 async function makeApiRequest(endpoint) {
@@ -33,7 +46,7 @@ async function makeApiRequest(endpoint) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': HOMA_API_KEY
+        'X-API-KEY': currentToken || HOMA_API_KEY
       }
     });
 
@@ -573,13 +586,166 @@ server.tool(
 );
 
 // ============================================
+// AUTH - Login Endpoint
+// ============================================
+
+// Tool: Login to HOMA API using Firebase UID
+server.tool(
+  "login_homa",
+  "Login to HOMA API to get a valid JWT token using Firebase UID",
+  {
+    email: z.string().email().describe("Email address for login"),
+    uid: z.string().describe("Firebase UID for authorization"),
+  },
+  async ({ email, uid }) => {
+    const url = `${API_HOMA_URL}/api/v1/authorizations`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, UID: uid })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return { 
+          isError: true,
+          content: [{ 
+            type: "text", 
+            text: `Login Error ${response.status}: ${errorText}` 
+          }]
+        };
+      }
+
+      const data = await response.json();
+      
+      // If login successful and token is returned, update the token
+      if (data.token || data.accessToken || data.jwt) {
+        const newToken = data.token || data.accessToken || data.jwt;
+        updateEnvToken(newToken);
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Login successful! Token updated.\nUser: ${data.user?.email || email}\nToken expires: ${data.expiresAt || 'N/A'}` 
+          }]
+        };
+      }
+
+      return {
+        content: [{ 
+          type: "text", 
+          text: JSON.stringify(data, null, 2) 
+        }]
+      };
+    } catch (error) {
+      return {
+        isError: true,
+        content: [{ 
+          type: "text", 
+          text: `Network Error: ${error.message}` 
+        }]
+      };
+    }
+  }
+);
+
+// Tool: Refresh Token
+server.tool(
+  "refresh_token",
+  "Refresh the current JWT token",
+  {},
+  async () => {
+    const url = `${API_HOMA_URL}/api/v1/auth/refresh`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': currentToken || HOMA_API_KEY
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return { 
+          isError: true,
+          content: [{ 
+            type: "text", 
+            text: `Refresh Error ${response.status}: ${errorText}` 
+          }]
+        };
+      }
+
+      const data = await response.json();
+      
+      // If refresh successful and token is returned, update the token
+      if (data.token || data.accessToken || data.jwt) {
+        const newToken = data.token || data.accessToken || data.jwt;
+        updateEnvToken(newToken);
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Token refreshed successfully!\nNew token expires: ${data.expiresAt || 'N/A'}` 
+          }]
+        };
+      }
+
+      return {
+        content: [{ 
+          type: "text", 
+          text: JSON.stringify(data, null, 2) 
+        }]
+      };
+    } catch (error) {
+      return {
+        isError: true,
+        content: [{ 
+          type: "text", 
+          text: `Network Error: ${error.message}` 
+        }]
+      };
+    }
+  }
+);
+
+// Tool: Set Token Manually
+server.tool(
+  "set_token",
+  "Manually set a JWT token for API authentication",
+  {
+    token: z.string().describe("The JWT token to use for API calls"),
+  },
+  async ({ token }) => {
+    try {
+      updateEnvToken(token);
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Token updated successfully! The new token will be used for all subsequent API calls.` 
+        }]
+      };
+    } catch (error) {
+      return {
+        isError: true,
+        content: [{ 
+          type: "text", 
+          text: `Error setting token: ${error.message}` 
+        }]
+      };
+    }
+  }
+);
+
+// ============================================
 // Start Server
 // ============================================
 
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("HOMA MCP Server running on stdio - 25 tools available");
+  console.error("HOMA MCP Server running on stdio - 28 tools available (including auth tools)");
 }
 
 main().catch((error) => {

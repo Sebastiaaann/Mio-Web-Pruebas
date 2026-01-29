@@ -18,9 +18,22 @@
 								"exec": [
 									"var jsonData = pm.response.json();",
 									"if (jsonData.success) {",
-									"    pm.collectionVariables.set(\"token\", jsonData.token);",
-									"    pm.collectionVariables.set(\"patient_id\", jsonData.patient_id);",
-									"    console.log(\"Token y Patient ID actualizados\");",
+									"    var token = jsonData.token;",
+									"    var patient_id = jsonData.patient_id;",
+									"    console.log(\"!!! TOKEN RECEIVED !!!\", token);",
+									"    ",
+									"    // 1. Postman Standard Scopes",
+									"    if (pm.collectionVariables) { pm.collectionVariables.set(\"token\", token); pm.collectionVariables.set(\"patient_id\", patient_id); }",
+									"    if (pm.environment) { pm.environment.set(\"token\", token); pm.environment.set(\"patient_id\", patient_id); }",
+									"    if (pm.globals) { pm.globals.set(\"token\", token); pm.globals.set(\"patient_id\", patient_id); }",
+									"",
+									"    // 2. Bruno Specific (Force Env & Var)",
+									"    if (typeof bru !== 'undefined') {",
+									"        console.log(\"!!! BRUNO DETECTED !!!\");",
+									"        if (bru.setVar) { bru.setVar(\"token\", token); bru.setVar(\"patient_id\", patient_id); }",
+									"        if (bru.setEnvVar) { bru.setEnvVar(\"token\", token); bru.setEnvVar(\"patient_id\", patient_id); }",
+									"    }",
+									"    console.log(\"Token updated in all available scopes\");",
 									"}"
 								],
 								"type": "text/javascript"
@@ -64,8 +77,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
+								"key": "X-API-KEY",
+								"value": "{{token}}"
 							}
 						],
 						"url": {
@@ -88,8 +101,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
+								"key": "X-API-KEY",
+								"value": "{{token}}"
 							}
 						],
 						"url": {
@@ -113,8 +126,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}"
+								"key": "X-API-KEY",
+								"value": "{{token}}"
 							}
 						],
 						"url": {
@@ -128,6 +141,677 @@
 								"patients",
 								"plans",
 								"{{patient_id}}"
+							]
+						}
+					}
+				}
+,
+				{
+					"name": "5. Listar Pacientes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients"
+							]
+						}
+					}
+				},
+				{
+					"name": "6. Obtener Campañas del Paciente",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/{{patient_id}}/campaigns",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"{{patient_id}}",
+								"campaigns"
+							]
+						}
+					}
+				},
+				{
+					"name": "7. Obtener Más Planes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/more_plans/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"more_plans",
+								"{{patient_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "8. Obtener Material Audiovisual",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/material_audiovisual/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"material_audiovisual",
+								"{{patient_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "9. Crear Paciente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients"
+							]
+						}
+					}
+				},
+				{
+					"name": "10. Asignar Campaña",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patient_id\": \"{{patient_id}}\",\n    \"campaign_id\": \"CAMPAIGN_ID\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/setcampaing",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"setcampaing"
+							]
+						}
+					}
+				},
+				{
+					"name": "11. Desasignar Campaña",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patient_id\": \"{{patient_id}}\",\n    \"campaign_id\": \"CAMPAIGN_ID\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/unsetcampaing",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"unsetcampaing"
+							]
+						}
+					}
+				},
+				{
+					"name": "12. Enviar Push Notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"patient_id\": \"{{patient_id}}\",\n    \"message\": \"Test Notification\",\n    \"title\": \"Test Title\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/sendpushnotification",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"sendpushnotification"
+							]
+						}
+					}
+				},
+				{
+					"name": "13. Actualizar Plan",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/patients/plans/{{patient_id}}/PLAN_ID",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"patients",
+								"plans",
+								"{{patient_id}}",
+								"PLAN_ID"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Protocolos",
+			"item": [
+				{
+					"name": "1. Protocolos por HealthPlan",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/protocols/HEALTHPLAN_ID",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"protocols",
+								"HEALTHPLAN_ID"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Detalle Protocolo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/protocol/PROTOCOL_ID",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"protocol",
+								"PROTOCOL_ID"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. Observaciones Protocolo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/protocol/observations/{{patient_id}}/PROTOCOL_ID",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"protocol",
+								"observations",
+								"{{patient_id}}",
+								"PROTOCOL_ID"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. Último Info Control",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/protocol/last_info_control/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"protocol",
+								"last_info_control",
+								"{{patient_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "5. Último Control",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/protocol/last_control/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"protocol",
+								"last_control",
+								"{{patient_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "6. Rango Observación",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/protocol/observation_range/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"protocol",
+								"observation_range",
+								"{{patient_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "HealthPlans",
+			"item": [
+				{
+					"name": "1. HealthPlans por Paciente",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/healthplans/{{patient_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"healthplans",
+								"{{patient_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Campañas",
+			"item": [
+				{
+					"name": "1. Todas las Campañas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/campaigns/all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"campaigns",
+								"all"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Parámetros",
+			"item": [
+				{
+					"name": "1. Obtener Parámetro",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/parameters/CODEPARAM",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parameters",
+								"CODEPARAM"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Servicios",
+			"item": [
+				{
+					"name": "1. Marcar Uso Servicio",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/services/setuseservice",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"services",
+								"setuseservice"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Marcar Uso Servicio ClickUp",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/services/setuseserviceclickup/SERVICE/DOCUMENT/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"services",
+								"setuseserviceclickup",
+								"SERVICE",
+								"DOCUMENT",
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Integraciones",
+			"item": [
+				{
+					"name": "1. Activar Hanu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/hanu/activate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hanu",
+								"activate"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Activar PDMS",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/pdms/activate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pdms",
+								"activate"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Batch",
+			"item": [
+				{
+					"name": "1. Tipos de Observación",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-KEY",
+								"value": "{{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/batch/observation_types",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"batch",
+								"observation_types"
 							]
 						}
 					}

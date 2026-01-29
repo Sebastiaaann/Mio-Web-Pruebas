@@ -3,14 +3,16 @@ import "./assets/styles/principal.css"; // Tailwind CSS + shadcn variables
 
 import { createApp } from "vue";
 import { createPinia } from "pinia";
+import { piniaPersistPlugin } from "./plugins/piniaPersist";
 
 import App from "./App.vue";
 import router from "./router";
 
 const app = createApp(App);
 
-// Inicializamos los módulos
+// Inicializamos Pinia con plugin de persistencia
 const pinia = createPinia();
+pinia.use(piniaPersistPlugin);
 app.use(pinia);
 
 // Restaurar sesión antes de montar el router
