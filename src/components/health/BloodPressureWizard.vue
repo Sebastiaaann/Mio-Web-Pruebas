@@ -210,36 +210,121 @@ function handleKeydown(e) {
                     </div>
                 </div>
 
-                <!-- STEP 2: Feeling (Wallet List Style Light) -->
+                <!-- STEP 2: Estado de Ánimo -->
                 <div 
                     v-else-if="step === 2" 
                     key="step-2"
                     class="flex flex-col w-full"
                 >
-                    <div class="text-center mb-6">
-                        <h2 class="text-lg font-bold text-gray-900">¿Cómo te sientes?</h2>
-                        <p class="text-xs text-gray-500 mt-1">Selecciona tu estado actual</p>
+                    <!-- Question Header -->
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">¿Cómo te sientes hoy?</h2>
+                        <p class="text-sm text-gray-500">Tu estado emocional puede influir en tus mediciones</p>
                     </div>
 
-                    <div class="space-y-3 w-full">
+                    <!-- Mood Options Grid -->
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <!-- Good Mood -->
                         <button 
-                            v-for="option in [
-                                { value: 'bien', label: 'Me siento Bien', icon: '😊' },
-                                { value: 'regular', label: 'Me siento Regular', icon: '😐' },
-                                { value: 'mal', label: 'Me siento Mal', icon: '😞' }
-                            ]" 
-                            :key="option.value"
-                            @click="() => { form.feeling = option.value; nextStep() }"
-                            class="w-full group flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-md transition-all active:scale-[0.98]"
+                            @click="form.feeling = 'bien'"
+                            class="group relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer"
+                            :class="form.feeling === 'bien' 
+                                ? 'border-blue-500 bg-emerald-50 scale-105' 
+                                : 'border-transparent bg-emerald-50 hover:bg-emerald-100 hover:-translate-y-1'"
                         >
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                                    {{ option.icon }}
-                                </div>
-                                <span class="font-medium text-gray-700 group-hover:text-gray-900 transition-colors text-base">{{ option.label }}</span>
+                            <div class="text-center">
+                                <div class="text-6xl mb-3 transform transition-transform group-hover:scale-110">😊</div>
+                                <p class="font-semibold text-gray-900 text-sm">Me siento Bien</p>
+                                <p class="text-xs text-gray-500 mt-1">Energía positiva</p>
                             </div>
-                            <ChevronRight class="w-5 h-5 text-gray-300 group-hover:text-gray-400" />
+                            <!-- Checkmark when selected -->
+                            <div 
+                                class="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center transition-all duration-200"
+                                :class="form.feeling === 'bien' ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+                            >
+                                <Check class="text-white w-3.5 h-3.5" />
+                            </div>
                         </button>
+
+                        <!-- Regular Mood -->
+                        <button 
+                            @click="form.feeling = 'regular'"
+                            class="group relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer"
+                            :class="form.feeling === 'regular' 
+                                ? 'border-blue-500 bg-amber-50 scale-105' 
+                                : 'border-transparent bg-amber-50 hover:bg-amber-100 hover:-translate-y-1'"
+                        >
+                            <div class="text-center">
+                                <div class="text-6xl mb-3 transform transition-transform group-hover:scale-110">😐</div>
+                                <p class="font-semibold text-gray-900 text-sm">Regular</p>
+                                <p class="text-xs text-gray-500 mt-1">Neutral / Estable</p>
+                            </div>
+                            <!-- Checkmark when selected -->
+                            <div 
+                                class="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center transition-all duration-200"
+                                :class="form.feeling === 'regular' ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+                            >
+                                <Check class="text-white w-3.5 h-3.5" />
+                            </div>
+                        </button>
+
+                        <!-- Bad Mood -->
+                        <button 
+                            @click="form.feeling = 'mal'"
+                            class="group relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer"
+                            :class="form.feeling === 'mal' 
+                                ? 'border-blue-500 bg-red-50 scale-105' 
+                                : 'border-transparent bg-red-50 hover:bg-red-100 hover:-translate-y-1'"
+                        >
+                            <div class="text-center">
+                                <div class="text-6xl mb-3 transform transition-transform group-hover:scale-110">😞</div>
+                                <p class="font-semibold text-gray-900 text-sm">Mal</p>
+                                <p class="text-xs text-gray-500 mt-1">Con dificultades</p>
+                            </div>
+                            <!-- Checkmark when selected -->
+                            <div 
+                                class="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center transition-all duration-200"
+                                :class="form.feeling === 'mal' ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+                            >
+                                <Check class="text-white w-3.5 h-3.5" />
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Selected Mood Indicator -->
+                    <div 
+                        class="text-center mb-6 transition-all duration-300"
+                        :class="form.feeling ? 'opacity-100' : 'opacity-0'"
+                    >
+                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full">
+                            <Activity class="w-4 h-4 text-blue-500" />
+                            <span class="text-sm font-medium text-blue-600">
+                                Has seleccionado: {{ form.feeling === 'bien' ? 'Me siento Bien' : form.feeling === 'regular' ? 'Regular' : form.feeling === 'mal' ? 'Mal' : '' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                        <button 
+                            @click="prevStep" 
+                            class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
+                        >
+                            <ArrowLeft class="w-4 h-4" />
+                            Atrás
+                        </button>
+                        
+                        <Button 
+                            :disabled="!canProceedFromStep2" 
+                            class="flex items-center gap-2 px-6 py-2 rounded-xl font-semibold text-sm transition-all"
+                            :class="canProceedFromStep2 
+                                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-200' 
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                            @click="nextStep"
+                        >
+                            Continuar
+                            <ChevronRight class="w-4 h-4" />
+                        </Button>
                     </div>
                 </div>
 
