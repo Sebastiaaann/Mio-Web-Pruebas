@@ -96,6 +96,35 @@ export function validarLongitud(texto, min, max) {
   return longitud >= min && longitud <= max;
 }
 
+/**
+ * Valida que un texto libre no contenga etiquetas HTML
+ * @param {string} texto - Texto a validar
+ * @returns {boolean} true si es seguro
+ * @example
+ * esTextoSeguro('Sin etiquetas') // true
+ * esTextoSeguro('<script>alert(1)</script>') // false
+ */
+export function esTextoSeguro(texto) {
+  if (!texto) return true;
+  const patronPeligroso = /<[^>]*>/g;
+  return !patronPeligroso.test(texto);
+}
+
+/**
+ * Valida texto libre con longitud máxima y seguridad básica
+ * @param {string} texto - Texto a validar
+ * @param {number} max - Longitud máxima
+ * @returns {boolean} true si es válido
+ * @example
+ * validarTextoLibre('Sin etiquetas', 300) // true
+ * validarTextoLibre('<b>Hola</b>', 300) // false
+ */
+export function validarTextoLibre(texto, max = 300) {
+  if (!texto) return true;
+  if (texto.length > max) return false;
+  return esTextoSeguro(texto);
+}
+
 // Re-exportar funciones de RUT desde rutValidator para consolidar en un solo archivo
 // Esto mantiene compatibilidad con imports existentes
 export {

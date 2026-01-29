@@ -27,8 +27,29 @@ Object.defineProperty(global, 'localStorage', {
   configurable: true
 })
 
+// Mock de @vueuse/core para tests
+vi.mock('@vueuse/core', () => ({
+  toValue: (val) => {
+    // Implementación simple de toValue
+    if (val && typeof val === 'object' && 'value' in val) {
+      return val.value
+    }
+    if (typeof val === 'function') {
+      return val()
+    }
+    return val
+  },
+  toRef: (val) => {
+    // Implementación simple de toRef
+    if (val && typeof val === 'object' && 'value' in val) {
+      return val
+    }
+    return { value: val }
+  }
+}))
+
 // Configuración global para componentes
 beforeEach(() => {
   vi.clearAllMocks()
-  localStorage.clear()
+  memoriaStorage.clear()
 })
