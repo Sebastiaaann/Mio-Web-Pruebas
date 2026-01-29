@@ -1,297 +1,553 @@
 <script setup>
-/**
- * DashboardPreventiveView - Vista preventiva inspirada en el diseño moderno
- * Layout de 3 columnas:
- * 1. Izquierda: Perfil + Última Medición
- * 2. Centro: Próximos Controles + Campañas
- * 3. Derecha: Videos Educativos
- */
-import { ref, onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/tiendaUsuario'
-import { useHealthStore } from '@/stores/tiendaSalud'
+import { ref, onMounted, nextTick } from "vue";
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/stores/tiendaUsuario";
+import { useHealthStore } from "@/stores/tiendaSalud";
+import Chart from 'chart.js/auto';
+import emblaCarouselVue from "embla-carousel-vue";
+import Autoplay from "embla-carousel-autoplay";
 
-// Shadcn components
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+// Stores
+const userStore = useUserStore();
+const healthStore = useHealthStore();
+const { firstName, fullName, user } = storeToRefs(userStore);
+const { historialMediciones, controlesProximos, videos } = storeToRefs(healthStore);
 
-// Lucide icons
-import { 
-  FileEdit, 
-  Settings, 
-  Heart, 
-  ArrowRight, 
-  Megaphone, 
-  Shield,
-  Calendar,
-  CalendarX,
-  Video,
-  Play,
-  Loader2,
-  Activity,
-  User 
-} from 'lucide-vue-next'
+// Carousel Setup (for Education/Videos)
+const [emblaRef] = emblaCarouselVue({ loop: true, align: 'start' }, [Autoplay()]);
 
-// Custom components
-import TarjetaSalud from '@/components/health/TarjetaSalud.vue'
-import IconoEstado from '@/components/ui/IconoEstado.vue'
-// import ControlFormDialog from '@/components/health/ControlFormDialog.vue'
+// Chart References
+const chartPresion = ref(null);
+const chartGlucosa = ref(null);
+const chartPeso = ref(null);
+const chartFC = ref(null);
 
-const router = useRouter()
-const userStore = useUserStore()
-const healthStore = useHealthStore()
+onMounted(async () => {
+    // Mock login/data init if needed
+    if (!userStore.isAuthenticated) userStore.mockLogin();
+    healthStore.initMockData();
 
-const { firstName, fullName, user } = storeToRefs(userStore)
-const { ultimaMedicion, controlesProximos, campanhas, videos, loading } = storeToRefs(healthStore)
+    await nextTick();
+    initCharts();
+});
 
-// Dialog State
-const isControlDialogOpen = ref(false)
-const selectedControl = ref({})
+const initCharts = () => {
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9CA3AF' } },
+            y: { grid: { color: '#F3F4F6' }, ticks: { font: { size: 10 }, color: '#9CA3AF' } }
+        },
+        elements: { point: { radius: 0, hitRadius: 10, hoverRadius: 4 } }
+    };
 
-onMounted(() => {
-  // Mock login para desarrollo
-  if (!userStore.isAuthenticated) {
-    userStore.mockLogin()
-  }
-  
-  // Cargar datos de salud
-  healthStore.initMockData()
-})
+    // Presión Arterial
+    if (chartPresion.value) {
+        new Chart(chartPresion.value, {
+            type: 'line',
+            data: {
+                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                datasets: [
+                    { label: 'Sistólica', data: [118, 120, 122, 119, 121, 118, 120], borderColor: '#DC2626', backgroundColor: '#DC2626', borderWidth: 2, tension: 0.4 },
+                    { label: 'Diastólica', data: [78, 80, 79, 77, 79, 78, 80], borderColor: '#F87171', backgroundColor: '#F87171', borderWidth: 2, tension: 0.4 }
+                ]
+            },
+            options: commonOptions
+        });
+    }
 
-function irAOnboarding() {
-  router.push('/onboarding')
-}
+    // Glucosa
+    if (chartGlucosa.value) {
+        new Chart(chartGlucosa.value, {
+            type: 'line',
+            data: {
+                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'Glucosa', data: [98, 96, 94, 92, 95, 93, 94], borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, tension: 0.4
+                }]
+            },
+            options: commonOptions
+        });
+    }
 
-function handleControlClick(control) {
-  selectedControl.value = control
-  isControlDialogOpen.value = true
-}
+    // Peso
+    if (chartPeso.value) {
+        new Chart(chartPeso.value, {
+            type: 'line',
+            data: {
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7'],
+                datasets: [{
+                    label: 'Peso', data: [70.2, 69.8, 69.5, 69.2, 68.9, 68.7, 68.5], borderColor: '#FF9500', backgroundColor: '#FF9500', borderWidth: 2, tension: 0.4
+                }]
+            },
+            options: commonOptions
+        });
+    }
 
-function handleControlSubmit(data) {
-  // console.log('Datos enviados desde el dashboard:', data)
-  // Aquí podrías mostrar un toast de éxito
-}
+    // Frecuencia Cardíaca
+    if (chartFC.value) {
+        new Chart(chartFC.value, {
+            type: 'line',
+            data: {
+                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'FC', data: [72, 74, 71, 73, 72, 70, 72], borderColor: '#9333EA',
+                    backgroundColor: (ctx) => {
+                        const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+                        gradient.addColorStop(0, 'rgba(147, 51, 234, 0.3)');
+                        gradient.addColorStop(1, 'rgba(147, 51, 234, 0)');
+                        return gradient;
+                    },
+                    borderWidth: 2, fill: true, tension: 0.4
+                }]
+            },
+            options: commonOptions
+        });
+    }
+};
 
-function playVideo(video) {
-  console.log('Reproducir video:', video.titulo)
-}
 </script>
 
 <template>
-  <div class="dashboard-preventive h-full w-full">
+  <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
     
-    <!-- Grid Layout Principal -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
-
-      <!-- COLUMNA IZQUIERDA (3/12) - Perfil y Resumen -->
-      <div class="lg:col-span-3 flex flex-col gap-4 h-full">
-        
-        <!-- Tarjeta de Perfil -->
-        <Card class="bg-card border-border shadow-sm flex-shrink-0">
-          <CardContent class="p-6 flex flex-col items-center text-center">
-            <div class="relative mb-4">
-               <Avatar class="h-24 w-24 border-4 border-background shadow-lg">
-                  <AvatarImage :src="user?.avatar" alt="Avatar" />
-                  <AvatarFallback class="bg-primary/10 text-primary text-2xl font-bold">
-                    {{ firstName.charAt(0) }}
-                  </AvatarFallback>
-               </Avatar>
-               <div class="absolute bottom-0 right-0 bg-emerald-500 rounded-full p-1.5 border-4 border-card">
-                 <div class="w-3 h-3 bg-white rounded-full"></div>
-               </div>
+    <!-- Content Area -->
+    <div class="p-4 sm:p-8 space-y-6">
+        <!-- Tabs -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="flex border-b border-gray-200 overflow-x-auto">
+                <button class="tab-active px-6 py-4 font-medium text-sm flex items-center gap-2 whitespace-nowrap">
+                    <iconify-icon icon="lucide:activity"></iconify-icon>
+                    Mediciones
+                </button>
+                <button class="px-6 py-4 text-gray-500 hover:text-gray-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
+                    <iconify-icon icon="lucide:bar-chart-3"></iconify-icon>
+                    Análisis
+                </button>
+                <button class="px-6 py-4 text-gray-500 hover:text-gray-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
+                    <iconify-icon icon="lucide:pill"></iconify-icon>
+                    Medicamentos
+                </button>
             </div>
-            
-            <h2 class="text-xl font-bold text-foreground mb-1">{{ fullName }}</h2>
-            <p class="text-xs text-muted-foreground uppercase tracking-wider mb-4">ID: #48291</p>
-            
-            <div class="flex gap-2 mb-6">
-              <Badge variant="secondary" class="bg-primary/10 text-primary hover:bg-primary/20">Usuario MIO+</Badge>
-            </div>
+        </div>
 
-            <div class="grid grid-cols-2 gap-3 w-full">
-              <Button class="w-full bg-primary text-primary-foreground hover:bg-primary/90" @click="irAOnboarding">
-                <FileEdit class="mr-2 h-4 w-4" />
-                Editar
-              </Button>
-              <Button variant="outline" class="w-full border-border text-foreground hover:bg-accent" @click="router.push('/perfil')">
-                <Settings class="mr-2 h-4 w-4" />
-                Perfil
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div class="flex flex-col xl:flex-row gap-6">
+            <!-- Main Content -->
+            <div class="flex-1 space-y-6 min-w-0">
+                <!-- Date Filters -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <iconify-icon icon="lucide:calendar" class="text-gray-400"></iconify-icon>
+                        <span class="text-sm text-gray-700 font-medium">Período:</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg shadow-sm hover:bg-orange-600 transition-colors">7 días</button>
+                        <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">30 días</button>
+                        <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">90 días</button>
+                    </div>
+                </div>
 
-        <!-- Última Medición (Adaptada visualmente) -->
-        <Card class="bg-card border-border shadow-sm overflow-hidden flex-1">
-          <CardHeader class="pb-2">
-            <div class="flex items-center justify-between">
-              <CardTitle class="text-base font-semibold text-foreground flex items-center gap-2">
-                <Activity class="h-4 w-4 text-primary" />
-                Última Medición
-              </CardTitle>
-              <Badge :variant="ultimaMedicion?.estado === 'normal' ? 'default' : 'destructive'" class="uppercase text-[10px]">
-                {{ ultimaMedicion?.estado || 'N/A' }}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent class="p-6 pt-2 h-full flex flex-col justify-end">
-             <div class="flex items-baseline gap-2 mb-4">
-               <span class="text-4xl font-bold text-foreground">
-                 {{ ultimaMedicion?.valor && ultimaMedicion.valor !== 'N/A' ? ultimaMedicion.valor : '--' }}
-               </span>
-               <span class="text-sm text-muted-foreground">{{ ultimaMedicion?.unidad }}</span>
-             </div>
-             
-             <!-- Sparkline decorativa CSS -->
-             <div class="h-10 w-full flex items-end gap-1 mb-2 opacity-50">
-               <div class="w-1/6 bg-primary/20 rounded-t-sm h-[40%]"></div>
-               <div class="w-1/6 bg-primary/30 rounded-t-sm h-[60%]"></div>
-               <div class="w-1/6 bg-primary/40 rounded-t-sm h-[30%]"></div>
-               <div class="w-1/6 bg-primary/60 rounded-t-sm h-[80%]"></div>
-               <div class="w-1/6 bg-primary/80 rounded-t-sm h-[50%]"></div>
-               <div class="w-1/6 bg-primary rounded-t-sm h-[70%]"></div>
-             </div>
-             
-             <div class="text-xs text-muted-foreground flex items-center gap-1">
-               <IconoEstado :status="ultimaMedicion?.estado || 'na'" size="sm" />
-               <span class="ml-1">Estado General</span>
-             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <!-- COLUMNA CENTRAL (6/12) - Controles y Campañas -->
-      <div class="lg:col-span-6 flex flex-col gap-4 h-full">
-        
-        <!-- Próximos Controles -->
-        <section class="flex-shrink-0">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-foreground">Próximos Controles</h3>
-            <Button variant="ghost" size="sm" class="text-primary hover:text-primary/80 hover:bg-primary/10" @click="router.push('/controles')">
-              Ver todos <ArrowRight class="ml-1 h-4 w-4" />
-            </Button>
-          </div>
-
-          <!-- Grid -->
-          <div v-if="controlesProximos.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <TarjetaSalud
-              v-for="control in controlesProximos"
-              :key="control.id"
-              :titulo="control.nombre"
-              :descripcion="control.descripcion"
-              :fecha="control.fechaProgramada"
-              :icono="control.icono"
-              :color="control.color"
-              :estado="control.estado"
-              @click="handleControlClick(control)"
-              class="h-full"
-            />
-          </div>
-          
-           <!-- Empty state -->
-          <Card v-else class="border-dashed border-border bg-card/50">
-            <CardContent class="py-8 text-center text-muted-foreground flex flex-col items-center">
-              <CalendarX class="h-10 w-10 mb-2 opacity-50" />
-              <p>No hay controles programados</p>
-            </CardContent>
-          </Card>
-        </section>
-
-        <!-- Campañas (Expands to fill vertical space) -->
-        <section v-if="campanhas.length > 0" class="flex-1 flex flex-col">
-           <h3 class="text-lg font-bold text-foreground mb-4">Campañas Activas</h3>
-           <div class="flex-1">
-              <article 
-                v-for="campanha in campanhas" 
-                :key="campanha.id"
-                class="h-full relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-violet-600 to-indigo-700 p-6 text-white shadow-lg transition-all hover:shadow-primary/25 hover:scale-[1.005] cursor-pointer flex flex-col justify-between"
-              >
-                 <!-- Decorative bg pattern -->
-                 <div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
-                 
-                 <div class="relative z-10 flex items-start justify-between h-full flex-col">
-                    <div class="w-full flex justify-between items-start">
-                        <Badge class="bg-white/20 text-white border-none hover:bg-white/30">Novedad</Badge>
-                        <div class="h-12 w-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                            <Megaphone class="h-6 w-6 text-white" />
+                <!-- Charts Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Presión Arterial -->
+                    <div class="metric-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 cursor-pointer">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                                    <iconify-icon icon="lucide:heart" class="text-red-600 text-xl"></iconify-icon>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900">Presión Arterial</h3>
+                                    <p class="text-xs text-gray-500">mmHg</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Normal</span>
+                        </div>
+                        <div class="flex items-end gap-4 mb-4">
+                            <div>
+                                <span class="font-mono text-3xl font-bold text-gray-900">118/78</span>
+                                <span class="text-sm text-gray-500 ml-1">promedio</span>
+                            </div>
+                            <div class="text-sm text-green-600 flex items-center gap-1 font-medium">
+                                <iconify-icon icon="lucide:trending-down"></iconify-icon>
+                                <span>-3%</span>
+                            </div>
+                        </div>
+                        <div class="chart-container h-48 w-full relative">
+                            <canvas ref="chartPresion"></canvas>
                         </div>
                     </div>
-                    
-                    <div class="mt-auto pt-8">
-                      <h3 class="text-3xl font-bold mb-2">{{ campanha.nombre }}</h3>
-                      <p class="text-white/80 max-w-lg text-lg">{{ campanha.descripcion }}</p>
+
+                    <!-- Glucosa -->
+                    <div class="metric-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 cursor-pointer">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                                    <iconify-icon icon="lucide:droplet" class="text-blue-500 text-xl"></iconify-icon>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900">Glucosa</h3>
+                                    <p class="text-xs text-gray-500">mg/dL</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Óptimo</span>
+                        </div>
+                        <div class="flex items-end gap-4 mb-4">
+                            <div>
+                                <span class="font-mono text-3xl font-bold text-gray-900">94</span>
+                                <span class="text-sm text-gray-500 ml-1">promedio</span>
+                            </div>
+                            <div class="text-sm text-green-600 flex items-center gap-1 font-medium">
+                                <iconify-icon icon="lucide:trending-down"></iconify-icon>
+                                <span>-5%</span>
+                            </div>
+                        </div>
+                        <div class="chart-container h-48 w-full relative">
+                            <canvas ref="chartGlucosa"></canvas>
+                        </div>
                     </div>
-                 </div>
-              </article>
-           </div>
-        </section>
 
-      </div>
-
-      <!-- COLUMNA DERECHA (3/12) - Videos (Reemplaza Chat) -->
-      <div class="lg:col-span-3 flex flex-col gap-4 h-full">
-        
-        <section class="h-full flex flex-col">
-          <div class="flex items-center justify-between mb-4 flex-shrink-0">
-            <h3 class="text-lg font-bold text-foreground">Educación</h3>
-          </div>
-          
-          <div class="grid grid-rows-3 gap-4 h-full">
-            <article 
-              v-for="video in videos" 
-              :key="video.id"
-              class="group relative overflow-hidden rounded-xl bg-muted cursor-pointer transition-all hover:shadow-md flex flex-col"
-              @click="playVideo(video)"
-            >
-              <!-- Thumbnail aspect ratio box -->
-              <div class="flex-1 bg-slate-200 dark:bg-slate-800 relative">
-                 <div class="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                    <Video class="h-8 w-8 opacity-50" />
-                 </div>
-                 <!-- Play Overlay -->
-                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div class="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
-                       <Play class="h-5 w-5 text-primary ml-1" />
+                    <!-- Peso -->
+                    <div class="metric-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 cursor-pointer">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                                    <iconify-icon icon="lucide:scale" class="text-orange-500 text-xl"></iconify-icon>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900">Peso</h3>
+                                    <p class="text-xs text-gray-500">kg</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Meta</span>
+                        </div>
+                        <div class="flex items-end gap-4 mb-4">
+                            <div>
+                                <span class="font-mono text-3xl font-bold text-gray-900">68.5</span>
+                                <span class="text-sm text-gray-500 ml-1">actual</span>
+                            </div>
+                            <div class="text-sm text-green-600 flex items-center gap-1 font-medium">
+                                <iconify-icon icon="lucide:trending-down"></iconify-icon>
+                                <span>-1.2 kg</span>
+                            </div>
+                        </div>
+                        <div class="chart-container h-48 w-full relative">
+                            <canvas ref="chartPeso"></canvas>
+                        </div>
                     </div>
-                 </div>
-              </div>
-              
-              <div class="p-3 bg-card border border-border border-t-0 rounded-b-xl shrink-0">
-                 <h4 class="font-semibold text-sm text-foreground line-clamp-1 mb-1 group-hover:text-primary transition-colors">
-                   {{ video.titulo }}
-                 </h4>
-                 <div class="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{{ video.duracion }}</span>
-                    <span class="flex items-center gap-1"><Shield class="h-3 w-3" /> MIO+</span>
-                 </div>
-              </div>
-            </article>
-          </div>
-        </section>
 
-      </div>
+                    <!-- Frecuencia Cardíaca -->
+                    <div class="metric-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 cursor-pointer">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+                                    <iconify-icon icon="lucide:activity" class="text-purple-600 text-xl"></iconify-icon>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900">Frecuencia Cardíaca</h3>
+                                    <p class="text-xs text-gray-500">lpm</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Excelente</span>
+                        </div>
+                        <div class="flex items-end gap-4 mb-4">
+                            <div>
+                                <span class="font-mono text-3xl font-bold text-gray-900">72</span>
+                                <span class="text-sm text-gray-500 ml-1">promedio</span>
+                            </div>
+                            <div class="text-sm text-gray-500 flex items-center gap-1 font-medium">
+                                <iconify-icon icon="lucide:minus"></iconify-icon>
+                                <span>0%</span>
+                            </div>
+                        </div>
+                        <div class="chart-container h-48 w-full relative">
+                            <canvas ref="chartFC"></canvas>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Historial de Mediciones -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <h3 class="font-bold text-lg text-gray-900">Historial de Mediciones</h3>
+                        <button class="text-sm text-orange-500 hover:text-orange-600 font-medium flex items-center gap-2 transition-colors">
+                            <iconify-icon icon="lucide:download"></iconify-icon>
+                            Exportar
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Valor</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">15 Ene, 2026</div>
+                                        <div class="text-xs text-gray-500">08:30 AM</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <iconify-icon icon="lucide:heart" class="text-red-500"></iconify-icon>
+                                            <span class="text-sm text-gray-900">Presión Arterial</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-mono text-lg font-semibold text-gray-900">120/80</span>
+                                        <span class="text-xs text-gray-500 ml-1">mmHg</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                                            <span class="w-1.5 h-1.5 bg-green-600 rounded-full"></span>
+                                            Normal
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <button class="text-gray-400 hover:text-orange-500 transition-colors p-1 rounded-full hover:bg-orange-50">
+                                            <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">14 Ene, 2026</div>
+                                        <div class="text-xs text-gray-500">07:15 AM</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <iconify-icon icon="lucide:droplet" class="text-blue-500"></iconify-icon>
+                                            <span class="text-sm text-gray-900">Glucosa</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-mono text-lg font-semibold text-gray-900">92</span>
+                                        <span class="text-xs text-gray-500 ml-1">mg/dL</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                                            <span class="w-1.5 h-1.5 bg-green-600 rounded-full"></span>
+                                            Óptimo
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <button class="text-gray-400 hover:text-orange-500 transition-colors p-1 rounded-full hover:bg-orange-50">
+                                            <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                                 <tr class="hover:bg-gray-50 transition-colors cursor-pointer group">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">13 Ene, 2026</div>
+                                        <div class="text-xs text-gray-500">09:00 AM</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <iconify-icon icon="lucide:scale" class="text-orange-500"></iconify-icon>
+                                            <span class="text-sm text-gray-900">Peso</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-mono text-lg font-semibold text-gray-900">68.5</span>
+                                        <span class="text-xs text-gray-500 ml-1">kg</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                                            <span class="w-1.5 h-1.5 bg-green-600 rounded-full"></span>
+                                            Meta
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <button class="text-gray-400 hover:text-orange-500 transition-colors p-1 rounded-full hover:bg-orange-50">
+                                            <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                 <!-- Videos section (Carousel) -->
+                 <div class="mt-8">
+                    <h3 class="font-bold text-lg text-gray-900 mb-4 px-1">Educación Recomendada</h3>
+                    <!-- Embla Carousel -->
+                    <div class="overflow-hidden" ref="emblaRef">
+                        <div class="flex -ml-4">
+                             <!-- Slide 1 -->
+                            <div class="flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.33%] min-w-0 pl-4" v-for="video in videos" :key="video.id">
+                                 <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 h-full hover:shadow-md transition-shadow cursor-pointer group">
+                                    <div class="h-40 bg-gray-200 relative">
+                                        <img v-if="video.thumbnail" :src="video.thumbnail" class="w-full h-full object-cover">
+                                        <div v-else class="w-full h-full bg-gray-100 flex items-center justify-center">
+                                             <iconify-icon icon="lucide:image" class="text-gray-300 text-4xl"></iconify-icon>
+                                        </div>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-all">
+                                            <iconify-icon icon="lucide:play-circle" class="text-white text-4xl opacity-90 scale-95 group-hover:scale-110 transition-transform duration-200 drop-shadow-lg"></iconify-icon>
+                                        </div>
+                                        <span class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-md font-medium">05:20</span>
+                                    </div>
+                                    <div class="p-4">
+                                        <div class="flex items-start justify-between gap-2 mb-2">
+                                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-600 uppercase tracking-wide">Educación</span>
+                                        </div>
+                                        <h4 class="font-bold text-gray-900 line-clamp-1 mb-1 group-hover:text-orange-500 transition-colors">{{ video.titulo }}</h4>
+                                        <p class="text-sm text-gray-500 line-clamp-2 h-10">{{ video.descripcion }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Fallback/Mock Slides if no videos -->
+                             <div  v-if="videos.length === 0" class="flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.33%] min-w-0 pl-4">
+                                 <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 h-full group cursor-pointer">
+                                    <div class="h-40 bg-gray-100 relative flex items-center justify-center">
+                                       <iconify-icon icon="lucide:video" class="text-gray-300 text-4xl"></iconify-icon>
+                                    </div>
+                                    <div class="p-4">
+                                        <h4 class="font-bold text-gray-900 mb-1">Cargando contenido...</h4>
+                                        <p class="text-sm text-gray-500">Estamos preparando tus videos.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <aside class="w-full xl:w-80 space-y-6">
+                <!-- Rangos Normales -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                        <iconify-icon icon="lucide:info" class="text-orange-500"></iconify-icon>
+                        Rangos Normales
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="border-l-4 border-green-500 p-4 bg-gray-50 rounded-r-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-900">Presión Arterial</span>
+                                <iconify-icon icon="lucide:check-circle" class="text-green-500 text-lg"></iconify-icon>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="font-mono font-bold text-gray-900">90/60</span>
+                                <span class="text-gray-400">-</span>
+                                <span class="font-mono font-bold text-gray-900">120/80</span>
+                                <span class="text-xs text-gray-500">mmHg</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Tu última: 118/78</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 p-4 bg-gray-50 rounded-r-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-900">Glucosa en Ayunas</span>
+                                <iconify-icon icon="lucide:check-circle" class="text-green-500 text-lg"></iconify-icon>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="font-mono font-bold text-gray-900">70</span>
+                                <span class="text-gray-400">-</span>
+                                <span class="font-mono font-bold text-gray-900">100</span>
+                                <span class="text-xs text-gray-500">mg/dL</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Tu última: 94</p>
+                        </div>
+
+                        <div class="border-l-4 border-green-500 p-4 bg-gray-50 rounded-r-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-900">IMC</span>
+                                <iconify-icon icon="lucide:check-circle" class="text-green-500 text-lg"></iconify-icon>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="font-mono font-bold text-gray-900">18.5</span>
+                                <span class="text-gray-400">-</span>
+                                <span class="font-mono font-bold text-gray-900">24.9</span>
+                                <span class="text-xs text-gray-500">kg/m²</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Tu IMC: 22.4</p>
+                        </div>
+
+                         <div class="border-l-4 border-green-500 p-4 bg-gray-50 rounded-r-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-900">Frecuencia Card.</span>
+                                <iconify-icon icon="lucide:check-circle" class="text-green-500 text-lg"></iconify-icon>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="font-mono font-bold text-gray-900">60</span>
+                                <span class="text-gray-400">-</span>
+                                <span class="font-mono font-bold text-gray-900">100</span>
+                                <span class="text-xs text-gray-500">lpm</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Tu promedio: 72</p>
+                        </div>
+
+                        <div class="border-l-4 border-yellow-500 p-4 bg-gray-50 rounded-r-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-900">Colesterol Total</span>
+                                <iconify-icon icon="lucide:alert-circle" class="text-yellow-500 text-lg"></iconify-icon>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <span class="text-gray-400">&lt;</span>
+                                <span class="font-mono font-bold text-gray-900">200</span>
+                                <span class="text-xs text-gray-500">mg/dL</span>
+                            </div>
+                            <p class="text-xs text-yellow-600 mt-1 font-medium">Tu último: 215 - Revisar</p>
+                        </div>
+                    </div>
+                     <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="#" class="text-sm text-orange-500 hover:text-orange-600 font-medium flex items-center justify-center gap-2 transition-colors">
+                            Ver todos los rangos
+                            <iconify-icon icon="lucide:arrow-right"></iconify-icon>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Próximas Mediciones -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+                        <iconify-icon icon="lucide:calendar-clock" class="text-orange-500"></iconify-icon>
+                        Programadas
+                    </h3>
+                    <div class="space-y-3">
+                         <div class="p-3 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-gray-50/50">
+                            <div class="flex items-center gap-2 mb-1">
+                                <iconify-icon icon="lucide:droplet" class="text-blue-500 text-sm"></iconify-icon>
+                                <span class="text-sm font-bold text-gray-900">Glucosa</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Hoy, 08:00 PM</p>
+                        </div>
+                        <div class="p-3 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-gray-50/50">
+                             <div class="flex items-center gap-2 mb-1">
+                                <iconify-icon icon="lucide:scale" class="text-orange-500 text-sm"></iconify-icon>
+                                <span class="text-sm font-bold text-gray-900">Peso</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Mañana, 07:00 AM</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
     </div>
 
-    <!-- Dialogo de Control -->
-    <!-- <ControlFormDialog 
-      v-model:open="isControlDialogOpen"
-      :control="selectedControl"
-      @submit="handleControlSubmit"
-    /> -->
+    <!-- FAB -->
+    <button class="fixed bottom-8 right-8 w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 z-30">
+        <iconify-icon icon="lucide:plus" class="text-3xl"></iconify-icon>
+    </button>
   </div>
 </template>
 
 <style scoped>
-/* Custom utility for clamping text */
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.tab-active {
+    border-bottom: 2px solid theme('colors.orange.500');
+    color: theme('colors.orange.500');
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
 }
 </style>
