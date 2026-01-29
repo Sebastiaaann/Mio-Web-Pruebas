@@ -130,6 +130,17 @@ export const useConfigStore = defineStore('config', () => {
     localStorage.setItem('mio-plan-activo', planActivo.value)
   }
 
+  /**
+   * Resetear store a estado inicial
+   */
+  function $reset() {
+    clientName.value = 'Homa'
+    clientBrand.value = 'homa'
+    planActivo.value = 'esencial'
+    currentConfig.value = { ...defaultConfig }
+    localStorage.removeItem('mio-plan-activo')
+  }
+
   return {
     clientName,
     clientBrand,
@@ -138,6 +149,7 @@ export const useConfigStore = defineStore('config', () => {
     setClientConfig,
     loadPreset,
     setPlanActivo,
+    $reset,
     presets
   }
 })

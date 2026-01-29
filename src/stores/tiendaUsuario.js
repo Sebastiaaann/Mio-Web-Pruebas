@@ -6,6 +6,60 @@ import { pacienteService } from '@/services/pacienteService';
 import { logger } from '@/utils/logger';
 
 /**
+ * Helper: Obtener primer nombre del usuario
+ * Soporta múltiples formatos de respuesta de API
+ * @param {Object} usuario - Objeto usuario
+ * @returns {string} Primer nombre o string vacío
+ */
+function getFirstName(usuario) {
+  if (!usuario) return '';
+  
+  // Prioridad: name (API HOMA) > nombre (legacy) > firstName (alternativo)
+  const nombre = usuario.name || usuario.nombre || usuario.firstName;
+  if (nombre) return nombre;
+  
+  // Fallback: extraer de fullName
+  if (usuario.fullName) {
+    return usuario.fullName.split(' ')[0];
+  }
+  
+  return '';
+}
+
+/**
+ * Helper: Obtener nombre completo del usuario
+ * @param {Object} usuario - Objeto usuario
+ * @returns {string} Nombre completo o string vacío
+ */
+function getNombreCompleto(usuario) {
+  if (!usuario) return '';
+  
+  if (usuario.fullName) return usuario.fullName;
+  
+  const nombre = usuario.name || usuario.nombre || usuario.firstName || '';
+  const apellido = usuario.lastname || usuario.apellido || usuario.lastName || '';
+  
+  return `${nombre} ${apellido}`.trim();
+}
+
+/**
+ * Helper: Obtener iniciales del usuario
+ * @param {Object} usuario - Objeto usuario
+ * @returns {string} Iniciales en mayúsculas
+ */
+function getIniciales(usuario) {
+  if (!usuario) return '';
+  
+  const nombre = usuario.name || usuario.nombre || usuario.firstName || '';
+  const apellido = usuario.lastname || usuario.apellido || usuario.lastName || '';
+  
+  const n = nombre ? nombre[0] : '';
+  const a = apellido ? apellido[0] : '';
+  
+  return (n + a).toUpperCase();
+}
+
+/**
  * Store de Usuario - Maneja autenticación y sesión
  */
 export const useTiendaUsuario = defineStore('usuario', () => {
@@ -18,42 +72,13 @@ export const useTiendaUsuario = defineStore('usuario', () => {
   // Getters
   const estaAutenticado = computed(() => !!token.value && !!usuario.value);
   
-  const nombreCompleto = computed(() => {
-    if (!usuario.value) return '';
-    // Intentar obtener del objeto usuario (API Homa usa name/lastname, estandarizamos a esto)
-    const nombre = usuario.value.name || usuario.value.nombre || usuario.value.firstName || '';
-    const apellido = usuario.value.lastname || usuario.value.apellido || usuario.value.lastName || '';
-    
-    // Si tiene fullName directo (Legacy/Firebase)
-    if (usuario.value.fullName) return usuario.value.fullName;
-    
-    return `${nombre} ${apellido}`.trim();
-  });
+  const nombreCompleto = computed(() => getNombreCompleto(usuario.value));
 
-  const iniciales = computed(() => {
-    if (!usuario.value) return '';
-    const nombre = usuario.value.name || usuario.value.nombre || usuario.value.firstName || '';
-    const apellido = usuario.value.lastname || usuario.value.apellido || usuario.value.lastName || '';
-    
-    const n = nombre ? nombre[0] : '';
-    const a = apellido ? apellido[0] : '';
-    
-    return (n + a).toUpperCase();
-  });
+  const iniciales = computed(() => getIniciales(usuario.value));
 
   // Getter para primer nombre (compatibilidad con HomeView)
-  const firstName = computed(() => {
-    if (!usuario.value) return '';
-    // Prioridad a 'name' que viene de la API
-    if (usuario.value.name) return usuario.value.name;
-    if (usuario.value.nombre || usuario.value.firstName) return usuario.value.nombre || usuario.value.firstName;
-    
-    // Fallback: extraer de fullName
-    if (usuario.value.fullName) {
-        return usuario.value.fullName.split(' ')[0];
-    }
-    return '';
-  });
+  // Usa el helper getFirstName para lógica consistente
+  const firstName = computed(() => getFirstName(usuario.value));
 
   // Actions
 
@@ -189,6 +214,16 @@ export const useTiendaUsuario = defineStore('usuario', () => {
     error.value = null;
   }
 
+  /**
+   * Resetear store a estado inicial
+   */
+  function $reset() {
+    usuario.value = null;
+    token.value = null;
+    cargando.value = false;
+    error.value = null;
+  }
+
   return {
     // State
     usuario,
@@ -207,6 +242,7 @@ export const useTiendaUsuario = defineStore('usuario', () => {
     registrarUsuario,
     actualizarUsuario,
     limpiarError,
+    $reset,
     // Alias en inglés para compatibilidad
     login: iniciarSesion,
     register: registrarUsuario,
