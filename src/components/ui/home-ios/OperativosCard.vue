@@ -4,12 +4,19 @@
  */
 import { Motion } from 'motion-v'
 import { CalendarCheck, ArrowRight } from 'lucide-vue-next'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
+import { computed } from 'vue'
+
+const { prefersReduced } = usePrefersReducedMotion()
+
+const motionTransition = computed(() =>
+  prefersReduced.value ? { duration: 0.001 } : { duration: 0.6, delay: 0.6, ease: 'easeOut' }
+)
 
 const props = defineProps({
-  operativos: { type: Array, default: () => [] }
+  operativos: { type: Array, default: () => [] },
+  toVerCalendario: { type: String, default: '/citas' }
 })
-
-const emit = defineEmits(['verCalendario'])
 
 // Formatear mes corto
 const formatMes = (fecha) => {
@@ -30,7 +37,7 @@ const formatDia = (fecha) => {
   <Motion
     :initial="{ opacity: 0, y: 30 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: 0.6, delay: 0.6, ease: 'easeOut' }"
+    :transition="motionTransition"
   >
     <div class="glass-card rounded-2xl p-6">
       <div class="flex items-center justify-between mb-4">
@@ -43,13 +50,13 @@ const formatDia = (fecha) => {
             <p class="text-xs text-gray-500">Próximos procedimientos programados</p>
           </div>
         </div>
-        <button 
-          @click="emit('verCalendario')"
-          class="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1"
+        <RouterLink
+          :to="toVerCalendario"
+          class="text-purple-600 text-sm font-medium hover:text-purple-700 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-md"
         >
           Ver calendario
           <ArrowRight class="w-4 h-4" />
-        </button>
+        </RouterLink>
       </div>
       
       <!-- Operativo Item -->

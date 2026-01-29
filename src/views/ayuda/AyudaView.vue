@@ -5,8 +5,14 @@
  * Migrado a shadcn-vue
  */
 import { ref } from 'vue'
+// Base Components
+import SectionHeader from '@/components/ui/base/SectionHeader.vue'
+import BaseCard from '@/components/ui/base/BaseCard.vue'
+import SearchInput from '@/components/ui/base/SearchInput.vue'
+import IconContainer from '@/components/ui/base/IconContainer.vue'
+
+// Shadcn
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { 
   Dialog, 
   DialogContent, 
@@ -15,7 +21,6 @@ import {
   DialogFooter,
   DialogClose
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 
 // Lucide icons
 import { 
@@ -24,12 +29,23 @@ import {
   Activity, 
   Heart,
   ChevronRight,
-  Search,
-  MessageCircle,
   X
 } from 'lucide-vue-next'
 
 const showFaqDialog = ref(false)
+const searchQuery = ref('')
+
+// Helper to extract proper color name for Tailwind
+const getTailwindColor = (hexOrName) => {
+  // Map hex colors to nearest tailwind palette name (simple mapping for this view)
+  const colorMap = {
+    '#7B61FF': 'violet',
+    '#3B82F6': 'blue',
+    '#10B981': 'emerald',
+    '#EF4444': 'rose'
+  }
+  return colorMap[hexOrName] || 'gray'
+}
 
 const menuItems = [
   {
@@ -95,63 +111,65 @@ function handleItemClick(item) {
 <template>
   <div class="ayuda-view space-y-6 pb-20 md:pb-6">
     <!-- Header -->
-    <header class="mb-6">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-        Centro de Ayuda
-      </h1>
-      <p class="text-gray-500">
-        ¿En qué podemos ayudarte hoy?
-      </p>
-    </header>
+    <SectionHeader 
+      title="Centro de Ayuda" 
+      subtitle="¿En qué podemos ayudarte hoy?"
+      size="large"
+    />
 
     <!-- Search -->
-    <div class="relative mb-6">
-      <Search class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-      <Input 
-        type="text"
-        placeholder="Buscar en ayuda..."
-        class="pl-12 py-3 rounded-xl"
-      />
-    </div>
+    <SearchInput 
+      v-model="searchQuery" 
+      placeholder="Buscar en ayuda..." 
+    />
 
     <!-- Menu List -->
-    <div class="grid gap-4">
-      <button
+    <div class="grid gap-4 mt-6">
+      <BaseCard
         v-for="item in menuItems"
         :key="item.id"
+        padding="normal"
+        rounded="large"
+        hoverable
+        clickable
         @click="handleItemClick(item)"
-        class="help-item flex items-center p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 text-left group cursor-pointer"
+        class="flex items-center group"
       >
         <!-- Icon -->
-        <div 
-          class="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 mr-4 group-hover:scale-110 transition-transform"
-          :style="{ backgroundColor: `${item.color}15` }"
+        <IconContainer 
+          size="large" 
+          :bg-color="getTailwindColor(item.color)" 
+          bg-intensity="50"
+          :icon-color="getTailwindColor(item.color)"
+          :style="{ backgroundColor: `${item.color}15`, color: item.color }"
+          rounded="xl"
+          class="mr-4 group-hover:scale-110 transition-transform"
         >
-          <component 
-            :is="item.icon" 
-            class="h-6 w-6"
-            :style="{ color: item.color }"
-          />
-        </div>
+          <component :is="item.icon" stroke-width="2.5" />
+        </IconContainer>
         
         <!-- Content -->
         <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 group-hover:text-primary transition-colors">
+          <h3 class="font-semibold text-gray-800 group-hover:text-primary transition-colors text-lg">
             {{ item.titulo }}
           </h3>
-          <p class="text-sm text-gray-500 mt-1">
+          <p class="text-sm text-gray-500 mt-0.5">
             {{ item.descripcion }}
           </p>
         </div>
         
         <!-- Arrow -->
         <ChevronRight class="h-5 w-5 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-      </button>
+      </BaseCard>
     </div>
 
     <!-- Contact Card - WhatsApp Real -->
-    <Card class="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-100">
-      <CardContent class="p-6">
+    <BaseCard 
+      padding="large" 
+      rounded="large" 
+      :hoverable="false"
+      class="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-100"
+    >
         <div class="flex items-center">
           <div class="flex-1">
             <h3 class="font-bold text-gray-800 mb-1">¿Necesitas más ayuda?</h3>
@@ -169,8 +187,7 @@ function handleItemClick(item) {
             </svg>
           </a>
         </div>
-      </CardContent>
-    </Card>
+    </BaseCard>
 
     <!-- FAQ Dialog -->
     <Dialog v-model:open="showFaqDialog">
@@ -180,10 +197,13 @@ function handleItemClick(item) {
         </DialogHeader>
         
         <div class="space-y-4 py-4 max-h-96 overflow-y-auto">
-          <div 
+          <BaseCard 
             v-for="(faq, index) in faqs" 
             :key="index"
-            class="faq-item p-4 bg-gray-50 rounded-xl"
+            padding="normal"
+            rounded="medium"
+            variant="gray"
+            :hoverable="false"
           >
             <h4 class="font-semibold text-gray-800 mb-2 flex items-start">
               <HelpCircle class="h-4 w-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
@@ -192,7 +212,7 @@ function handleItemClick(item) {
             <p class="text-sm text-gray-600 pl-6">
               {{ faq.respuesta }}
             </p>
-          </div>
+          </BaseCard>
         </div>
         
         <DialogFooter>
@@ -207,9 +227,3 @@ function handleItemClick(item) {
     </Dialog>
   </div>
 </template>
-
-<style scoped>
-.help-item:active {
-  transform: scale(0.98);
-}
-</style>

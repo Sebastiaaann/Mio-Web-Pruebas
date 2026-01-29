@@ -1,13 +1,11 @@
 /**
  * Servicio de Servicios Dinámicos
  * Maneja los servicios disponibles para el usuario en el Home
- * TODO: Actualizar endpoints cuando Cristobal confirme
+ * Refactorizado para usar clienteApi centralizado
  */
 
 import { authService } from './authService';
-
-const API_HOMA_URL = import.meta.env.VITE_API_HOMA_URL || "https://apihoma.homa.cl:7200";
-const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 10000;
+import { clienteApi } from '@/utils/clienteApi';
 
 // MODO DESARROLLO: Cambiar a false para usar backend real
 const USE_MOCK = false;
@@ -44,34 +42,14 @@ export const serviciosService = {
       });
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
     try {
       const user = authService.obtenerUsuario();
       if (!user || !user.patient_id) {
         throw new Error("No hay información de paciente disponible");
       }
 
-      // Endpoint real: GET /api/v1/patients/{patient_id}/services
-      const response = await fetch(`${API_HOMA_URL}/api/v1/patients/${user.patient_id}/services`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          // El token de autorización se obtuvo en el login de HOMA
-          "X-API-KEY": authService.obtenerToken()
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      // Usar clienteApi centralizado para la petición
+      const data = await clienteApi.get(`/api/v1/patients/${user.patient_id}/services`);
       
       // Extracción robusta del array de servicios
       let servicesArray = [];
@@ -124,9 +102,6 @@ export const serviciosService = {
 
     } catch (error) {
       console.error("Error fetching services:", error);
-      if (error.name === "AbortError") {
-        return { success: false, error: "Tiempo de espera agotado" };
-      }
       return { success: false, error: error.message || "Error de conexión" };
     }
   },

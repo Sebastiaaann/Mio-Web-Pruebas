@@ -136,11 +136,11 @@ onMounted(async () => {
   await cargarMaterial()
 })
 
-watch(() => route.query, async () => {
+watch(() => [route.query.incluye, route.query.excluye, route.query.titulo], async () => {
   if (materialAudiovisual.value.length === 0) {
     await cargarMaterial()
   }
-}, { deep: true })
+})
 </script>
 
 <template>

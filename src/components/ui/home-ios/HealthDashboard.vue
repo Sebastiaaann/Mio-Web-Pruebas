@@ -4,6 +4,14 @@
  * Muestra última medición y próximos controles
  */
 import { Motion } from 'motion-v'
+import { computed } from 'vue'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
+
+const { prefersReduced } = usePrefersReducedMotion()
+
+const motionTransition = computed(() =>
+  prefersReduced.value ? { duration: 0.001 } : { duration: 0.6, delay: 0.4, ease: 'easeOut' }
+)
 import { HeartPulse, Scale, ChevronRight } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -14,10 +22,12 @@ const props = defineProps({
   proximosControles: { 
     type: Array, 
     default: () => [] 
+  },
+  toVerTodo: {
+    type: String,
+    default: '/controles'
   }
 })
-
-const emit = defineEmits(['verTodo'])
 
 const iconMap = {
   presion: HeartPulse,
@@ -36,17 +46,17 @@ const iconColors = {
   <Motion
     :initial="{ opacity: 0, y: 30 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: 0.6, delay: 0.4, ease: 'easeOut' }"
+    :transition="motionTransition"
   >
     <div class="glass-card rounded-2xl p-5 h-full">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-bold text-gray-800">Mi Salud</h3>
-        <button 
-          @click="emit('verTodo')"
-          class="text-purple-600 text-xs font-medium hover:text-purple-700"
+        <RouterLink
+          :to="toVerTodo"
+          class="text-purple-600 text-xs font-medium hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-md"
         >
           Ver todo
-        </button>
+        </RouterLink>
       </div>
       
       <!-- Content Grid -->
@@ -93,7 +103,7 @@ const iconColors = {
               v-for="control in proximosControles.slice(0, 2)"
               :key="control.id"
               :to="control.href || '/controles'"
-              class="flex items-center gap-3 p-3 bg-white/60 rounded-xl hover:bg-white/80 transition-colors"
+              class="flex items-center gap-3 p-3 bg-white/60 rounded-xl hover:bg-white/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             >
               <div 
                 class="w-10 h-10 rounded-xl flex items-center justify-center"

@@ -4,6 +4,8 @@
  * Layout de 6 cards en grid
  */
 import { Motion } from 'motion-v'
+import { computed } from 'vue'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
 
 const props = defineProps({
   titulo: { type: String, required: true },
@@ -14,18 +16,22 @@ const props = defineProps({
   href: { type: String, default: '#' },
   delay: { type: Number, default: 0 }
 })
+const { prefersReduced } = usePrefersReducedMotion()
+
+const motionTransition = computed(() =>
+  prefersReduced.value ? { duration: 0.001, delay: props.delay } : { duration: 0.5, delay: props.delay, ease: 'easeOut' }
+)
 </script>
 
 <template>
   <Motion
     :initial="{ opacity: 0, y: 20 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: 0.5, delay: delay, ease: 'easeOut' }"
+    :transition="motionTransition"
   >
-    <router-link 
+      <router-link 
       :to="href"
-      class="glass-card rounded-2xl p-5 card-hover text-center block min-h-30 touch-target"
-      role="button"
+      class="glass-card rounded-2xl p-5 card-hover text-center block min-h-30 touch-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       :aria-label="`Ir a ${titulo}: ${subtitulo}`"
     >
       <div 
@@ -53,7 +59,7 @@ const props = defineProps({
 }
 
 .card-hover {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {

@@ -4,31 +4,44 @@ import InputText from 'primevue/inputtext';
 import { validarRut } from '@/utils/validadores';
 import { formatearRut, limpiarRut } from '@/utils/formateadores';
 
-const { 
-  modelValue = '', 
-  label = 'RUT',
-  placeholder = 'Ej: 12.345.678-9',
-  required = false,
-  mostrarError = true
-} = defineProps([
-  'modelValue', 
-  'label', 
-  'placeholder', 
-  'required', 
-  'mostrarError'
-]);
+const props = defineProps({
+  id: { type: String, required: false },
+  modelValue: { type: String, default: '' },
+  label: { type: String, default: 'RUT' },
+  placeholder: { type: String, default: 'Ej: 12.345.678-9' },
+  required: { type: Boolean, default: false },
+  mostrarError: { type: Boolean, default: true },
+  descripcionAyuda: {
+    type: String,
+    default: 'Ingrese RUT sin puntos ni guion (ej: 123456789)'
+  }
+});
 
 const emit = defineEmits(['update:modelValue', 'validacion']);
 
 // Estado interno del componente
 const inputRef = ref();
-const valorInterno = ref(modelValue);
+const valorInterno = ref(props.modelValue);
 const rutValido = ref(true);
 const mensajeError = ref('');
+
+const idGenerado = `rut-${Math.random().toString(36).slice(2, 9)}`;
+const idCampo = computed(() => props.id || idGenerado);
+const idError = computed(() => `${idCampo.value}-error`);
+const idAyuda = computed(() => `${idCampo.value}-ayuda`);
 
 // Computed para determinar si hay error
 const hayError = computed(() => {
   return !rutValido.value && valorInterno.value.length > 0;
+});
+
+const ariaDescribedby = computed(() => {
+  const ids = [];
+
+  if (props.mostrarError && hayError.value && mensajeError.value) ids.push(idError.value);
+  if (!hayError.value && valorInterno.value.length === 0) ids.push(idAyuda.value);
+
+  return ids.length ? ids.join(' ') : undefined;
 });
 
 // Computed para las clases CSS del input
@@ -39,7 +52,7 @@ const clasesInput = computed(() => {
 });
 
 // Watch para cambios externos del modelValue
-watch(() => modelValue, (nuevoValor) => {
+watch(() => props.modelValue, (nuevoValor) => {
   valorInterno.value = nuevoValor;
   validarRutInterno(nuevoValor);
 });
@@ -47,8 +60,8 @@ watch(() => modelValue, (nuevoValor) => {
 // Función de validación interna
 function validarRutInterno(rut) {
   if (!rut || rut.length === 0) {
-    rutValido.value = !required;
-    mensajeError.value = required ? 'El RUT es obligatorio' : '';
+    rutValido.value = !props.required;
+    mensajeError.value = props.required ? 'El RUT es obligatorio' : '';
     return rutValido.value;
   }
   
@@ -104,21 +117,25 @@ defineExpose({
   <div class="campo-rut">
     <!-- Label -->
     <label 
-      v-if="label" 
+      v-if="props.label" 
       class="block text-sm font-medium text-black mb-2"
       :class="{ 'text-red-600': hayError }"
+      :for="idCampo"
     >
-      {{ label }}
-      <span v-if="required" class="text-red-500 ml-1">*</span>
+      {{ props.label }}
+      <span v-if="props.required" class="text-red-500 ml-1">*</span>
     </label>
 
     <!-- Input -->
     <InputText
       ref="inputRef"
+      :id="idCampo"
       :model-value="valorInterno"
-      :placeholder="placeholder"
+      :placeholder="props.placeholder"
       :class="clasesInput"
       class="w-full"
+      :aria-invalid="hayError ? 'true' : 'false'"
+      :aria-describedby="ariaDescribedby"
       @input="manejarInput"
       @blur="manejarBlur"
       maxlength="12"
@@ -127,7 +144,10 @@ defineExpose({
 
     <!-- Mensaje de error -->
     <div 
-      v-if="mostrarError && hayError && mensajeError" 
+      v-if="props.mostrarError && hayError && mensajeError" 
+      :id="idError"
+      role="alert"
+      aria-live="polite"
       class="error-message mt-1 text-sm"
       :class="hayError ? 'text-gray-600' : 'text-gray-500'"
     >
@@ -137,9 +157,10 @@ defineExpose({
     <!-- Mensaje de ayuda -->
     <div 
       v-if="!hayError && valorInterno.length === 0" 
+      :id="idAyuda"
       class="mt-1 text-xs text-gray-500"
     >
-      Ingrese RUT sin puntos ni guion (ej: 123456789)
+      {{ props.descripcionAyuda }}
     </div>
   </div>
 </template>

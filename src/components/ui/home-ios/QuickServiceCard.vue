@@ -4,6 +4,10 @@
  * Para los 4 servicios principales del grid
  */
 import { Motion } from 'motion-v'
+import { computed } from 'vue'
+import ClipButton from '@/components/ui/ClipButton.vue'
+import { Bell } from 'lucide-vue-next'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
 
 const props = defineProps({
   titulo: { type: String, required: true },
@@ -26,22 +30,40 @@ const badgeClasses = {
   pink: 'bg-pink-100 text-pink-600',
   emerald: 'bg-emerald-100 text-emerald-600'
 }
+const { prefersReduced } = usePrefersReducedMotion()
+
+const motionTransition = computed(() =>
+  prefersReduced.value ? { duration: 0.001, delay: props.delay } : { duration: 0.4, delay: props.delay, ease: 'easeOut' }
+)
 </script>
 
 <template>
   <Motion
     :initial="{ opacity: 0, scale: 0.9 }"
     :animate="{ opacity: 1, scale: 1 }"
-    :transition="{ duration: 0.4, delay: delay, ease: 'easeOut' }"
+    :transition="motionTransition"
     class="h-full"
     :class="{ 'col-span-2': destacado }" 
   >
     <router-link 
       :to="href"
-      class="glass-card rounded-2xl p-6 card-hover block h-full relative overflow-hidden"
+      class="glass-card rounded-2xl p-6 card-hover block h-full relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       :class="{ 'api-destacada': destacado }"
     >
       <div class="relative z-10 flex flex-col h-full" :class="{ 'max-w-[60%]': destacado }">
+            <!-- Botón de acción rápido (ClipButton) -->
+            <div class="absolute top-4 right-4 z-20">
+              <ClipButton
+                bg-class="bg-orange-100"
+                color-class="bg-orange-500"
+                text-class="text-orange-500"
+                @success="() => console.log('Acción completada:', titulo)"
+              >
+                <template #baseIcon><Bell :size="18" :stroke-width="2.2" /></template>
+                <template #filledIcon><Bell :size="18" :stroke-width="2.2" fill="currentColor" /></template>
+                <template #successIcon><Bell :size="18" :stroke-width="2.2" /></template>
+              </ClipButton>
+            </div>
         <!-- Icon or Image -->
         <div v-if="!imagen"
           class="icon-container w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
@@ -75,8 +97,8 @@ const badgeClasses = {
       </div>
 
       <!-- 3D Image (Absolute positioned for Highlight) -->
-      <div v-if="destacado && imagen" class="absolute -right-4 -bottom-4 w-40 h-40 animate-float-slow">
-        <img :src="imagen" :alt="titulo" class="w-full h-full object-contain drop-shadow-xl" />
+      <div v-if="destacado && imagen" class="absolute -right-4 -bottom-4 w-40 h-40 animate-float-slow" aria-hidden="true">
+        <img :src="imagen" :alt="titulo" width="160" height="160" loading="lazy" decoding="async" class="w-full h-full object-contain drop-shadow-xl" />
       </div>
     </router-link>
   </Motion>
@@ -96,7 +118,7 @@ const badgeClasses = {
 }
 
 .card-hover {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {
@@ -105,7 +127,7 @@ const badgeClasses = {
 }
 
 .icon-container {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover .icon-container {

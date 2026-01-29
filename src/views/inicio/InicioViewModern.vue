@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/tiendaUsuario";
 // RUT validation solo para registro
 import { validateRut, formatRutOnInput } from "@/utils/rutValidator";
+import { validarEmail } from "@/utils/validadores";
 // Icons
 import {
   CreditCard,
@@ -65,7 +66,7 @@ const handleLoginSubmit = async () => {
   loginError.value = "";
 
   // Validar email
-  if (!loginForm.value.email || !loginForm.value.email.includes("@")) {
+  if (!loginForm.value.email || !validarEmail(loginForm.value.email)) {
     loginError.value = "Email inválido";
     return;
   }
@@ -107,12 +108,16 @@ const handleRegisterSubmit = async () => {
   }
 
   // Validar email
-  if (!registerForm.value.email || !registerForm.value.email.includes("@")) {
+  if (!registerForm.value.email || !validarEmail(registerForm.value.email)) {
     registerError.value = "Email inválido";
     return;
   }
 
   // Validar confirmación de email
+  if (!registerForm.value.emailConfirm || !validarEmail(registerForm.value.emailConfirm)) {
+    registerError.value = "Email inválido";
+    return;
+  }
   if (registerForm.value.email !== registerForm.value.emailConfirm) {
     registerError.value = "Los emails no coinciden";
     return;
@@ -140,13 +145,9 @@ const handleRegisterSubmit = async () => {
 };
 
 // Formatear RUT mientras escribe
-const handleRutInput = (event, formType) => {
+const handleRutInput = (event) => {
   const formatted = formatRutOnInput(event.target.value);
-  if (formType === "login") {
-    loginForm.value.rut = formatted;
-  } else {
-    registerForm.value.rut = formatted;
-  }
+  registerForm.value.rut = formatted;
 };
 
 // Toggle Dark Mode - Sincronizado con localStorage (misma clave que dashboard)
@@ -191,7 +192,7 @@ const toggleDarkMode = () => {
 
     <!-- Main Landing Content -->
     <main
-      class="flex-grow flex items-center justify-center relative z-10 px-6 py-12 lg:px-24 transition-all duration-500 ease-in-out"
+      class="flex-grow flex items-center justify-center relative z-10 px-6 py-12 lg:px-24 transition-opacity transition-transform duration-500 ease-in-out"
       :class="{ 'opacity-50 blur-sm scale-95': showAuthModal }"
     >
       <div
@@ -226,13 +227,13 @@ const toggleDarkMode = () => {
           <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
             <button
               @click="handleLoginClick"
-              class="px-8 py-3.5 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium rounded-full transition-all shadow-lg shadow-[#8B5CF6]/30 hover:shadow-[#8B5CF6]/40 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-offset-2 transform hover:scale-105 active:scale-95"
+              class="px-8 py-3.5 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-medium rounded-full transition-colors transition-shadow transform shadow-lg shadow-[#8B5CF6]/30 hover:shadow-[#8B5CF6]/40 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-offset-2 hover:scale-105 active:scale-95"
             >
               Iniciar Sesión
             </button>
             <button
               @click="handleRegisterClick"
-              class="px-8 py-3.5 border font-medium rounded-full transition-all shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-offset-2 transform hover:scale-105 active:scale-95"
+              class="px-8 py-3.5 border font-medium rounded-full transition-colors transition-shadow shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:ring-offset-2 hover:scale-105 active:scale-95"
               :class="
                 isDark
                   ? 'bg-transparent border-gray-600 text-gray-200 hover:text-[#8B5CF6] hover:border-[#8B5CF6]/50 focus:ring-offset-[#1A1033]'
@@ -413,7 +414,7 @@ const toggleDarkMode = () => {
 
         <!-- Card -->
         <div
-          class="w-full max-w-lg rounded-3xl shadow-2xl p-8 md:p-10 relative overflow-hidden transition-all duration-300 border z-10 backdrop-blur-2xl"
+          class="w-full max-w-lg rounded-3xl shadow-2xl p-8 md:p-10 relative overflow-hidden transition-opacity transition-transform duration-300 border z-10 backdrop-blur-2xl"
           :class="
             isDark
               ? 'bg-gray-900/80 border-white/10 shadow-black/50'
@@ -488,7 +489,7 @@ const toggleDarkMode = () => {
                   type="text"
                   placeholder="Ej: 12.345.678-9"
                   v-model="registerForm.rut"
-                  @input="handleRutInput($event, 'register')"
+                  @input="handleRutInput($event)"
                   :disabled="isSubmitting"
                   class="block w-full pl-10 pr-3 py-3 border rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:border-[#8B5CF6] sm:text-sm transition-shadow duration-200"
                   :class="
@@ -578,7 +579,7 @@ const toggleDarkMode = () => {
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="w-full sm:w-1/2 flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[#8B5CF6] hover:bg-[#7C3AED] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8B5CF6] shadow-lg shadow-purple-200 dark:shadow-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full sm:w-1/2 flex items-center justify-center px-4 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[#8B5CF6] hover:bg-[#7C3AED] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8B5CF6] shadow-lg shadow-purple-200 dark:shadow-none transition-colors transition-shadow duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Loader2
                   v-if="isSubmitting"
@@ -615,7 +616,7 @@ const toggleDarkMode = () => {
                  placeholder="nombre@ejemplo.com"
                  v-model="loginForm.email"
                  :error="loginError && loginError.includes('Email') ? 'Email inválido' : ''"
-                 :success="loginForm.email && loginForm.email.includes('@')"
+                 :success="validarEmail(loginForm.email)"
                />
 
                <PremiumInput

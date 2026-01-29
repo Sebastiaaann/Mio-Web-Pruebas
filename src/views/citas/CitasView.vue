@@ -256,7 +256,7 @@ onUnmounted(() => {
     
     <!-- Main Content Container with dynamic margin -->
     <div 
-      class="fullpage-container h-dvh overflow-hidden bg-background transition-all duration-300"
+      class="fullpage-container h-dvh overflow-hidden bg-background transition-opacity duration-300"
       :class="sidebarVisible ? 'md:ml-72' : 'md:ml-20'"
       @wheel="handleWheel"
       @touchstart.passive="handleTouchStart"

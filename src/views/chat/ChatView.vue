@@ -2,6 +2,7 @@
 /**
  * ChatView - Vista dedicada del Asistente Virtual
  * Interfaz de chat con el webhook de HOMA
+ * Diseño minimalista inspirado en la imagen proporcionada
  */
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -18,12 +19,19 @@ import {
   Send, 
   ArrowLeft, 
   Trash2, 
-  User,
   Loader2,
   Sparkles
 } from 'lucide-vue-next'
 
 const router = useRouter()
+
+// Props
+const props = defineProps({
+  showHeader: {
+    type: Boolean,
+    default: true
+  }
+})
 
 // Estado del chat
 const mensajes = ref([])
@@ -36,7 +44,7 @@ const chatContainer = ref(null)
 const mensajeBienvenida = {
   id: 'welcome',
   tipo: 'bot',
-  texto: '¡Hola! 👋 Soy el Asistente Virtual de MIO. Estoy aquí para ayudarte con tus dudas de salud. ¿En qué puedo ayudarte hoy?',
+  texto: '¡Hola! 👋 Soy tu Asistente Virtual. Estoy aquí para ayudarte con información sobre tus controles de salud, medicamentos y cualquier duda que tengas. ¿En qué puedo ayudarte?',
   timestamp: new Date()
 }
 
@@ -146,27 +154,28 @@ onMounted(() => {
 })
 
 // Watch para auto-scroll
-watch(mensajes, () => scrollToBottom(), { deep: true })
+watch(() => mensajes.value.length, () => scrollToBottom())
 </script>
 
 <template>
-  <div class="chat-view flex flex-col h-full bg-linear-to-br from-purple-50 via-white to-purple-100">
+  <div class="chat-view flex flex-col h-full bg-[#FAFAF8]">
     <!-- Header -->
     <Motion
+      v-if="showHeader"
       :initial="{ opacity: 0, y: -20 }"
       :animate="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.4 }"
     >
-      <header class="glass-header px-4 py-3 border-b border-purple-100/50">
-        <div class="max-w-3xl mx-auto flex items-center justify-between">
+      <header class="bg-white/80 backdrop-blur-md px-4 py-3 border-b border-gray-100 sticky top-0 z-10">
+        <div class="max-w-2xl mx-auto flex items-center justify-between">
           <div class="flex items-center gap-3">
             <button 
               @click="router.back()"
-              class="p-2 rounded-xl hover:bg-purple-100 transition-colors"
+              class="p-2 rounded-xl hover:bg-gray-100 transition-colors"
             >
               <ArrowLeft class="w-5 h-5 text-gray-600" />
             </button>
-            <div class="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
               <Bot class="w-5 h-5 text-white" />
             </div>
             <div>
@@ -194,53 +203,34 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
       ref="chatContainer"
       class="flex-1 overflow-y-auto px-4 py-6"
     >
-      <div class="max-w-3xl mx-auto space-y-4">
+      <div class="max-w-2xl mx-auto space-y-6">
         <!-- Messages -->
         <Motion
           v-for="mensaje in mensajes"
           :key="mensaje.id"
-          :initial="{ opacity: 0, y: 20, scale: 0.95 }"
-          :animate="{ opacity: 1, y: 0, scale: 1 }"
+          :initial="{ opacity: 0, y: 20 }"
+          :animate="{ opacity: 1, y: 0 }"
           :transition="{ duration: 0.3 }"
         >
-          <div 
-            class="flex gap-3"
-            :class="mensaje.tipo === 'usuario' ? 'justify-end' : 'justify-start'"
-          >
-            <!-- Bot Avatar -->
+          <!-- Bot Message -->
+          <div v-if="mensaje.tipo === 'bot'">
             <div 
-              v-if="mensaje.tipo === 'bot'"
-              class="w-8 h-8 rounded-lg bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0"
+              class="bg-[#F5F1E8] rounded-3xl p-5 border border-[#E8E4D9]"
+              :class="mensaje.error ? 'bg-red-50 border border-red-200' : ''"
             >
-              <Bot class="w-4 h-4 text-white" />
+              <div class="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">
+                <span>RESPUESTA DEL AGENTE</span>
+              </div>
+              <div class="bg-white rounded-2xl px-5 py-4 border border-gray-100">
+                <p class="text-sm leading-relaxed whitespace-pre-wrap text-gray-800">{{ mensaje.texto }}</p>
+              </div>
             </div>
+          </div>
 
-            <!-- Message Bubble -->
-            <div 
-              class="max-w-[80%] rounded-2xl px-4 py-3 shadow-sm"
-              :class="[
-                mensaje.tipo === 'usuario' 
-                  ? 'bg-linear-to-r from-purple-600 to-purple-500 text-white rounded-br-sm' 
-                  : mensaje.error 
-                    ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-sm'
-                    : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
-              ]"
-            >
-              <p class="text-sm whitespace-pre-wrap">{{ mensaje.texto }}</p>
-              <p 
-                class="text-[10px] mt-1 opacity-60"
-                :class="mensaje.tipo === 'usuario' ? 'text-right' : ''"
-              >
-                {{ formatearHora(mensaje.timestamp) }}
-              </p>
-            </div>
-
-            <!-- User Avatar -->
-            <div 
-              v-if="mensaje.tipo === 'usuario'"
-              class="w-8 h-8 rounded-lg bg-linear-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0"
-            >
-              <User class="w-4 h-4 text-white" />
+          <!-- User Message -->
+          <div v-else class="flex justify-end">
+            <div class="max-w-[80%] text-right">
+              <p class="text-sm leading-relaxed text-gray-700">{{ mensaje.texto }}</p>
             </div>
           </div>
         </Motion>
@@ -251,16 +241,14 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
           :initial="{ opacity: 0, y: 10 }"
           :animate="{ opacity: 1, y: 0 }"
         >
-          <div class="flex gap-3 justify-start">
-            <div class="w-8 h-8 rounded-lg bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-              <Bot class="w-4 h-4 text-white" />
+          <div class="bg-[#F5F1E8] rounded-3xl p-5 border border-[#E8E4D9] inline-block">
+            <div class="text-xs text-gray-500 uppercase tracking-wider font-medium mb-3">
+              <span>RESPUESTA DEL AGENTE</span>
             </div>
-            <div class="bg-white rounded-2xl rounded-bl-sm px-4 py-3 border border-gray-100 shadow-sm">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms;" />
-                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms;" />
-                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms;" />
-              </div>
+            <div class="bg-white rounded-2xl px-5 py-4 border border-gray-100 inline-flex items-center gap-1">
+              <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms;" />
+              <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms;" />
+              <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms;" />
             </div>
           </div>
         </Motion>
@@ -276,7 +264,7 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
               v-for="sugerencia in sugerencias"
               :key="sugerencia"
               @click="usarSugerencia(sugerencia)"
-              class="text-sm px-3 py-2 bg-white border border-purple-200 text-purple-600 rounded-xl hover:bg-purple-50 hover:border-purple-300 transition-all"
+              class="text-sm px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all"
             >
               {{ sugerencia }}
             </button>
@@ -291,22 +279,24 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
       :animate="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.4, delay: 0.2 }"
     >
-      <div class="glass-header border-t border-purple-100/50 p-4">
+      <div class="bg-white border-t border-gray-100 p-4">
         <form 
           @submit.prevent="enviar"
-          class="max-w-3xl mx-auto flex items-center gap-3"
+          class="max-w-2xl mx-auto flex items-center gap-3"
         >
-          <input
-            v-model="mensajeInput"
-            type="text"
-            placeholder="Escribe tu mensaje..."
-            class="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all"
-            :disabled="enviando"
-          />
+          <div class="flex-1 relative">
+            <input
+              v-model="mensajeInput"
+              type="text"
+              placeholder="¿En qué puedo ayudarte hoy?"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all text-gray-700 placeholder-gray-400"
+              :disabled="enviando"
+            />
+          </div>
           <button
             type="submit"
             :disabled="!puedeEnviar"
-            class="p-3 rounded-xl bg-linear-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-300/40 hover:shadow-purple-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            class="w-11 h-11 rounded-full bg-[#E07A5F] text-white shadow-lg shadow-orange-200/50 hover:bg-[#D06A4F] hover:shadow-orange-300/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center"
           >
             <Loader2 v-if="enviando" class="w-5 h-5 animate-spin" />
             <Send v-else class="w-5 h-5" />
@@ -322,12 +312,6 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
   min-height: 100%;
 }
 
-.glass-header {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
 /* Custom scrollbar */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
@@ -338,11 +322,16 @@ watch(mensajes, () => scrollToBottom(), { deep: true })
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(147, 51, 234, 0.2);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(147, 51, 234, 0.4);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth scroll behavior */
+.overflow-y-auto {
+  scroll-behavior: smooth;
 }
 </style>

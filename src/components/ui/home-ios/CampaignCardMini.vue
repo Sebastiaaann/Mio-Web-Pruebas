@@ -5,6 +5,13 @@
  */
 import { Motion } from 'motion-v'
 import { computed } from 'vue'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
+
+const { prefersReduced } = usePrefersReducedMotion()
+
+const motionTransition = (delay = 0) =>
+  prefersReduced.value ? { duration: 0.001 } : { duration: 0.5, delay, ease: 'easeOut' }
+import { RouterLink } from 'vue-router'
 
 const props = defineProps({
   titulo: {
@@ -37,14 +44,25 @@ const props = defineProps({
   }
 })
 
-const handleClick = () => {
-  if (props.url && props.url !== '#') {
-    console.log('🔗 Abriendo campaña:', props.titulo, '| URL:', props.url)
-    window.open(props.url, '_blank')
-  } else {
-    console.warn('⚠️ Campaña sin URL:', props.titulo)
-  }
-}
+const esUrlValida = computed(() => Boolean(props.url) && props.url !== '#')
+const esUrlInterna = computed(() => esUrlValida.value && props.url.startsWith('/'))
+
+const componenteRaiz = computed(() => {
+  if (!esUrlValida.value) return 'div'
+  return esUrlInterna.value ? RouterLink : 'a'
+})
+
+const atributosEnlace = computed(() => {
+  if (!esUrlValida.value) return { 'aria-disabled': 'true' }
+  if (esUrlInterna.value) return { to: props.url }
+  return { href: props.url, target: '_blank', rel: 'noopener noreferrer' }
+})
+
+const clasesCard = computed(() => {
+  const base = 'glass-card rounded-2xl p-5 card-hover text-center group block'
+  if (!esUrlValida.value) return `${base} cursor-default opacity-80`
+  return `${base} cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white`
+})
 
 // Generar colores dinámicos basados en el título (para variedad visual)
 const coloresGradiente = computed(() => {
@@ -70,11 +88,13 @@ const coloresGradiente = computed(() => {
   <Motion
     :initial="{ opacity: 0, y: 20 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: 0.5, delay: delay, ease: 'easeOut' }"
+    :transition="motionTransition(delay)"
   >
-    <div 
-      class="glass-card rounded-2xl p-5 card-hover text-center cursor-pointer"
-      @click="handleClick"
+    <component
+      :is="componenteRaiz"
+      v-bind="atributosEnlace"
+      :class="clasesCard"
+      :aria-label="esUrlValida ? `Abrir campaña: ${titulo}` : `Campaña no disponible: ${titulo}`"
     >
       <!-- Icono Circular -->
       <div 
@@ -88,6 +108,8 @@ const coloresGradiente = computed(() => {
           v-if="imagen" 
           :src="imagen" 
           :alt="titulo"
+          width="40" height="40"
+          loading="lazy" decoding="async"
           class="w-10 h-10 object-contain"
         />
         <div v-else class="text-white text-xl font-black">
@@ -104,7 +126,7 @@ const coloresGradiente = computed(() => {
           {{ descripcion }}
         </p>
       </div>
-    </div>
+    </component>
   </Motion>
 </template>
 
@@ -117,7 +139,7 @@ const coloresGradiente = computed(() => {
 }
 
 .card-hover {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-hover:hover {

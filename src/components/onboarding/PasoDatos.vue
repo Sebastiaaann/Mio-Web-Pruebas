@@ -41,15 +41,11 @@ const formularioValido = computed(() => {
          formularioLocal.value.genero;
 });
 
-// Watch para actualizar store cuando cambie el formulario
+// Watch unificado: actualizar store + validación en tiempo real
 watch(formularioLocal, (nuevosDatos) => {
   onboardingStore.actualizarDatosPersonales(nuevosDatos);
-}, { deep: true });
-
-// Watch para validación en tiempo real
-watch(formularioLocal, () => {
   validarFormulario();
-}, { deep: true });
+}, { deep: 1 });
 
 // Funciones de validación
 function validarCampo(campo, valor) {
