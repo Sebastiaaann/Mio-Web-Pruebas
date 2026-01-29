@@ -5,6 +5,9 @@
  * Migrado a Lucide icons
  */
 import { computed } from 'vue'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
+
+const { prefersReduced } = usePrefersReducedMotion()
 import { MessageCircle, Mail, Heart, HelpCircle } from 'lucide-vue-next'
 
 const { 
@@ -47,7 +50,7 @@ const sizeClasses = computed(() => {
 })
 
 const animationClass = computed(() => {
-  if (!animate) return ''
+  if (!animate || prefersReduced.value) return ''
   
   switch (mood) {
     case 'waving':
@@ -82,6 +85,10 @@ const bubbleSizeClasses = computed(() => {
       src="/assets/robot_mascot.png" 
       alt="MIO Agente Virtual" 
       :class="[sizeClasses, animationClass, 'object-contain drop-shadow-lg']"
+      :width="size === 'xl' ? 192 : size === 'lg' ? 128 : size === 'sm' ? 64 : 96"
+      :height="size === 'xl' ? 192 : size === 'lg' ? 128 : size === 'sm' ? 64 : 96"
+      loading="eager"
+      decoding="async"
     />
     
     <!-- Speech Bubble -->
