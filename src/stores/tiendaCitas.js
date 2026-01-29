@@ -186,6 +186,15 @@ export const useTiendaCitas = defineStore('citas', () => {
     error.value = null;
   }
 
+  /**
+   * Resetear store a estado inicial
+   */
+  function $reset() {
+    citasAgendadas.value = [];
+    cargando.value = false;
+    error.value = null;
+  }
+
   return {
     // State
     citasAgendadas,
@@ -198,7 +207,8 @@ export const useTiendaCitas = defineStore('citas', () => {
     obtenerCitas,
     agregarCita,
     cancelarCita,
-    limpiarError
+    limpiarError,
+    $reset
   };
 });
 

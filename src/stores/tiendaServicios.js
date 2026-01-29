@@ -129,6 +129,16 @@ export const useTiendaServicios = defineStore('servicios', () => {
     await cargarServicios();
   }
 
+  /**
+   * Resetear store a estado inicial
+   */
+  function $reset() {
+    servicios.value = [];
+    cargando.value = false;
+    error.value = null;
+    filtro.value = '';
+  }
+
   return {
     // State
     servicios,
@@ -147,6 +157,7 @@ export const useTiendaServicios = defineStore('servicios', () => {
     limpiarFiltro,
     limpiarError,
     recargarServicios,
+    $reset,
     // Alias en inglés para compatibilidad con HomeView
     serviciosDisponibles: serviciosActivos,
     cantidadServicios: totalServicios,

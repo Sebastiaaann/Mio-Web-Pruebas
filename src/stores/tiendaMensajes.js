@@ -175,10 +175,60 @@ export const useMensajesStore = defineStore('mensajes', () => {
     })
   }
 
+  /**
+   * Resetear store a estado inicial
+   */
+  function $reset() {
+    sections.value = [
+      {
+        id: 'results',
+        title: 'RESULTADOS',
+        count: 0,
+        icon: markRaw(ClipboardCheck),
+        iconColor: 'text-indigo-500 dark:text-indigo-400',
+        items: []
+      },
+      {
+        id: 'alerts',
+        title: 'ALERTAS',
+        count: 0,
+        icon: markRaw(AlertCircle),
+        iconColor: 'text-red-500',
+        items: []
+      },
+      {
+        id: 'reminders',
+        title: 'RECORDATORIOS',
+        count: 0,
+        icon: markRaw(Bell),
+        iconColor: 'text-teal-500',
+        items: []
+      },
+      {
+        id: 'news',
+        title: 'NOVEDADES',
+        count: 1,
+        icon: markRaw(Sparkles),
+        iconColor: 'text-violet-500',
+        items: [
+          {
+            id: 'NOV-01',
+            title: 'Nueva función: Control de Sueño',
+            description: 'Ahora puedes registrar tus horas de sueño y ver correlaciones con tu energía diaria.',
+            icon: markRaw(Info),
+            iconColor: 'text-violet-500',
+            iconBg: 'bg-violet-100 dark:bg-violet-900/30'
+          }
+        ]
+      }
+    ]
+  }
+
   return {
     sections,
     addMessage,
     upsertMessage,
-    initFromControls
+    initFromControls,
+    $reset
   }
 })

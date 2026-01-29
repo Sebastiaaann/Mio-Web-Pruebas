@@ -1,5 +1,6 @@
 // stores/onboardingStore.js
 import { defineStore } from 'pinia';
+import { validarRut, validarLongitud, validarRango, validarTextoLibre } from '@/utils/validadores';
 
 export const useOnboardingStore = defineStore('onboarding', {
   state: () => ({
@@ -74,6 +75,53 @@ export const useOnboardingStore = defineStore('onboarding', {
   },
 
   actions: {
+    validarDatosConsolidados() {
+      const errores = [];
+      const { datosPersonales, datosHabitos } = this.datosCompletos;
+
+      const nombreValido = validarLongitud(datosPersonales.nombre?.trim() || '', 2, 50)
+        && /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s'-]+$/.test(datosPersonales.nombre || '');
+      const apellidoValido = validarLongitud(datosPersonales.apellido?.trim() || '', 2, 50)
+        && /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s'-]+$/.test(datosPersonales.apellido || '');
+      const generoValido = ['masculino', 'femenino', 'otro', 'no_decir'].includes(datosPersonales.genero);
+
+      if (!validarRut(datosPersonales.rut || '')) {
+        errores.push('El RUT no es válido');
+      }
+      if (!nombreValido) {
+        errores.push('El nombre es obligatorio y debe tener al menos 2 caracteres');
+      }
+      if (!apellidoValido) {
+        errores.push('El apellido es obligatorio y debe tener al menos 2 caracteres');
+      }
+      if (!generoValido) {
+        errores.push('Debe seleccionar un género válido');
+      }
+
+      const tabaquismoValido = ['no_fuma', 'ocasional', 'diario_bajo', 'diario_alto'].includes(
+        datosHabitos.estiloVida.tabaquismo
+      );
+      const consumoAguaValido = validarRango(Number(datosHabitos.estiloVida.consumoAgua), 0, 10);
+
+      if (!tabaquismoValido) {
+        errores.push('Debe seleccionar una opción válida de tabaquismo');
+      }
+      if (!consumoAguaValido) {
+        errores.push('El consumo de agua debe estar entre 0 y 10 litros');
+      }
+
+      if (!validarTextoLibre(datosHabitos.nutricion.preferencias || '', 300)) {
+        errores.push('Las preferencias deben ser un texto válido de máximo 300 caracteres');
+      }
+      if (!validarTextoLibre(datosHabitos.nutricion.alergias || '', 300)) {
+        errores.push('Las alergias deben ser un texto válido de máximo 300 caracteres');
+      }
+
+      return {
+        valido: errores.length === 0,
+        errores
+      };
+    },
     // Actualizar datos personales (Paso 1)
     actualizarDatosPersonales(datos) {
       this.datosPersonales = { ...this.datosPersonales, ...datos };
@@ -140,6 +188,11 @@ export const useOnboardingStore = defineStore('onboarding', {
           throw new Error('Todos los pasos deben estar completos antes del envío');
         }
 
+        const resultadoValidacion = this.validarDatosConsolidados();
+        if (!resultadoValidacion.valido) {
+          throw new Error(resultadoValidacion.errores[0] || 'Datos inválidos');
+        }
+
         const datosConsolidados = this.datosCompletos;
 
         // Para testing - mostrar en consola solo en desarrollo
@@ -201,6 +254,11 @@ export const useOnboardingStore = defineStore('onboarding', {
           alergias: ''
         }
       };
+    },
+
+    // Alias para consistencia con otros stores
+    $reset() {
+      this.reiniciarOnboarding();
     }
   }
 });

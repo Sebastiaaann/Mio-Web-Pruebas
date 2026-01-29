@@ -6,7 +6,10 @@ export const useTiendaCampanas = defineStore('tiendaCampanas', {
   state: () => ({
     campanas: [],
     cargando: false,
-    error: null
+    error: null,
+    todasLasCampanas: [],
+    cargandoTodas: false,
+    errorTodas: null
   }),
 
   actions: {
@@ -41,23 +44,28 @@ export const useTiendaCampanas = defineStore('tiendaCampanas', {
         const res = await pacienteService.obtenerCampanas(patientId);
         if (res.success && res.campanas) {
           // Mapear campañas con todos los campos disponibles
+          // La API de HOMA devuelve: id, name, description, logo (base64), url_link, survey_url, active
           this.campanas = res.campanas.map((c, index) => ({
-            id: c.id || c.campaign_id || index.toString(),
-            name: c.name || c.titulo || 'Campaña de Salud',
-            titulo: c.name || c.titulo || 'Campaña de Salud',
-            description: c.description || c.descripcion || '',
+            id: c.id || c.campaign_id || `campana-${index}`,
+            nombre: c.name || c.nombre || 'Campaña de Salud',
+            name: c.name || c.nombre || 'Campaña de Salud',
             descripcion: c.description || c.descripcion || '',
-            // El logo viene en base64 en el campo 'logo'
-            image: c.logo || c.image_url || c.imagen || '',
-            imagen: c.logo || c.image_url || c.imagen || '',
+            description: c.description || c.descripcion || '',
+            // El logo viene en base64 en el campo 'logo' desde la API de HOMA
+            // Verificar si ya tiene el prefijo data: para evitar duplicarlo
+            imagenUrl: c.logo ? (c.logo.startsWith('data:') ? c.logo : `data:image/png;base64,${c.logo}`) : '',
             logo: c.logo || '',
             // La URL puede estar en url_link o survey_url
             url: c.url_link || c.survey_url || c.url || '#',
-            link: c.url_link || c.survey_url || c.link || '#',
-            survey_url: c.survey_url || '',
-            survey_id: c.survey_id || null,
+            urlLink: c.url_link || '',
+            surveyUrl: c.survey_url || '',
+            surveyId: c.survey_id || null,
+            activa: c.active !== undefined ? c.active : true,
             active: c.active !== undefined ? c.active : true,
-            activa: c.active !== undefined ? c.active : true
+            // Campos adicionales que pueden venir de la API
+            fechaInicio: c.start_date || c.fecha_inicio || null,
+            fechaFin: c.end_date || c.fecha_fin || null,
+            tipo: c.type || c.tipo || 'salud'
           }));
           logger.info(`✅ Campañas cargadas: ${this.campanas.length}`, this.campanas);
         } else {
@@ -72,6 +80,55 @@ export const useTiendaCampanas = defineStore('tiendaCampanas', {
       } finally {
         this.cargando = false;
       }
+    },
+
+    async cargarTodasLasCampanas() {
+      this.cargandoTodas = true;
+      this.errorTodas = null;
+
+      try {
+        const res = await pacienteService.obtenerTodasLasCampanas();
+        if (res.success && res.campanas) {
+          this.todasLasCampanas = res.campanas.map((c, index) => ({
+            id: c.id || c.campaign_id || `campana-${index}`,
+            nombre: c.name || c.nombre || 'Campaña de Salud',
+            name: c.name || c.nombre || 'Campaña de Salud',
+            descripcion: c.description || c.descripcion || '',
+            description: c.description || c.descripcion || '',
+            imagenUrl: c.logo ? (c.logo.startsWith('data:') ? c.logo : `data:image/png;base64,${c.logo}`) : '',
+            logo: c.logo || '',
+            url: c.url_link || c.survey_url || c.url || '#',
+            urlLink: c.url_link || '',
+            surveyUrl: c.survey_url || '',
+            surveyId: c.survey_id || null,
+            activa: c.active !== undefined ? c.active : true,
+            active: c.active !== undefined ? c.active : true,
+            fechaInicio: c.start_date || c.fecha_inicio || null,
+            fechaFin: c.end_date || c.fecha_fin || null,
+            tipo: c.type || c.tipo || 'salud'
+          }));
+          logger.info(`✅ Todas las campañas cargadas: ${this.todasLasCampanas.length}`);
+        } else {
+          logger.warn('No se encontraron campañas o falló la carga:', res.error);
+          this.errorTodas = res.error || 'No hay campañas disponibles';
+          this.todasLasCampanas = [];
+        }
+      } catch (err) {
+        logger.error('Error en cargarTodasLasCampanas store:', err);
+        this.errorTodas = 'Error al cargar campañas';
+        this.todasLasCampanas = [];
+      } finally {
+        this.cargandoTodas = false;
+      }
+    },
+
+    $reset() {
+      this.campanas = [];
+      this.cargando = false;
+      this.error = null;
+      this.todasLasCampanas = [];
+      this.cargandoTodas = false;
+      this.errorTodas = null;
     }
   }
 });
