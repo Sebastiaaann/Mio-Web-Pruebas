@@ -229,7 +229,7 @@ onMounted(() => {
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
           <div 
-            class="bg-black h-2 rounded-full transition-all duration-300"
+            class="bg-black h-2 rounded-full transition-colors transition-transform duration-300"
             :style="{ width: `${((pasoActual + 1) / pasos.length) * 100}%` }"
           ></div>
         </div>

@@ -4,26 +4,24 @@
  * Reutiliza el componente MioRobot existente
  */
 import { Motion } from 'motion-v'
+import { computed } from 'vue'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
 import { MessageCircle } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
 import MioRobot from '@/components/ui/MioRobot.vue'
-
-const router = useRouter()
-
-function openChat() {
-  router.push('/chat')
-}
+const { prefersReduced } = usePrefersReducedMotion()
+const motionTransition = computed(() => prefersReduced.value ? { duration: 0 } : { duration: 0.5, delay: 0.2 })
 </script>
 
 <template>
   <Motion
     :initial="{ opacity: 0, y: 10 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: 0.5, delay: 0.2 }"
+    :transition="motionTransition"
   >
-    <div 
-      class="chatbot-banner cursor-pointer relative overflow-hidden group"
-      @click="openChat"
+    <RouterLink
+      to="/chat"
+      class="chatbot-banner cursor-pointer relative overflow-hidden group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+      aria-label="Abrir asistente virtual"
     >
       <!-- Background & Mesh -->
       <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
@@ -33,8 +31,8 @@ function openChat() {
       <div class="relative z-10 flex items-center justify-between p-5">
         <div class="flex items-center gap-4">
           <!-- Robot usando MioRobot component -->
-          <div class="robot-container bg-white/20 backdrop-blur-md rounded-2xl p-2 group-hover:scale-110 transition-transform">
-            <MioRobot size="sm" mood="happy" :animate="true" :showBubble="true" />
+            <div class="robot-container bg-white/20 backdrop-blur-md rounded-2xl p-2 group-hover:scale-110 transition-transform">
+            <MioRobot size="sm" mood="happy" :animate="!prefersReduced" :showBubble="!prefersReduced" />
           </div>
           
           <!-- Text -->
@@ -52,7 +50,7 @@ function openChat() {
           <MessageCircle class="w-4 h-4" />
         </div>
       </div>
-    </div>
+    </RouterLink>
   </Motion>
 </template>
 
@@ -60,7 +58,7 @@ function openChat() {
 .chatbot-banner {
   border-radius: 24px;
   box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.4);
-  transition: all 0.3s ease;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .chatbot-banner:hover {

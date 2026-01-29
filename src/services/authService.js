@@ -1,9 +1,8 @@
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "@/config/firebaseConfig";
 import { logger } from "@/utils/logger";
-
-const API_HOMA_URL = import.meta.env.VITE_API_HOMA_URL || "https://apihoma.homa.cl:7200";
-const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 10000;
+import { validarEmail } from "@/utils/validadores";
+import { clienteApi } from "@/utils/clienteApi";
 
 // MODO DESARROLLO: Cambiar a false para usar backend real
 const USE_MOCK = false;
@@ -15,21 +14,6 @@ const MENSAJES_ERROR = {
   CUENTA_DESHABILITADA: 'Su cuenta ha sido deshabilitada.',
   CREDENCIALES_INVALIDAS: 'Credenciales incorrectas.',
   TIMEOUT: 'La solicitud tomó demasiado tiempo. Intente nuevamente.'
-};
-
-/**
- * Helper: Crear fetch con timeout (DRY)
- * @private
- */
-const crearFetchConTimeout = (url, opciones = {}) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-  
-  return {
-    controller,
-    timeoutId,
-    fetch: fetch(url, { ...opciones, signal: controller.signal })
-  };
 };
 
 // Event Bus simple usando Window (para desacolar sin librerías extra)
@@ -47,6 +31,9 @@ export const authService = {
    * @returns {Promise<{success: boolean, token?: string, user?: object, error?: string}>}
    */
   async iniciarSesion(email, password) {
+    if (!validarEmail(email) || !password) {
+      return { success: false, error: 'Email o contraseña inválidos.' };
+    }
     if (USE_MOCK) {
       return this._loginMock(email, password);
     }
@@ -92,39 +79,26 @@ export const authService = {
   },
 
   /**
-   * Autorizar con API HOMA (SRP)
+   * Autorizar con API HOMA usando clienteApi centralizado
    * @private
    */
   async _autorizarConHoma(firebaseUser) {
-    const { controller, timeoutId, fetch: peticion } = crearFetchConTimeout(
-      `${API_HOMA_URL}/api/v1/authorizations`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email: firebaseUser.email, 
-          UID: firebaseUser.uid 
-        })
-      }
-    );
-
     try {
-      const respuesta = await peticion;
-      clearTimeout(timeoutId);
+      const datos = await clienteApi.post('/api/v1/authorizations', {
+        email: firebaseUser.email,
+        UID: firebaseUser.uid
+      });
 
-      if (!respuesta.ok) {
-        throw new Error(`Error HOMA: ${respuesta.status}`);
-      }
-
-      const datos = await respuesta.json();
-      
       if (!datos.success) {
         throw new Error(datos.error || "Error en autorización HOMA");
       }
 
       return datos;
     } catch (error) {
-      clearTimeout(timeoutId);
+      // Mapear errores del clienteApi a mensajes amigables
+      if (error.message === "Sesión expirada" || error.message?.includes("timeout")) {
+        error.name = "AbortError";
+      }
       throw error;
     }
   },

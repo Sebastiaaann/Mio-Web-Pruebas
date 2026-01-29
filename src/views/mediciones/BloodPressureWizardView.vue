@@ -163,10 +163,10 @@ function handleKeydown(e) {
         <div ref="contentRef" class="p-6">
             <Transition 
                 mode="popLayout" 
-                enter-active-class="transition-all duration-300 ease-out" 
+                enter-active-class="transition-colors transition-transform duration-300 ease-out" 
                 enter-from-class="opacity-0 translate-x-4 blur-sm" 
                 enter-to-class="opacity-100 translate-x-0 blur-0"
-                leave-active-class="transition-all duration-200 ease-in absolute w-full top-6 left-0 px-6" 
+                leave-active-class="transition-colors transition-transform duration-200 ease-in absolute w-full top-6 left-0 px-6" 
                 leave-from-class="opacity-100 translate-x-0 blur-0" 
                 leave-to-class="opacity-0 -translate-x-4 blur-sm"
             >
@@ -190,7 +190,7 @@ function handleKeydown(e) {
                     </div>
 
                     <div class="w-full pt-4">
-                         <Button class="w-full h-12 rounded-xl text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 transition-all hover:scale-[1.01] active:scale-[0.98]" @click="nextStep">
+                         <Button class="w-full h-12 rounded-xl text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 transition-colors transition-transform hover:scale-[1.01] active:scale-[0.98]" @click="nextStep">
                             Comenzar
                          </Button>
                     </div>
@@ -216,7 +216,7 @@ function handleKeydown(e) {
                             ]" 
                             :key="option.value"
                             @click="() => { form.feeling = option.value; nextStep() }"
-                            class="w-full group flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-md transition-all active:scale-[0.98]"
+                            class="w-full group flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-md transition-colors transition-shadow active:scale-[0.98]"
                         >
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
@@ -241,7 +241,7 @@ function handleKeydown(e) {
                             <Input 
                                 v-model="form.systolic" 
                                 type="number" 
-                                class="h-16 text-2xl font-mono text-center rounded-xl bg-gray-50 border-gray-100 text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-gray-300" 
+                                class="h-16 text-2xl font-mono text-center rounded-xl bg-gray-50 border-gray-100 text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-colors placeholder:text-gray-300" 
                                 placeholder="120"
                                 autofocus
                             />
@@ -251,7 +251,7 @@ function handleKeydown(e) {
                              <Input 
                                 v-model="form.diastolic" 
                                 type="number" 
-                                class="h-16 text-2xl font-mono text-center rounded-xl bg-gray-50 border-gray-100 text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-gray-300" 
+                                class="h-16 text-2xl font-mono text-center rounded-xl bg-gray-50 border-gray-100 text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-colors placeholder:text-gray-300" 
                                 placeholder="80"
                             />
                         </div>
@@ -266,7 +266,7 @@ function handleKeydown(e) {
                             <Input 
                                 v-model="form.heartRate" 
                                 type="number" 
-                                class="h-14 pl-14 font-mono text-lg rounded-xl bg-gray-50 border-gray-100 text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 placeholder:text-gray-300 transition-all" 
+                                class="h-14 pl-14 font-mono text-lg rounded-xl bg-gray-50 border-gray-100 text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 placeholder:text-gray-300 transition-colors" 
                                 placeholder="60 BPM"
                             />
                         </div>
@@ -308,7 +308,7 @@ function handleKeydown(e) {
                         </div>
                     </div>
 
-                    <Button class="w-full h-12 rounded-xl text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-100 transition-all hover:scale-[1.01] active:scale-[0.98]" @click="saveMeasurement" :disabled="isSubmitting">
+                    <Button class="w-full h-12 rounded-xl text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-100 transition-colors hover:scale-[1.01] active:scale-[0.98]" @click="saveMeasurement" :disabled="isSubmitting">
                         <span v-if="isSubmitting">Guardando...</span>
                         <span v-else>Confirmar</span>
                     </Button>
@@ -358,7 +358,7 @@ function handleKeydown(e) {
                          </ul>
                     </div>
 
-                    <Button class="w-full h-12 rounded-xl text-base font-semibold bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 transition-all shadow-sm" @click="step++">
+                    <Button class="w-full h-12 rounded-xl text-base font-semibold bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 transition-colors shadow-sm" @click="step++">
                         Entendido
                     </Button>
                 </div>
@@ -398,7 +398,7 @@ function handleKeydown(e) {
                          </div>
                     </div>
 
-                    <Button class="w-full h-12 rounded-xl text-base font-bold bg-gray-900 text-white hover:bg-gray-800 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]" @click="finish">
+                    <Button class="w-full h-12 rounded-xl text-base font-bold bg-gray-900 text-white hover:bg-gray-800 shadow-xl transition-colors hover:scale-[1.02] active:scale-[0.98]" @click="finish">
                         Finalizar
                     </Button>
                 </div>

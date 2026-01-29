@@ -3,9 +3,11 @@
  * TarjetaMaterialAudiovisual - Card para material audiovisual
  * Diseño limpio y moderno, con imagen y CTA
  */
+import { computed } from 'vue'
 import { Motion } from 'motion-v'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
 import { PlayCircle } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 
 const props = defineProps({
   titulo: { type: String, required: true },
@@ -16,31 +18,47 @@ const props = defineProps({
   delay: { type: Number, default: 0 }
 })
 
-const router = useRouter()
+const esUrlValida = computed(() => Boolean(props.url) && props.url !== '#')
+const esUrlInterna = computed(() => esUrlValida.value && props.url.startsWith('/'))
 
-const abrirMaterial = () => {
-  if (!props.url || props.url === '#') return
+const componenteRaiz = computed(() => {
+  if (!esUrlValida.value) return 'div'
+  return esUrlInterna.value ? RouterLink : 'a'
+})
 
-  if (props.url.startsWith('/')) {
-    router.push(props.url)
-    return
-  }
+const atributosEnlace = computed(() => {
+  if (!esUrlValida.value) return { 'aria-disabled': 'true' }
+  if (esUrlInterna.value) return { to: props.url }
+  return { href: props.url, target: '_blank', rel: 'noopener noreferrer' }
+})
 
-  window.open(props.url, '_blank')
-}
+const clasesCard = computed(() => {
+  const base =
+    'card-audiovisual rounded-2xl overflow-hidden bg-white border border-stone-200 shadow-sm hover:shadow-md transition-transform transition-shadow transition-colors group block'
+
+  if (!esUrlValida.value) return `${base} cursor-default opacity-80`
+
+  return `${base} cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white`
+})
+
+const { prefersReduced } = usePrefersReducedMotion()
+
+const motionTransition = computed(() =>
+  prefersReduced.value ? { duration: 0.001, delay: props.delay } : { duration: 0.4, delay: props.delay, ease: 'easeOut' }
+)
 </script>
 
 <template>
   <Motion
     :initial="{ opacity: 0, y: 16 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: 0.4, delay: delay, ease: 'easeOut' }"
+    :transition="motionTransition"
   >
-    <article
-      class="card-audiovisual rounded-2xl overflow-hidden bg-white border border-stone-200 shadow-sm hover:shadow-md transition-all cursor-pointer"
-      @click="abrirMaterial"
-      :aria-label="`Abrir material: ${titulo}`"
-      role="button"
+    <component
+      :is="componenteRaiz"
+      v-bind="atributosEnlace"
+      :class="clasesCard"
+      :aria-label="esUrlValida ? `Abrir material: ${titulo}` : `Material no disponible: ${titulo}`"
     >
       <div class="relative aspect-video bg-stone-100">
         <img
@@ -48,6 +66,7 @@ const abrirMaterial = () => {
           :src="imagen"
           :alt="titulo"
           class="w-full h-full object-cover"
+          width="1280" height="720"
           loading="lazy"
           decoding="async"
         />
@@ -72,7 +91,7 @@ const abrirMaterial = () => {
           {{ descripcion }}
         </p>
       </div>
-    </article>
+    </component>
   </Motion>
 </template>
 

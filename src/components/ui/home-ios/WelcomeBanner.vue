@@ -3,13 +3,28 @@
  * WelcomeBanner - Banner de bienvenida estilo iOS
  * Muestra saludo personalizado con CTAs principales
  */
-import { computed } from 'vue'
 import { Motion } from 'motion-v'
 import { CalendarPlus, FileText, Stethoscope, Heart } from 'lucide-vue-next'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
+import { computed } from 'vue'
+
+const { prefersReduced } = usePrefersReducedMotion()
+
+const mainTransition = computed(() =>
+  prefersReduced.value ? { duration: 0.001 } : { duration: 0.6, ease: 'easeOut' }
+)
+
+const floatTransition = (duration = 6) =>
+  prefersReduced.value ? { duration: 0.001, repeat: 0 } : { duration, repeat: Infinity, ease: 'easeInOut' }
+
+const pulseTransition = (duration = 2) =>
+  prefersReduced.value ? { duration: 0.001, repeat: 0 } : { duration, repeat: Infinity, ease: 'easeInOut' }
 
 const props = defineProps({
   nombre: { type: String, default: 'Usuario' },
-  saludo: { type: String, default: 'Buenos días' }
+  saludo: { type: String, default: 'Buenos días' },
+  toNuevaCita: { type: String, default: '/citas' },
+  toVerHistorial: { type: String, default: '/controles' }
 })
 
 const emit = defineEmits(['nuevaCita', 'verHistorial'])
@@ -19,11 +34,11 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
   <Motion
     :initial="{ opacity: 0, y: 30 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{ duration: 0.6, ease: 'easeOut' }"
+    :transition="mainTransition"
   >
     <div class="glass-card rounded-3xl p-10 shadow-xl shadow-black/5 overflow-hidden relative">
       <!-- Decorative gradient -->
-      <div class="absolute top-0 right-0 w-72 h-72 bg-linear-to-bl from-emerald-100/60 to-transparent rounded-full blur-2xl pointer-events-none" />
+      <div class="absolute top-0 right-0 w-72 h-72 bg-linear-to-bl from-emerald-100/60 to-transparent rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
       
       <div class="relative flex items-center justify-between">
         <div class="flex-1">
@@ -44,20 +59,22 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
           
           <!-- CTAs -->
           <div class="flex items-center gap-4 mt-6">
-            <button 
+            <RouterLink
+              :to="toNuevaCita"
+              class="shine-effect inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-lg font-semibold shadow-lg shadow-black/10 hover:bg-violet-700 transition-colors transition-transform duration-300 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               @click="emit('nuevaCita')"
-              class="shine-effect inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white rounded-lg font-semibold shadow-lg shadow-black/10 hover:bg-violet-700 transition-all duration-300 hover:scale-[1.02]"
             >
               <CalendarPlus class="w-5 h-5" />
               Nueva Cita
-            </button>
-            <button 
+            </RouterLink>
+            <RouterLink
+              :to="toVerHistorial"
+              class="inline-flex items-center gap-2 px-6 py-3 bg-white/90 text-gray-700 rounded-lg font-semibold border border-stone-200 hover:bg-stone-50 transition-colors transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               @click="emit('verHistorial')"
-              class="inline-flex items-center gap-2 px-6 py-3 bg-white/90 text-gray-700 rounded-lg font-semibold border border-stone-200 hover:bg-stone-50 transition-all duration-300"
             >
               <FileText class="w-5 h-5" />
               Ver Historial
-            </button>
+            </RouterLink>
           </div>
         </div>
         
@@ -66,18 +83,18 @@ const emit = defineEmits(['nuevaCita', 'verHistorial'])
           <div class="relative">
             <Motion
               :animate="{ y: [0, -10, 0] }"
-              :transition="{ duration: 6, repeat: Infinity, ease: 'easeInOut' }"
+              :transition="floatTransition(6)"
             >
-              <div class="w-52 h-40 rounded-3xl bg-linear-to-br from-violet-100 to-emerald-100 flex items-center justify-center">
+              <div class="w-52 h-40 rounded-3xl bg-linear-to-br from-violet-100 to-emerald-100 flex items-center justify-center" aria-hidden="true">
                 <Stethoscope class="w-16 h-16 text-violet-600" />
               </div>
             </Motion>
             <Motion
               :animate="{ scale: [1, 1.1, 1] }"
-              :transition="{ duration: 2, repeat: Infinity, ease: 'easeInOut' }"
+              :transition="pulseTransition(2)"
               class="absolute -bottom-2 -right-2"
             >
-              <div class="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+              <div class="w-14 h-14 rounded-2xl bg-white shadow-lg flex items-center justify-center" aria-hidden="true">
                 <Heart class="w-6 h-6 text-rose-500" />
               </div>
             </Motion>

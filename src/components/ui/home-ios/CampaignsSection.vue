@@ -4,7 +4,10 @@
  * Reemplaza Servicios Principales con campañas dinámicas de la API
  */
 import { Motion } from 'motion-v'
-import { ArrowRight, ExternalLink } from 'lucide-vue-next'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
+
+const { prefersReduced } = usePrefersReducedMotion()
+import { ExternalLink } from 'lucide-vue-next'
 
 const props = defineProps({
   campaigns: {
@@ -18,16 +21,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['startCampaign'])
-
-/**
- * Abre la URL de la encuesta en nueva pestaña
- */
-function handleStartCampaign(campaign) {
-  if (campaign.survey_url) {
-    window.open(campaign.survey_url, '_blank', 'noopener,noreferrer')
-  }
-  emit('startCampaign', campaign)
-}
 </script>
 
 <template>
@@ -35,7 +28,7 @@ function handleStartCampaign(campaign) {
     <Motion
       :initial="{ opacity: 0, y: 20 }"
       :animate="{ opacity: 1, y: 0 }"
-      :transition="{ duration: 0.5, delay: 0.1 }"
+      :transition="prefersReduced ? { duration: 0.001 } : { duration: 0.5, delay: 0.1 }"
     >
       <div class="flex items-center justify-between mb-6">
         <div>
@@ -80,11 +73,17 @@ function handleStartCampaign(campaign) {
         :key="campaign.id"
         :initial="{ opacity: 0, x: -20 }"
         :animate="{ opacity: 1, x: 0 }"
-        :transition="{ duration: 0.4, delay: 0.1 + (index * 0.1) }"
+        :transition="prefersReduced ? { duration: 0.001 } : { duration: 0.4, delay: 0.1 + (index * 0.1) }"
       >
-        <div 
-          class="campaign-card group cursor-pointer"
-          @click="handleStartCampaign(campaign)"
+        <component
+          :is="campaign.survey_url ? 'a' : 'div'"
+          :href="campaign.survey_url || undefined"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="campaign-card group"
+          :class="campaign.survey_url ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white' : 'cursor-default opacity-80'"
+          :aria-label="campaign.survey_url ? `Abrir campaña: ${campaign.name}` : `Campaña no disponible: ${campaign.name}`"
+          @click="campaign.survey_url && emit('startCampaign', campaign)"
         >
           <div class="flex items-center gap-4">
             <!-- Logo -->
@@ -93,6 +92,8 @@ function handleStartCampaign(campaign) {
                 v-if="campaign.logo"
                 :src="campaign.logo" 
                 :alt="campaign.name"
+                width="64" height="40"
+                loading="lazy" decoding="async"
                 class="w-16 h-10 object-contain"
               />
               <div 
@@ -114,15 +115,12 @@ function handleStartCampaign(campaign) {
             </div>
 
             <!-- CTA -->
-            <button 
-              class="campaign-cta flex-shrink-0 flex items-center gap-1"
-              @click.stop="handleStartCampaign(campaign)"
-            >
+            <span class="campaign-cta flex-shrink-0 flex items-center gap-1">
               <span>COMENZAR AHORA</span>
               <ExternalLink class="w-3.5 h-3.5" />
-            </button>
+            </span>
           </div>
-        </div>
+        </component>
       </Motion>
     </div>
   </section>
@@ -135,7 +133,7 @@ function handleStartCampaign(campaign) {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
   padding: 16px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -160,7 +158,7 @@ function handleStartCampaign(campaign) {
   padding: 8px 12px;
   border-radius: 8px;
   background: rgba(13, 148, 136, 0.08);
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .campaign-cta:hover {

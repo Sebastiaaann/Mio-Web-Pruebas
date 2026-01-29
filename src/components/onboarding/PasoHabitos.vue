@@ -79,7 +79,7 @@ const condicionesSeleccionadas = computed(() => {
 // Watch para actualizar store cuando cambie el formulario
 watch(formularioLocal, (nuevosDatos) => {
   onboardingStore.actualizarDatosHabitos(nuevosDatos);
-}, { deep: true });
+}, { deep: 2 });
 
 // Manejar cambio en checkbox de condiciones cardiovasculares
 function manejarCambioCondicion(condicion, valor) {

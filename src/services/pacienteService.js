@@ -1,32 +1,5 @@
-import { authService } from './authService';
+import { clienteApi } from '@/utils/clienteApi';
 import { logger } from '@/utils/logger';
-
-const API_HOMA_URL = import.meta.env.VITE_API_HOMA_URL || "https://apihoma.homa.cl:7200";
-const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 10000;
-
-/**
- * Helper: Crear fetch con timeout automático (DRY principle)
- * @private
- */
-const crearFetchConTimeout = (url, opciones = {}) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-  
-  return {
-    controller,
-    timeoutId,
-    fetch: fetch(url, { ...opciones, signal: controller.signal })
-  };
-};
-
-/**
- * Helper: Construir headers comunes (DRY principle)
- * @private
- */
-const construirHeadersComunes = () => ({
-  "Content-Type": "application/json",
-  "X-API-KEY": authService.obtenerToken()
-});
 
 export const pacienteService = {
   /**
@@ -40,28 +13,8 @@ export const pacienteService = {
       return { success: false, error: "ID de paciente no proporcionado" };
     }
 
-    const { controller, timeoutId, fetch: peticion } = crearFetchConTimeout(
-      `${API_HOMA_URL}/api/v1/patients/${patientId}`,
-      {
-        method: "GET",
-        headers: construirHeadersComunes()
-      }
-    );
-
     try {
-      const respuesta = await peticion;
-      clearTimeout(timeoutId);
-
-      // Guard clause para sesión expirada
-      if (respuesta.status === 401) {
-        return { success: false, error: "Sesión expirada" };
-      }
-
-      if (!respuesta.ok) {
-        throw new Error(`Error ${respuesta.status}`);
-      }
-
-      const datos = await respuesta.json();
+      const datos = await clienteApi.get(`/api/v1/patients/${patientId}`);
       const pacienteData = this._extraerDatosPaciente(datos);
 
       return { success: true, paciente: pacienteData };
@@ -96,48 +49,33 @@ export const pacienteService = {
    * Obtener planes del paciente (Plan Actual)
    */
   async obtenerPlanes(patientId) {
-    const { controller, timeoutId, fetch: peticion } = crearFetchConTimeout(
-      `${API_HOMA_URL}/api/v1/patients/plans/${patientId}`,
-      {
-        method: "GET",
-        headers: construirHeadersComunes()
-      }
-    );
-    
     try {
-      const respuesta = await peticion;
-      clearTimeout(timeoutId);
+      const datos = await clienteApi.get(`/api/v1/patients/plans/${patientId}`);
       
-      if (respuesta.ok) {
-        const datos = await respuesta.json();
-        
-        // Manejar múltiples estructuras de respuesta
-        // Estructura 1: { success: true, data: { plans: [...] } }
-        if (datos.success && datos.data?.plans) {
-          return {
-            success: true,
-            data: datos.data
-          };
-        }
-        // Estructura 2: { plans: [...] }
-        else if (datos.plans) {
-          return {
-            success: true,
-            planes: datos.plans
-          };
-        }
-        // Estructura 3: respuesta directa es array
-        else if (Array.isArray(datos)) {
-          return {
-            success: true,
-            planes: datos
-          };
-        }
-        
-        return { success: true, data: datos };
+      // Manejar múltiples estructuras de respuesta
+      // Estructura 1: { success: true, data: { plans: [...] } }
+      if (datos.success && datos.data?.plans) {
+        return {
+          success: true,
+          data: datos.data
+        };
+      }
+      // Estructura 2: { plans: [...] }
+      else if (datos.plans) {
+        return {
+          success: true,
+          planes: datos.plans
+        };
+      }
+      // Estructura 3: respuesta directa es array
+      else if (Array.isArray(datos)) {
+        return {
+          success: true,
+          planes: datos
+        };
       }
       
-      return { success: false, error: "Error al cargar planes" };
+      return { success: true, data: datos };
     } catch (error) {
       logger.error("Error obteniendo planes:", error);
       return { success: false, error: error.message };
@@ -148,60 +86,70 @@ export const pacienteService = {
    * Obtener más planes disponibles (Marketplace)
    */
   async obtenerMasPlanes(patientId) {
-    const { controller, timeoutId, fetch: peticion } = crearFetchConTimeout(
-      `${API_HOMA_URL}/api/v1/patients/more_plans/${patientId}`,
-      {
-        method: "GET",
-        headers: construirHeadersComunes()
-      }
-    );
-    
     try {
-      const respuesta = await peticion;
-      clearTimeout(timeoutId);
+      const datos = await clienteApi.get(`/api/v1/patients/more_plans/${patientId}`);
       
-      logger.info(`[obtenerMasPlanes] Status: ${respuesta.status}, URL: ${API_HOMA_URL}/api/v1/patients/more_plans/${patientId}`);
+      logger.info('[obtenerMasPlanes] Datos recibidos:', datos);
       
-      // Verificar Content-Type antes de parsear
-      const contentType = respuesta.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        logger.error(`[obtenerMasPlanes] Content-Type inválido: ${contentType}`);
-        const textoRespuesta = await respuesta.text();
-        logger.error(`[obtenerMasPlanes] Respuesta recibida: ${textoRespuesta.substring(0, 200)}`);
+      // Manejar ambas estructuras de respuesta:
+      // 1. Nueva: { success: true, data: { plans: [...] } }
+      // 2. Antigua: { plans: [...] }
+      if (datos.data && datos.data.plans) {
         return { 
-          success: false, 
-          error: `El endpoint devolvió ${contentType} en lugar de JSON` 
+          success: true, 
+          data: datos.data
+        };
+      } else if (datos.plans) {
+        return { 
+          success: true, 
+          plans: datos.plans 
         };
       }
       
-      if (respuesta.ok) {
-        const datos = await respuesta.json();
-        
-        logger.info('[obtenerMasPlanes] Datos recibidos:', datos);
-        
-        // Manejar ambas estructuras de respuesta:
-        // 1. Nueva: { success: true, data: { plans: [...] } }
-        // 2. Antigua: { plans: [...] }
-        if (datos.data && datos.data.plans) {
-          return { 
-            success: true, 
-            data: datos.data
-          };
-        } else if (datos.plans) {
-          return { 
-            success: true, 
-            plans: datos.plans 
-          };
-        }
-        
-        return { success: true, data: datos };
-      }
-      
-      logger.error(`[obtenerMasPlanes] Error HTTP ${respuesta.status}`);
-      return { success: false, error: `Error ${respuesta.status} al cargar más planes` };
+      return { success: true, data: datos };
     } catch (error) {
       logger.error("Error obteniendo más planes:", error);
       return { success: false, error: error.message };
+    }
+  },
+
+  /**
+   * Obtener servicios del paciente
+   * @param {number|string} patientId 
+   */
+  async obtenerServicios(patientId) {
+    if (!patientId) {
+      return { success: false, error: "ID de paciente no proporcionado" };
+    }
+
+    try {
+      const datos = await clienteApi.get(`/api/v1/patients/${patientId}/services`);
+      
+      // Manejar múltiples estructuras de respuesta
+      if (datos.success && datos.data?.services) {
+        return {
+          success: true,
+          data: datos.data
+        };
+      } else if (datos.services) {
+        return {
+          success: true,
+          servicios: datos.services
+        };
+      } else if (Array.isArray(datos)) {
+        return {
+          success: true,
+          servicios: datos
+        };
+      }
+      
+      return { success: true, data: datos };
+    } catch (error) {
+      logger.error("Error obteniendo servicios:", error);
+      return { 
+        success: false, 
+        error: "No se pudieron cargar los servicios. Por favor intente más tarde." 
+      };
     }
   },
 
@@ -215,33 +163,8 @@ export const pacienteService = {
       return { success: false, error: "ID de paciente no proporcionado" };
     }
 
-    const { controller, timeoutId, fetch: peticion } = crearFetchConTimeout(
-      `${API_HOMA_URL}/api/v1/patients/${patientId}/campaigns`,
-      {
-        method: "GET",
-        headers: construirHeadersComunes()
-      }
-    );
-
     try {
-      const respuesta = await peticion;
-      clearTimeout(timeoutId);
-
-      // Guard clause para error HTTP
-      if (!respuesta.ok) {
-        logger.error(`Error HTTP ${respuesta.status} al obtener campañas`);
-        throw new Error(`Error ${respuesta.status}`);
-      }
-
-      // Validar content-type
-      const esJSON = this._validarRespuestaJSON(respuesta);
-      if (!esJSON) {
-        const texto = await respuesta.text();
-        logger.error(`Respuesta no-JSON: ${texto.substring(0, 200)}`);
-        throw new Error('Respuesta del servidor no es JSON válido');
-      }
-
-      const datos = await respuesta.json();
+      const datos = await clienteApi.get(`/api/v1/patients/${patientId}/campaigns`);
       const campanas = this._extraerCampanas(datos);
 
       return { success: true, campanas };
@@ -264,30 +187,8 @@ export const pacienteService = {
       return { success: false, error: "ID de paciente no proporcionado" };
     }
 
-    const { timeoutId, fetch: peticion } = crearFetchConTimeout(
-      `${API_HOMA_URL}/api/v1/patients/material_audiovisual/${patientId}`,
-      {
-        method: "GET",
-        headers: construirHeadersComunes()
-      }
-    );
-
     try {
-      const respuesta = await peticion;
-      clearTimeout(timeoutId);
-
-      if (!respuesta.ok) {
-        logger.error(`Error HTTP ${respuesta.status} al obtener material audiovisual`);
-        throw new Error(`Error ${respuesta.status}`);
-      }
-
-      if (!this._validarRespuestaJSON(respuesta)) {
-        const texto = await respuesta.text();
-        logger.error(`Respuesta no-JSON: ${texto.substring(0, 200)}`);
-        throw new Error('Respuesta del servidor no es JSON válido');
-      }
-
-      const datos = await respuesta.json();
+      const datos = await clienteApi.get(`/api/v1/patients/material_audiovisual/${patientId}`);
       const items = this._extraerMaterialAudiovisual(datos);
 
       return { success: true, items };
@@ -301,12 +202,26 @@ export const pacienteService = {
   },
 
   /**
-   * Validar que la respuesta sea JSON (SRP)
-   * @private
+   * Actualizar perfil del paciente
+   * @param {number|string} patientId
+   * @param {object} datos - Datos a actualizar
    */
-  _validarRespuestaJSON(respuesta) {
-    const contentType = respuesta.headers.get('content-type');
-    return contentType && contentType.includes('application/json');
+  async actualizarPerfil(patientId, datos) {
+    if (!patientId) {
+      return { success: false, error: "ID de paciente no proporcionado" };
+    }
+
+    try {
+      const respuesta = await clienteApi.put(`/api/v1/patients/${patientId}`, datos);
+      
+      return { success: true, data: respuesta };
+    } catch (error) {
+      logger.error("Error actualizando perfil:", error);
+      return {
+        success: false,
+        error: "No se pudo actualizar el perfil. Por favor intente más tarde."
+      };
+    }
   },
 
   /**
@@ -339,6 +254,7 @@ export const pacienteService = {
     logger.warn('Estructura de campañas no reconocida');
     return [];
   },
+
   /**
    * Extraer material audiovisual de estructura anidada (SRP)
    * @private
@@ -357,5 +273,25 @@ export const pacienteService = {
 
     logger.warn('Estructura de material audiovisual no reconocida');
     return [];
+  },
+
+  /**
+   * Obtener todas las campañas disponibles (endpoint /api/v1/campaigns/all)
+   * @returns {Promise<{success: boolean, campanas?: array, error?: string}>}
+   */
+  async obtenerTodasLasCampanas() {
+    try {
+      const datos = await clienteApi.get('/api/v1/campaigns/all');
+      const campanas = this._extraerCampanas(datos);
+
+      return { success: true, campanas };
+
+    } catch (error) {
+      logger.error("Error obteniendo todas las campañas:", error);
+      return { 
+        success: false, 
+        error: "No se pudieron cargar las campañas. Por favor intente más tarde." 
+      };
+    }
   }
 };
