@@ -77,55 +77,69 @@ export const useMedicionesStore = defineStore('mediciones', () => {
       const response = await clienteApi.get<Record<string, any>>(`/api/v1/protocol/observations/${patient_id}/${protocolId}`)
       const observations = response?.data?.observations || []
 
-      historialMediciones.value[protocolId] = observations.map((obs: any) => {
-        // 1. Presión arterial
-        if (obs.systolic && obs.diastolic) {
-          return {
-            id: String(obs.id || `${protocolId}-${obs.created}`),
-            tipo: 'presion',
-            nombre: obs.name || 'Presión Arterial',
-            valor: `${obs.systolic}/${obs.diastolic}`,
-            unidad: 'mmHg',
-            fecha: obs.created || new Date().toISOString(),
-            estado: 'normal',
-            observation_type_id: obs.observation_type_id
+      historialMediciones.value[protocolId] = observations
+        .filter((obs: any) => {
+          // Solo incluir observaciones con datos médicos válidos
+          const tienePresion = obs.systolic && obs.diastolic
+          const tienePeso = obs.weight !== undefined && obs.weight !== null && obs.weight !== ''
+          const tieneGlucosa = obs.glucose !== undefined && obs.glucose !== null && obs.glucose !== ''
+          return tienePresion || tienePeso || tieneGlucosa
+        })
+        .map((obs: any) => {
+          // 1. Presión arterial
+          if (obs.systolic && obs.diastolic) {
+            return {
+              id: String(obs.id || `${protocolId}-${obs.created}`),
+              tipo: 'presion',
+              nombre: obs.name || 'Presión Arterial',
+              valor: `${obs.systolic}/${obs.diastolic}`,
+              unidad: 'mmHg',
+              fecha: obs.created || new Date().toISOString(),
+              estado: 'normal',
+              observation_type_id: obs.observation_type_id
+            }
           }
-        }
 
-        // 2. Peso corporal
-        if (obs.weight !== undefined && obs.weight !== null) {
-          const valorPeso = typeof obs.weight === 'number'
-            ? obs.weight
-            : Number(obs.weight)
+          // 2. Peso corporal
+          if (obs.weight !== undefined && obs.weight !== null && obs.weight !== '') {
+            const valorPeso = typeof obs.weight === 'number'
+              ? obs.weight
+              : Number(obs.weight)
 
-          return {
-            id: String(obs.id || `${protocolId}-${obs.created}`),
-            tipo: 'peso',
-            nombre: obs.name || 'Control de Peso',
-            valor: Number.isNaN(valorPeso) ? '' : valorPeso,
-            unidad: 'kg',
-            fecha: obs.created || new Date().toISOString(),
-            estado: 'normal',
-            observation_type_id: obs.observation_type_id
+            return {
+              id: String(obs.id || `${protocolId}-${obs.created}`),
+              tipo: 'peso',
+              nombre: obs.name || 'Control de Peso',
+              valor: Number.isNaN(valorPeso) ? '' : valorPeso,
+              unidad: 'kg',
+              fecha: obs.created || new Date().toISOString(),
+              estado: 'normal',
+              observation_type_id: obs.observation_type_id
+            }
           }
-        }
 
-        // 3. Glucosa (fallback)
-        const valorGlucosa = typeof obs.glucose === 'number'
-          ? obs.glucose
-          : Number(obs.glucose ?? obs.value ?? '')
+          // 3. Glucosa
+          if (obs.glucose !== undefined && obs.glucose !== null && obs.glucose !== '') {
+            const valorGlucosa = typeof obs.glucose === 'number'
+              ? obs.glucose
+              : Number(obs.glucose)
 
-        return {
-          id: String(obs.id || `${protocolId}-${obs.created}`),
-          tipo: 'glucosa',
-          nombre: obs.name || 'Glicemia',
-          valor: Number.isNaN(valorGlucosa) ? '' : valorGlucosa,
-          unidad: 'mg/dL',
-          fecha: obs.created || new Date().toISOString(),
-          estado: 'normal',
-          observation_type_id: obs.observation_type_id
-        }
-      })
+            return {
+              id: String(obs.id || `${protocolId}-${obs.created}`),
+              tipo: 'glucosa',
+              nombre: obs.name || 'Glicemia',
+              valor: Number.isNaN(valorGlucosa) ? '' : valorGlucosa,
+              unidad: 'mg/dL',
+              fecha: obs.created || new Date().toISOString(),
+              estado: 'normal',
+              observation_type_id: obs.observation_type_id
+            }
+          }
+
+          // Fallback (no debería llegar aquí debido al filter)
+          return null
+        })
+        .filter((m: any) => m !== null) // Eliminar nulls del fallback
 
       datosInicializados.value = true
     } catch {
