@@ -98,7 +98,7 @@ function calcularFechaInicio(rango: RangoFechas): Date {
  * @returns Valor numérico extraído o 0 si no se puede parsear
  */
 function extraerValorNumerico(medicion: Medicion): number {
-  const valorLimpio = medicion.valor.replace(/[^\d./]/g, '')
+  const valorLimpio = String(medicion.valor).replace(/[^\d./]/g, '')
 
   // Manejar formato de presión arterial (sistólica/diastólica)
   if (valorLimpio.includes('/')) {
