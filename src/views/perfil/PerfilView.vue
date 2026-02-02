@@ -1,19 +1,22 @@
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import { Motion, AnimatePresence } from 'motion-v'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/tiendaUsuario'
 import { useHealthStore } from '@/stores/tiendaSalud'
-import { useTiendaServicios } from '@/stores/tiendaServicios'
 import { useConfigStore } from '@/stores/tiendaConfig'
-import { pacienteService } from '@/services/pacienteService'
-import { logger } from '@/utils/logger'
 import { storeToRefs } from 'pinia'
 import { 
   Heart, Settings, Bell, X, Moon, Sun, Volume2, VolumeX, LogOut, CheckCircle, ArrowRight,
   Video, Activity, Calendar, PlayCircle, Bot, Leaf, Youtube, Phone, Fingerprint, ClipboardCheck, Sparkles 
 } from 'lucide-vue-next'
 import { useDark, useToggle } from '@vueuse/core'
+
+// Composables
+import { usePlanManager } from '@/composables/usePlanManager'
+import { useMotionVariants } from '@/composables/useMotionVariants'
+import { useModalManager } from '@/composables/useModalManager'
+import { useServiceManager } from '@/composables/useServiceManager'
 
 // Componentes Base del Sistema de Diseño
 import BaseCard from '@/components/ui/base/BaseCard.vue'
@@ -27,215 +30,57 @@ import EmptyState from '@/components/ui/base/EmptyState.vue'
 import PlanCard from '@/components/ui/PlanCard.vue'
 import ClipButton from '@/components/ui/ClipButton.vue'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
 const router = useRouter()
 const userStore = useUserStore()
 const healthStore = useHealthStore()
-const serviciosStore = useTiendaServicios()
+const configStore = useConfigStore()
 
-const { servicios, cargando: cargandoServicios } = storeToRefs(serviciosStore)
 const { videos, campanhas } = storeToRefs(healthStore)
 
 // Dark mode
 const isDark = useDark({ storageKey: 'mio-theme' })
 const toggleDark = useToggle(isDark)
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+// Composables
+const {
+  selectedPlanType,
+  availablePlans,
+  currentPlanMeta,
+  isLoading: isLoadingPlans,
+  currentTheme,
+  setPlanType,
+  loadPlans,
+  selectPlanForPurchase
+} = usePlanManager()
 
-// Modals state
-const showSettings = ref(false)
-const showNotifications = ref(false)
-const showPlanInfo = ref(false)
+const {
+  containerVariants,
+  itemVariants,
+  overlayVariants,
+  panelVariants
+} = useMotionVariants()
+
+const {
+  isOpen,
+  openSettings,
+  openNotifications,
+  openPlanInfo,
+  closeAll
+} = useModalManager()
+
+const {
+  services,
+  isLoading: isLoadingServices,
+  getServiceIcon,
+  filterServicesByPlan,
+  loadServices
+} = useServiceManager()
 
 // Settings state
 const notificationsEnabled = ref(true)
 const isLoggingOut = ref(false)
-
-// Plan Selection State
-const selectedPlanType = ref('mutual') // 'esencial' or 'mutual'
-const availablePlans = ref([])
-const currentPlanMeta = ref(null)
-const isLoadingPlans = ref(false)
-const planCambiadoManualmente = ref(false) // Bandera para saber si el usuario cambió el plan
-const planActivoAPI = ref(null) // Guardar el plan activo del API
-
-// Cargar preferencia de plan guardada al iniciar
-const preferenciaPlanGuardada = localStorage.getItem('mio-plan-activo')
-if (preferenciaPlanGuardada) {
-  selectedPlanType.value = preferenciaPlanGuardada
-  planCambiadoManualmente.value = true
-}
-
-// Plan Themes based on provided JSON
-const planThemes = {
-  esencial: {
-    primary: '#7D58E9',
-    secondary: '#7D58E9',
-    accent: '#996BEF',
-    text: '#333333',
-    background: '#FFFFFF',
-    logo: '/assets/logo_mio_purple.png'
-  },
-  mutual: {
-    primary: '#C4D600',
-    secondary: '#00B6AE',
-    accent: '#505050',
-    text: '#505050',
-    background: '#C4D600',
-    text_alt: '#FFFFFF',
-    logo: '/assets/logo_mutual.png'
-  }
-}
-
-// Config Store
-const configStore = useConfigStore()
-
-// Theme Computed Property
-const currentTheme = computed(() => {
-  return planThemes[selectedPlanType.value] || planThemes.mutual
-})
-
-// Watch for plan selection changes to update global theme and local meta
-import { watch } from 'vue'
-
-watch(selectedPlanType, (newPlanType, oldPlanType) => {
-  if (!newPlanType) return
-  
-  // Si el plan cambió y hay un valor anterior, es un cambio manual del usuario
-  if (oldPlanType && newPlanType !== oldPlanType) {
-    planCambiadoManualmente.value = true
-    // Actualizar el plan activo en el store global (esto también guarda en localStorage)
-    configStore.setPlanActivo(newPlanType)
-    logger.info('💾 Preferencia de plan guardada:', newPlanType)
-  }
-  
-  logger.info(`🔄 Cambio de plan: ${oldPlanType} → ${newPlanType} (manual: ${planCambiadoManualmente.value})`)
-
-  // TODO: Descomentar cuando se quiera habilitar el cambio de colores de interfaz
-  // 1. Update Global Theme
-  // const theme = planThemes[newPlanType]
-  // if (theme) {
-  //   configStore.setClientConfig({
-  //     config: {
-  //       colors: {
-  //          primary: theme.primary,
-  //          secondary: theme.secondary,
-  //          accent: theme.accent,
-  //          text: theme.text,
-  //          // Do not override global background with theme color (which is used for tints locally)
-  //          // background: theme.background 
-  //       }
-  //     }
-  //   })
-  // }
-
-  // 2. Update Local Meta (Plan Actual Card)
-  const theme = planThemes[newPlanType]
-  // Try to find in available plans (buscar por nombre de plan o tipo)
-  let foundPlan = availablePlans.value.find(p => {
-    const pNombre = (p.nombre || p.name_plan || p.subtitle || '').toLowerCase()
-    return pNombre.includes(newPlanType.toLowerCase())
-  })
-  
-  // Si no está en available plans, buscar en planActivoAPI si coincide
-  if (!foundPlan && planActivoAPI.value) {
-    const apiPlanNombre = (planActivoAPI.value.name_plan || '').toLowerCase()
-    if (apiPlanNombre.includes(newPlanType.toLowerCase())) {
-      foundPlan = planActivoAPI.value
-    }
-  }
-  
-  // Si aún no hay plan, revisar currentPlanMeta actual
-  if (!foundPlan && currentPlanMeta.value && currentPlanMeta.value.nombre?.toLowerCase()?.includes(newPlanType.toLowerCase())) {
-     foundPlan = currentPlanMeta.value
-  }
-
-  if (foundPlan) {
-    // Determine logo: preference API logo > Theme logo
-    // EXCEPT for Mutual, where we enforce the local asset as requested
-    let mergedLogo = foundPlan.logo || foundPlan.config?.logo || theme?.logo
-    
-    if (newPlanType.toLowerCase() === 'mutual' && theme?.logo) {
-        mergedLogo = theme.logo
-    }
-
-    currentPlanMeta.value = { 
-        ...foundPlan,
-        nombre: foundPlan.nombre || foundPlan.name_plan || (newPlanType.charAt(0).toUpperCase() + newPlanType.slice(1)),
-        logo: mergedLogo,
-        colorPrimario: foundPlan.colorPrimario || foundPlan.config?.colors?.primary || theme?.primary,
-        colors: foundPlan.colors || foundPlan.config?.colors || theme
-    }
-    logger.info('✅ Metadata del plan actualizada:', currentPlanMeta.value.nombre)
-  } else {
-    // Fallback if plan details not in API: Construct mock meta from theme
-     currentPlanMeta.value = {
-        nombre: newPlanType.charAt(0).toUpperCase() + newPlanType.slice(1),
-        logo: theme?.logo, // Use local asset
-        colorPrimario: theme?.primary,
-        colors: theme
-     }
-     logger.info('⚠️ Plan no encontrado en API, usando datos del tema:', currentPlanMeta.value.nombre)
-  }
-})
-
-// Filtered Services based on Plan Selection
-const filteredServices = computed(() => {
-  return servicios.value.filter(service => {
-    // If service has items (complex structure with plan variants), filter by plan
-    if (service.items && Array.isArray(service.items)) {
-       return service.items.some(item => {
-         const planName = item.plan_name || ''
-         return planName.toLowerCase() === selectedPlanType.value.toLowerCase()
-       })
-    }
-    
-    // If simple structure (API returns user's services directly), include it
-    return true
-  })
-})
-
-// Dynamically resolve icon component
-const getServiceIcon = (iconName) => {
-  const icons = {
-    Video, Activity, Calendar, PlayCircle, Bot, Leaf, Youtube, Phone, Fingerprint, ClipboardCheck, Sparkles, Heart
-  }
-  return icons[iconName] || Activity
-}
-
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 100, damping: 10 },
-  },
-}
-
-const overlayVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.2 } },
-  exit: { opacity: 0, transition: { duration: 0.15 } }
-}
-
-const panelVariants = {
-  hidden: { opacity: 0, y: 40, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1, 
-    transition: { type: "spring", stiffness: 300, damping: 25 } 
-  },
-  exit: { opacity: 0, y: 20, scale: 0.98, transition: { duration: 0.15 } }
-}
 
 // User data
 const userName = computed(() => userStore.nombreCompleto || 'Usuario')
@@ -261,28 +106,6 @@ const controlesCompletados = computed(() => {
 })
 
 // Actions
-function openSettings() {
-  showNotifications.value = false
-  showSettings.value = true
-}
-
-function openNotifications() {
-  showSettings.value = false
-  showNotifications.value = true
-}
-
-function closeAll() {
-  showSettings.value = false
-  showNotifications.value = false
-  showPlanInfo.value = false
-}
-
-function openPlanInfo() {
-  showSettings.value = false
-  showNotifications.value = false
-  showPlanInfo.value = true
-}
-
 async function handleLogout() {
   if (isLoggingOut.value) return
   isLoggingOut.value = true
@@ -294,156 +117,27 @@ async function handleLogout() {
   }
 }
 
-function handlePlanSelection(plan) {
-  logger.info('Plan seleccionado:', {
-    nombre: plan.subtitle,
-    precio: plan.price,
-    store_id: plan.store_id
-  })
-  
-  // Aquí se implementaría la lógica para upgrade de plan
-  // Por ahora mostramos un mensaje informativo
-  alert(`Has seleccionado el plan ${plan.subtitle}\n\nEn breve podrás adquirir este plan directamente desde la app.`)
-  
-  // TODO: Implementar navegación a checkout o modal de confirmación
-  // router.push({ name: 'checkout', params: { planId: plan.store_id } })
+function handlePlanSelection(plan: any) {
+  selectPlanForPurchase(plan)
 }
 
 onMounted(async () => {
   // Load plans and services
   try {
-    isLoadingPlans.value = true
     const patientId = userStore.usuario?.id || userStore.usuario?.patient_id
     
-    // 1. Load services from store (handles caching/availability internally usually, but we force load)
-    await serviciosStore.cargarServicios()
+    // 1. Load services from composable
+    await loadServices()
     
     // 2. Load health data
     await healthStore.initMockData()
 
     if (patientId) {
-      // 2. Fetch plans (Current Plan Info con nueva estructura)
-      const plansResponse = await pacienteService.obtenerPlanes(patientId)
-      
-      logger.info('📋 Respuesta de planes recibida:', plansResponse)
-      
-      if (plansResponse.success && plansResponse.data?.plans && Array.isArray(plansResponse.data.plans)) {
-        logger.info('✅ Planes recibidos (nueva estructura):', plansResponse.data.plans)
-        
-        // Buscar el plan activo
-        const activePlan = plansResponse.data.plans.find(p => p.active_plan === "1")
-        
-        if (activePlan) {
-          // Guardar el plan activo del API para referencia
-          planActivoAPI.value = activePlan
-          
-          // Determinar el tipo de plan del API
-          const planName = activePlan.name_plan.toLowerCase()
-          let tipoPlanAPI = 'mutual'
-          if (planName.includes('mutual')) {
-            tipoPlanAPI = 'mutual'
-          } else if (planName.includes('esencial') || planName.includes('vital')) {
-            tipoPlanAPI = 'esencial'
-          }
-          
-          // Solo establecer el plan si el usuario NO ha cambiado manualmente
-          if (!planCambiadoManualmente.value) {
-            selectedPlanType.value = tipoPlanAPI
-            configStore.setPlanActivo(tipoPlanAPI) // Actualizar store global
-            logger.info('🔄 Plan inicial establecido desde API:', tipoPlanAPI)
-          } else {
-            logger.info('👤 Respetando preferencia del usuario:', selectedPlanType.value)
-          }
-          
-          // Establecer metadatos del plan actual (siempre actualizar metadata con datos del API)
-          currentPlanMeta.value = {
-            nombre: activePlan.name_plan,
-            logo: activePlan.config?.logo || planThemes[selectedPlanType.value]?.logo,
-            colorPrimario: activePlan.config?.colors?.primary || planThemes[selectedPlanType.value]?.primary,
-            colors: activePlan.config?.colors || planThemes[selectedPlanType.value],
-            ...activePlan
-          }
-          
-          logger.info('✅ Plan activo configurado:', currentPlanMeta.value.nombre)
-        }
-      } else if (plansResponse.success && plansResponse.planes && Array.isArray(plansResponse.planes)) {
-        // Fallback para estructura antigua
-        logger.info('✅ Planes recibidos (estructura antigua):', plansResponse.planes)
-        
-        const activePlan = plansResponse.planes.find(p => p.activo) || plansResponse.planes[0]
-        if (activePlan) {
-          currentPlanMeta.value = activePlan
-          
-          let themeName = 'mutual'
-          if (activePlan.nombre.toLowerCase().includes('mutual')) {
-            themeName = 'mutual'
-          } else if (activePlan.nombre.toLowerCase().includes('esencial')) {
-            themeName = 'esencial'
-          }
-          
-          // Solo establecer si no hay cambio manual
-          if (!planCambiadoManualmente.value) {
-            selectedPlanType.value = themeName
-            configStore.setPlanActivo(themeName) // Actualizar store global
-          }
-          
-          if (!activePlan.logo && planThemes[themeName]) {
-            activePlan.logo = planThemes[themeName].logo
-            currentPlanMeta.value = activePlan
-          }
-        }
-      } else {
-        logger.warn('⚠️ No se pudieron cargar los planes del usuario', plansResponse)
-      }
-
-      // 3. Fetch specific plan details (Available Plans for selection/upgrade)
-      const morePlansResponse = await pacienteService.obtenerMasPlanes(patientId)
-      
-      logger.info('Respuesta de más planes:', morePlansResponse)
-      
-      // Manejar la nueva estructura de API con data.plans
-      if (morePlansResponse.success && morePlansResponse.data?.plans) {
-        // Usar directamente la estructura del API sin transformar
-        availablePlans.value = morePlansResponse.data.plans
-        
-        logger.info(`✅ Planes disponibles cargados: ${availablePlans.value.length} planes`, availablePlans.value)
-      } 
-      // Fallback para estructura antigua de API (morePlansResponse.plans directamente)
-      else if (morePlansResponse.success && morePlansResponse.plans) {
-        const existingIds = new Set(availablePlans.value.map(p => p.id))
-        morePlansResponse.plans.forEach(p => {
-            if (!existingIds.has(p.id)) {
-                availablePlans.value.push(p)
-            }
-        })
-        
-        logger.info(`✅ Planes disponibles cargados (estructura antigua): ${availablePlans.value.length} planes`)
-        
-        // Post-process para estructura antigua
-        availablePlans.value = availablePlans.value.map(plan => {
-          let themeColor = null
-          if (plan.nombre?.toLowerCase().includes('mutual')) {
-              themeColor = planThemes.mutual.primary
-          } else if (plan.nombre?.toLowerCase().includes('esencial')) {
-              themeColor = planThemes.esencial.primary
-          }
-          
-          if (themeColor && !plan.color && !plan.colorPrimario) {
-              return { ...plan, color: themeColor, colorPrimario: themeColor }
-          }
-          return plan
-        })
-      } else {
-        logger.warn('⚠️ No se pudieron cargar planes disponibles', morePlansResponse)
-      }
-    } else {
-        // Fallback for demo/testing if no user logged in
-        logger.warn('No patient ID found, skipping plan fetch')
+      // 3. Load plans from composable
+      await loadPlans(String(patientId))
     }
   } catch (err) {
-    logger.error('Error fetching data', err)
-  } finally {
-    isLoadingPlans.value = false
+    console.error('Error fetching data', err)
   }
 })
 </script>
@@ -454,7 +148,7 @@ onMounted(async () => {
       <!-- Main Grid -->
       <Motion
         is="section"
-        :variants="containerVariants"
+        :variants="containerVariants as any"
         initial="hidden"
         animate="visible"
         class="grid w-full grid-cols-1 gap-4 md:grid-cols-2 auto-rows-[minmax(180px,auto)] mb-8"
@@ -462,7 +156,7 @@ onMounted(async () => {
       >
         <!-- SLOT 1: Avatar & Name Card -->
         <Motion
-          :variants="itemVariants"
+          :variants="itemVariants as any"
         >
           <BaseCard padding="normal" rounded="large" hoverable>
             <div>
@@ -516,7 +210,7 @@ onMounted(async () => {
 
         <!-- SLOT 2: Health Overview -->
         <Motion
-          :variants="itemVariants"
+          :variants="itemVariants as any"
           class="md:col-span-1 md:row-span-3"
         >
           <BaseCard padding="normal" rounded="large" hoverable :class="'overflow-hidden relative group h-full'">
@@ -573,7 +267,7 @@ onMounted(async () => {
 
         <!-- SLOT 3: Motivational Card -->
         <Motion
-          :variants="itemVariants"
+          :variants="itemVariants as any"
           class="md:col-span-1 md:row-span-1"
         >
           <BaseCard padding="normal" rounded="large" :class="'overflow-hidden relative group'">
@@ -592,7 +286,7 @@ onMounted(async () => {
 
         <!-- SLOT 4: Settings -->
         <Motion
-          :variants="itemVariants"
+          :variants="itemVariants as any"
           class="md:col-span-1 md:row-span-1"
         >
           <BaseCard padding="normal" rounded="large" hoverable>
@@ -654,12 +348,12 @@ onMounted(async () => {
             <div class="flex gap-1">
               <!-- Botón Esencial -->
               <button 
-                @click="selectedPlanType = 'esencial'"
+                @click="setPlanType('esencial')"
                 class="flex items-center gap-2 px-6 py-2 rounded-full text-base font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 :style="selectedPlanType === 'esencial' ? { 
                   backgroundColor: 'white', 
-                  color: planThemes.esencial.primary,
-                  borderColor: planThemes.esencial.primary,
+                  color: currentTheme.primary,
+                  borderColor: currentTheme.primary,
                   borderWidth: '2px',
                   boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                 } : { 
@@ -671,7 +365,7 @@ onMounted(async () => {
                 <div 
                   v-if="selectedPlanType === 'esencial'" 
                   class="w-4 h-4 rounded-full border-2" 
-                  :style="{ borderColor: planThemes.esencial.primary, backgroundColor: planThemes.esencial.primary }"
+                  :style="{ borderColor: currentTheme.primary, backgroundColor: currentTheme.primary }"
                 ></div>
                 <div 
                   v-else 
@@ -682,11 +376,11 @@ onMounted(async () => {
               
               <!-- Botón Mutual -->
               <button 
-                @click="selectedPlanType = 'mutual'"
+                @click="setPlanType('mutual')"
                 class="flex items-center gap-2 px-6 py-2 rounded-full text-base font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 :style="selectedPlanType === 'mutual' ? { 
-                  backgroundColor: planThemes.mutual.primary, 
-                  color: planThemes.mutual.text_alt,
+                  backgroundColor: currentTheme.primary, 
+                  color: currentTheme.text_alt,
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                 } : { 
                   color: '#9CA3AF' 
@@ -737,8 +431,8 @@ onMounted(async () => {
     <!-- Settings Panel Overlay -->
     <AnimatePresence>
       <Motion
-        v-if="showSettings"
-        :variants="overlayVariants"
+        v-if="isOpen('settings')"
+        :variants="overlayVariants as any"
         initial="hidden"
         animate="visible"
         exit="exit"
@@ -746,7 +440,7 @@ onMounted(async () => {
         @click.self="closeAll"
       >
         <Motion
-          :variants="panelVariants"
+          :variants="panelVariants as any"
           initial="hidden"
           animate="visible"
           exit="exit"
@@ -834,8 +528,8 @@ onMounted(async () => {
     <!-- Notifications Panel Overlay -->
     <AnimatePresence>
       <Motion
-        v-if="showNotifications"
-        :variants="overlayVariants"
+        v-if="isOpen('notifications')"
+        :variants="overlayVariants as any"
         initial="hidden"
         animate="visible"
         exit="exit"
@@ -843,7 +537,7 @@ onMounted(async () => {
         @click.self="closeAll"
       >
         <Motion
-          :variants="panelVariants"
+          :variants="panelVariants as any"
           initial="hidden"
           animate="visible"
           exit="exit"
@@ -915,8 +609,8 @@ onMounted(async () => {
     <!-- Plan Info Modal -->
     <AnimatePresence>
       <Motion
-        v-if="showPlanInfo"
-        :variants="overlayVariants"
+        v-if="isOpen('planInfo')"
+        :variants="overlayVariants as any"
         initial="hidden"
         animate="visible"
         exit="exit"
@@ -924,7 +618,7 @@ onMounted(async () => {
         @click.self="closeAll"
       >
         <Motion
-          :variants="panelVariants"
+          :variants="panelVariants as any"
           class="max-w-4xl w-full max-h-[90vh]"
         >
           <BaseCard padding="none" rounded="large" :hoverable="false" class="overflow-hidden shadow-2xl">

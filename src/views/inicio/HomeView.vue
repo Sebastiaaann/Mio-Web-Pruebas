@@ -1,5 +1,5 @@
-<script setup>
-import { ref, computed, onMounted } from 'vue';
+<script setup lang="ts">
+import { ref, computed, onMounted, type Ref } from 'vue';
 import { useUserStore } from '@/stores/tiendaUsuario';
 import { useHealthStore } from '@/stores/tiendaSalud';
 import { useTiendaCampanas } from '@/stores/tiendaCampanas';
@@ -7,6 +7,13 @@ import { useTiendaServicios } from '@/stores/tiendaServicios';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { Bot } from 'lucide-vue-next';
+import { useLocalStorage } from '@vueuse/core';
+import type { Control, Medicion, Campana, EstadoControl, EstadoMedicion, TipoMedicion } from '@/types/salud';
+import { useSaludo } from '@/composables/useSaludo';
+import { useFormatoFecha, formatDateFriendly } from '@/composables/useFormatoFecha';
+import { useMediciones, type MedicionDisplay, type Tendencia, type DatosResumen } from '@/composables/useMediciones';
+import { useUserInitials } from '@/composables/useUserInitials';
+import { useBannersFiltrados } from '@/composables/useBannersFiltrados';
 import {
   Sheet,
   SheetContent,
@@ -24,6 +31,29 @@ import {
 } from "@/components/ui/carousel/index.js";
 import ChatView from '@/views/chat/ChatView.vue';
 
+// ============================================================================
+// INTERFACES
+// ============================================================================
+
+interface EventoProximo {
+  day: number
+  month: string
+  title: string
+  subtitle: string
+  colorClass: string
+  bgClass: string
+  status: string
+  statusClass: string
+}
+
+interface MedicionResumen {
+  valor: number
+  fecha: string
+  fechaStr: string
+  altura?: number
+  valorCompleto?: string
+}
+
 // Stores
 const userStore = useUserStore();
 const healthStore = useHealthStore();
@@ -36,293 +66,57 @@ const { servicios } = storeToRefs(serviciosStore);
 
 // Refs
 const { nombreCompleto, firstName, usuario } = storeToRefs(userStore);
-const { campanas } = storeToRefs(campanasStore);
+const { campanas } = storeToRefs(campanasStore) as { campanas: Ref<Campana[]> };
 const { controlesProximos, historialMediciones, ultimaMedicion } = storeToRefs(healthStore);
 
 // Notifications
-const hasNotifications = ref(true);
+const hasNotifications = ref<boolean>(true);
 
 // Estado de carga
 const cargandoMediciones = computed(() => healthStore.loading);
 
 // Estado para controlar el panel del chatbot
-const chatbotAbierto = ref(false);
+const chatbotAbierto = ref<boolean>(false);
 
 // Estado para el plan activo (obtenido desde localStorage)
-const planActivo = ref('mutual');
+const planActivo = useLocalStorage<string>('mio-plan-activo', 'mutual');
+
+// Composables
+const { saludo } = useSaludo();
+
+// Usar composable de mediciones
+const {
+  medicionesDisplay,
+  datosResumenPeso,
+  datosResumenPresion,
+  calcularTendencia,
+  generarPathPresion,
+  generarYUltimoPunto
+} = useMediciones({
+  controlesProximos,
+  historialMediciones,
+  ultimaMedicion
+});
 
 // Banners filtrados según el plan
-const bannersFiltrados = computed(() => {
-  // Buscar el servicio de tipo BANNER
-  const servicioBanner = servicios.value.find(s => s.name === 'BANNER');
-  
-  if (!servicioBanner || !servicioBanner.options) {
-    return [];
-  }
-  
-  // Obtener todos los banners que tengan imagen y título
-  const todosBanners = servicioBanner.options.filter(option => 
-    option.image && option.title
-  );
-  
-  // Si el plan es esencial, filtrar solo "Clases en vivo con Berni Allen"
-  if (planActivo.value === 'esencial') {
-    return todosBanners.filter(banner => 
-      banner.title?.toLowerCase().includes('berni allen')
-    );
-  }
-  
-  // Si es mutual, mostrar todos los banners
-  return todosBanners;
-});
+const { bannersFiltrados } = useBannersFiltrados(servicios, planActivo);
 
 // --- Computed Data ---
 
-// Saludo dinámico
-const saludo = computed(() => {
-  const hora = new Date().getHours();
-  if (hora < 12) return 'Buenos días';
-  if (hora < 19) return 'Buenas tardes';
-  return 'Buenas noches';
-});
+// Saludo dinámico (usando composable)
+// const { saludo } = useSaludo(); // Ya declarado arriba
 
 // Iniciales del usuario
-const userInitials = computed(() => {
-    if (firstName.value) {
-        return firstName.value.substring(0, 2).toUpperCase();
-    }
-    if (nombreCompleto.value) {
-        return nombreCompleto.value.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    }
-    return 'MP'; // Mio Patient
-});
-
-// Mediciones Recientes - 4 controles específicos
-const medicionesDisplay = computed(() => {
-    // Definir los 4 controles específicos que queremos mostrar
-    const controlesRequeridos = [
-        { id: 'peso', nombre: 'Control de Peso', tipo: 'peso', icono: 'scale', color: 'text-purple-500', bg: 'bg-purple-50', unidad: 'kg' },
-        { id: 'presion', nombre: 'Control Presión Arterial', tipo: 'presion', icono: 'heart-pulse', color: 'text-alert-red', bg: 'bg-red-50', unidad: 'mmHg' },
-        { id: 'glicemia', nombre: 'Glicemia', tipo: 'glucosa', icono: 'droplet', color: 'text-blue-500', bg: 'bg-blue-50', unidad: 'mg/dL' },
-        { id: 'diabetes', nombre: 'Control Diabetes', tipo: 'glucosa', icono: 'activity', color: 'text-green-500', bg: 'bg-green-50', unidad: 'mg/dL' }
-    ];
-    
-    // Debug: Verificar qué datos tenemos disponibles
-    console.log('📊 Mediciones Display - Controles disponibles:', controlesProximos.value.length);
-    console.log('📊 Mediciones Display - Historial:', historialMediciones.value);
-    console.log('📊 Mediciones Display - Última medición:', ultimaMedicion.value);
-
-    // Mapear los 4 controles requeridos
-    return controlesRequeridos.map(controlReq => {
-        // Buscar si existe un control real en la API que coincida con este tipo
-        const controlReal = controlesProximos.value.find(c => {
-            const nombreLower = c.nombre.toLowerCase();
-            if (controlReq.tipo === 'peso') {
-                return nombreLower.includes('peso') || nombreLower.includes('masa');
-            } else if (controlReq.tipo === 'presion') {
-                return nombreLower.includes('presi') || nombreLower.includes('arterial');
-            } else if (controlReq.tipo === 'glucosa') {
-                return nombreLower.includes('gluc') || nombreLower.includes('glic') || nombreLower.includes('diabetes');
-            }
-            return false;
-        });
-        
-        // Usar el ID del control real si existe, sino usar el ID del requerido
-        const controlId = controlReal ? controlReal.id : controlReq.id;
-        
-        // Buscar historial para este control
-        const history = historialMediciones.value[controlId] || [];
-        let latest = history.length > 0 ? history[0] : null;
-        let previous = history.length > 1 ? history[1] : null;
-        
-        // Si no hay historial específico, buscar en la última medición global
-        if (!latest && ultimaMedicion.value) {
-            const ultima = ultimaMedicion.value;
-            if (ultima.tipo === controlReq.tipo) {
-                latest = ultima;
-            }
-        }
-        
-        // Si no hay datos, buscar en todos los historiales disponibles por tipo
-        if (!latest) {
-            Object.values(historialMediciones.value).forEach(historial => {
-                if (Array.isArray(historial)) {
-                    const medicionTipo = historial.find(m => m.tipo === controlReq.tipo);
-                    if (medicionTipo && (!latest || new Date(medicionTipo.fecha) > new Date(latest.fecha))) {
-                        latest = medicionTipo;
-                        // Buscar la anterior para tendencia
-                        const idx = historial.indexOf(medicionTipo);
-                        if (idx >= 0 && idx < historial.length - 1) {
-                            previous = historial[idx + 1];
-                        }
-                    }
-                }
-            });
-        }
-
-        let value = latest ? latest.valor : '--';
-        if (value === 'N/A' || value === null || value === undefined) value = '--';
-
-        // Usar unidad del control requerido o de la medición
-        let unit = latest && latest.unidad ? latest.unidad : controlReq.unidad;
-        // Usar formato de fecha amigable
-        let date = latest && latest.fecha ? formatDateFriendly(latest.fecha) : 'Sin registros';
-        let status = 'Pendiente';
-        let statusClass = 'bg-gray-bg text-gray-text-light';
-        
-        if (value === '--') {
-             status = 'Sin registrar';
-             unit = controlReq.unidad; // Mantener unidad aunque no haya valor
-        } else if (latest) {
-             const estado = latest.estado || 'normal';
-             if (estado === 'normal' || estado === 'none') {
-                status = 'Normal';
-                statusClass = 'bg-health-green/10 text-health-green';
-            } else if (estado === 'alerta' || estado === 'alert') {
-                status = 'Alerta';
-                statusClass = 'bg-alert-red/10 text-alert-red';
-            } else if (estado === 'critico' || estado === 'critical') {
-                status = 'Crítico';
-                statusClass = 'bg-red-600/10 text-red-600';
-            } else {
-                status = 'Registrado';
-                statusClass = 'bg-primary/10 text-primary';
-            }
-        }
-
-        // Usar icono y color del control requerido
-        const iconName = controlReq.icono;
-        const colorClass = controlReq.color;
-        const bgClass = controlReq.bg;
-
-        // Calcular tendencia comparando con medición anterior
-        const tendencia = calcularTendencia(
-            latest ? latest.valor : null,
-            previous ? previous.valor : null,
-            controlReq.tipo
-        );
-
-        return {
-            key: controlReq.id,
-            title: controlReq.nombre,
-            icon: iconName,
-            color: colorClass,
-            bg: bgClass,
-            unit,
-            value,
-            status,
-            statusClass,
-            date,
-            tendencia
-        };
-    });
-});
-
-// Datos para el Resumen Semanal - Gráficos dinámicos
-const datosResumenPeso = computed(() => {
-  // Buscar todas las mediciones de peso en el historial
-  const medicionesPeso = [];
-  
-  Object.values(historialMediciones.value).forEach(historial => {
-    if (Array.isArray(historial)) {
-      historial.forEach(m => {
-        if (m.tipo === 'peso' && m.valor && m.valor !== '--' && m.valor !== 'N/A') {
-          medicionesPeso.push({
-            valor: parseFloat(m.valor),
-            fecha: m.fecha,
-            fechaStr: new Date(m.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })
-          });
-        }
-      });
-    }
-  });
-  
-  // Ordenar por fecha y tomar las últimas 7
-  medicionesPeso.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-  const ultimasMediciones = medicionesPeso.slice(-7);
-  
-  if (ultimasMediciones.length === 0) {
-    return {
-      promedio: 0,
-      mediciones: [],
-      tieneDatos: false
-    };
-  }
-  
-  // Calcular promedio
-  const promedio = ultimasMediciones.reduce((sum, m) => sum + m.valor, 0) / ultimasMediciones.length;
-  
-  // Normalizar alturas para el gráfico (0-100%)
-  const valores = ultimasMediciones.map(m => m.valor);
-  const min = Math.min(...valores);
-  const max = Math.max(...valores);
-  const rango = max - min || 1;
-  
-  const medicionesNormalizadas = ultimasMediciones.map(m => ({
-    ...m,
-    altura: Math.max(20, Math.min(100, ((m.valor - min) / rango) * 80 + 20))
-  }));
-  
-  return {
-    promedio: promedio.toFixed(1),
-    mediciones: medicionesNormalizadas,
-    tieneDatos: true
-  };
-});
-
-const datosResumenPresion = computed(() => {
-  // Buscar todas las mediciones de presión en el historial
-  const medicionesPresion = [];
-  
-  Object.values(historialMediciones.value).forEach(historial => {
-    if (Array.isArray(historial)) {
-      historial.forEach(m => {
-        if (m.tipo === 'presion' && m.valor && m.valor !== '--' && m.valor !== 'N/A') {
-          // Extraer valor sistólico (antes del /)
-          const sistolica = parseFloat(m.valor.split('/')[0]);
-          if (!isNaN(sistolica)) {
-            medicionesPresion.push({
-              valor: sistolica,
-              valorCompleto: m.valor,
-              fecha: m.fecha,
-              fechaStr: new Date(m.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })
-            });
-          }
-        }
-      });
-    }
-  });
-  
-  // Ordenar por fecha y tomar las últimas 7
-  medicionesPresion.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-  const ultimasMediciones = medicionesPresion.slice(-7);
-  
-  if (ultimasMediciones.length === 0) {
-    return {
-      promedio: 0,
-      mediciones: [],
-      tieneDatos: false
-    };
-  }
-  
-  // Calcular promedio
-  const promedio = ultimasMediciones.reduce((sum, m) => sum + m.valor, 0) / ultimasMediciones.length;
-  
-  return {
-    promedio: Math.round(promedio),
-    mediciones: ultimasMediciones,
-    tieneDatos: true
-  };
-});
+const { iniciales: userInitials } = useUserInitials(firstName, nombreCompleto);
 
 // Eventos (Controles Pendientes)
-const proximosEventos = computed(() => {
+const proximosEventos = computed<EventoProximo[]>(() => {
     const list = controlesProximos.value.filter(c => c.estado === 'pendiente').slice(0, 3);
     
     if (list.length === 0) {
         return [
            { 
-             day: '15', month: 'ENE', title: 'Consulta General', subtitle: 'Hospital Central • 10:00 AM', 
+             day: 15, month: 'ENE', title: 'Consulta General', subtitle: 'Hospital Central • 10:00 AM', 
              colorClass: 'text-primary', bgClass: 'bg-primary/10', status: 'Confirmada', statusClass: 'bg-primary/10 text-primary' 
            }
         ];
@@ -345,127 +139,9 @@ const proximosEventos = computed(() => {
     });
 });
 
-const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if(isNaN(d.getTime())) return dateStr;
-    const now = new Date();
-    const diff = now - d;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 24) return `Hace ${hours} horas`;
-    return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
-};
-
-// Formato de fecha amigable (Hoy, Ayer, Hace X días)
-const formatDateFriendly = (dateStr) => {
-    if (!dateStr) return 'Sin fecha';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    
-    const now = new Date();
-    const diffTime = now - d;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-        // Hoy - mostrar hora
-        const hours = d.getHours().toString().padStart(2, '0');
-        const minutes = d.getMinutes().toString().padStart(2, '0');
-        return `Hoy, ${hours}:${minutes}`;
-    } else if (diffDays === 1) {
-        return 'Ayer';
-    } else if (diffDays < 7) {
-        return `Hace ${diffDays} días`;
-    } else if (diffDays < 30) {
-        const weeks = Math.floor(diffDays / 7);
-        return `Hace ${weeks} semana${weeks > 1 ? 's' : ''}`;
-    } else {
-        return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
-    }
-};
-
-// Funciones auxiliares para generar gráficos
-const generarPathPresion = (mediciones) => {
-  if (mediciones.length < 2) return '';
-  
-  const valores = mediciones.map(m => m.valor);
-  const min = Math.min(...valores);
-  const max = Math.max(...valores);
-  const rango = max - min || 1;
-  
-  // Normalizar valores a coordenadas Y (0-40, invertido porque SVG va de arriba hacia abajo)
-  const puntos = mediciones.map((m, idx) => {
-    const x = (idx / (mediciones.length - 1)) * 100;
-    const y = 40 - (((m.valor - min) / rango) * 30 + 5); // Entre 5 y 35
-    return `${x},${y}`;
-  });
-  
-  // Crear path suavizado con curvas Bézier
-  let path = `M${puntos[0]}`;
-  for (let i = 1; i < puntos.length; i++) {
-    const prev = puntos[i - 1].split(',').map(Number);
-    const curr = puntos[i].split(',').map(Number);
-    const cpx1 = prev[0] + (curr[0] - prev[0]) / 2;
-    const cpy1 = prev[1];
-    const cpx2 = prev[0] + (curr[0] - prev[0]) / 2;
-    const cpy2 = curr[1];
-    path += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${curr[0]},${curr[1]}`;
-  }
-  
-  return path;
-};
-
-const generarYUltimoPunto = (mediciones) => {
-  if (mediciones.length === 0) return 20;
-  
-  const ultimo = mediciones[mediciones.length - 1];
-  const valores = mediciones.map(m => m.valor);
-  const min = Math.min(...valores);
-  const max = Math.max(...valores);
-  const rango = max - min || 1;
-  
-  return 40 - (((ultimo.valor - min) / rango) * 30 + 5);
-};
-
-// Función para calcular tendencia comparando con medición anterior
-const calcularTendencia = (current, previous, tipo) => {
-    if (!current || !previous || current === '--' || previous === '--') {
-        return { direccion: 'stable', cambio: null, porcentaje: null };
-    }
-    
-    let valorActual = parseFloat(current);
-    let valorAnterior = parseFloat(previous);
-    
-    // Para presión arterial, extraer valor sistólico
-    if (tipo === 'presion' && current.includes('/')) {
-        valorActual = parseFloat(current.split('/')[0]);
-        valorAnterior = parseFloat(previous.split('/')[0]);
-    }
-    
-    if (isNaN(valorActual) || isNaN(valorAnterior) || valorAnterior === 0) {
-        return { direccion: 'stable', cambio: null, porcentaje: null };
-    }
-    
-    const diferencia = valorActual - valorAnterior;
-    const porcentaje = ((diferencia / valorAnterior) * 100);
-    
-    // Umbral del 5% para considerar estable
-    if (Math.abs(porcentaje) < 5) {
-        return { direccion: 'stable', cambio: diferencia, porcentaje };
-    }
-    
-    // Para peso y presión: menos es mejor (down = good)
-    // Para glucosa y frecuencia: depende del rango normal
-    let direccion = diferencia > 0 ? 'up' : 'down';
-    
-    return { direccion, cambio: diferencia, porcentaje };
-};
-
 onMounted(async () => {
-    // Obtener plan activo desde localStorage
-    const planGuardado = localStorage.getItem('mio-plan-activo');
-    if (planGuardado) {
-        planActivo.value = planGuardado;
-    }
+    // El plan activo ya se maneja con useLocalStorage (reactivo automáticamente)
+    // No es necesario cargarlo manualmente desde localStorage
     
     // Cargar datos reales de la API de HOMA
     await Promise.all([
@@ -607,7 +283,7 @@ onMounted(async () => {
                             </div>
                             <h3 class="font-display font-bold text-lg text-gray-text mb-2 group-hover:text-primary transition-colors">{{ campana.nombre }}</h3>
                             <p class="text-gray-text-light text-sm mb-6 leading-relaxed line-clamp-2 h-10">{{ campana.descripcion || 'Campaña de salud disponible para ti' }}</p>
-                            <a :href="campana.url" target="_blank" rel="noopener noreferrer" 
+                            <a :href="campana.url || '#'" target="_blank" rel="noopener noreferrer" 
                                class="block w-full py-3 bg-gray-bg text-gray-text font-bold rounded-xl hover:bg-primary hover:text-white transition-all shadow-none hover:shadow-lg hover:shadow-primary/30 text-center">
                                 Ver Detalles
                             </a>
@@ -660,7 +336,7 @@ onMounted(async () => {
                                         :class="`text-sm ${item.tendencia.direccion === 'up' ? 'text-red-500' : 'text-green-500'}`"
                                     ></iconify-icon>
                                     <span :class="`text-xs font-medium ${item.tendencia.direccion === 'up' ? 'text-red-500' : 'text-green-500'}`">
-                                        {{ Math.abs(item.tendencia.porcentaje).toFixed(1) }}%
+                                        {{ Math.abs(item.tendencia.porcentaje ?? 0).toFixed(1) }}%
                                     </span>
                                 </div>
                                 <div v-else-if="item.tendencia && item.tendencia.direccion === 'stable'" class="flex items-center gap-1">
