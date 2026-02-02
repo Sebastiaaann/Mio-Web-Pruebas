@@ -200,31 +200,37 @@ function buscarControlReal(
 
 /**
  * Busca la última medición de un tipo específico en todo el historial
+ * Recolecta TODAS las mediciones del tipo y devuelve la más reciente y la anterior
  */
 function buscarMedicionEnHistorial(
   historial: HistorialMediciones,
   tipo: TipoMedicion
-): { actual: Medicion | null; anterior: Medicion | null } {
-  let actual: Medicion | null = null
-  let anterior: Medicion | null = null
+): { actual: Medicion | null; anterior: Medicion | null; todas: Medicion[] } {
+  const todasLasMediciones: Medicion[] = []
 
+  // Recolectar TODAS las mediciones del tipo de TODO el historial
   Object.values(historial).forEach((historialProtocolo) => {
     if (!Array.isArray(historialProtocolo)) return
 
-    const medicionTipo = historialProtocolo.find((m) => m.tipo === tipo)
-    if (!medicionTipo) return
-
-    const fechaMedicion = new Date(medicionTipo.fecha)
-    const fechaActual = actual ? new Date(actual.fecha) : null
-
-    if (!fechaActual || fechaMedicion > fechaActual) {
-      // La encontrada es más reciente, la actual pasa a ser anterior
-      anterior = actual
-      actual = medicionTipo
-    }
+    historialProtocolo.forEach((m) => {
+      if (m.tipo === tipo) {
+        todasLasMediciones.push(m)
+      }
+    })
   })
 
-  return { actual, anterior }
+  // Ordenar por fecha (más reciente primero)
+  todasLasMediciones.sort((a, b) => {
+    const fechaA = new Date(a.fecha).getTime()
+    const fechaB = new Date(b.fecha).getTime()
+    return fechaB - fechaA
+  })
+
+  return {
+    actual: todasLasMediciones[0] || null,
+    anterior: todasLasMediciones[1] || null,
+    todas: todasLasMediciones
+  }
 }
 
 /**
@@ -356,36 +362,24 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
     const ultima = toValue(ultimaMedicion)
 
     return CONTROLES_REQUERIDOS.map((config) => {
-      // Buscar control real en la API
-      const controlReal = buscarControlReal(controles, config.tipo)
-      const controlId = controlReal ? controlReal.id : config.id
+      // Buscar mediciones por tipo en todo el historial
+      const { actual, anterior } = buscarMedicionEnHistorial(historial, config.tipo)
 
-      // Buscar historial específico
-      const history = historial[controlId] || []
-      let actual = history.length > 0 ? history[0] : null
-      let anterior = history.length > 1 ? history[1] : null
-
-      // Fallback: usar última medición global si coincide el tipo
-      if (!actual && ultima && ultima.tipo === config.tipo) {
-        actual = ultima
-      }
-
-      // Fallback: buscar en todo el historial por tipo
-      if (!actual) {
-        const { actual: encontrada, anterior: previa } = buscarMedicionEnHistorial(historial, config.tipo)
-        actual = encontrada
-        anterior = previa
+      // Fallback: usar última medición global si coincide el tipo y no hay en historial
+      let medicionActual = actual
+      if (!medicionActual && ultima && ultima.tipo === config.tipo) {
+        medicionActual = ultima
       }
 
       // Formatear valor
-      let value = actual?.valor ?? '--'
+      let value = medicionActual?.valor ?? '--'
       if (value === 'N/A' || value === null || value === undefined) {
         value = '--'
       }
 
       // Determinar unidad y fecha
-      const unit = actual?.unidad || config.unidad
-      const date = actual?.fecha ? formatDateFriendly(actual.fecha) : 'Sin registros'
+      const unit = medicionActual?.unidad || config.unidad
+      const date = medicionActual?.fecha ? formatDateFriendly(medicionActual.fecha) : 'Sin registros'
 
       // Determinar estado y clases
       let status = 'Pendiente'
@@ -393,8 +387,8 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
 
       if (value === '--') {
         status = 'Sin registrar'
-      } else if (actual) {
-        const estado = actual.estado || 'normal'
+      } else if (medicionActual) {
+        const estado = medicionActual.estado || 'normal'
         const configEstado = CLASES_ESTADO[estado]
 
         if (configEstado) {
@@ -408,7 +402,7 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
 
       // Calcular tendencia
       const tendencia = calcularTendencia(
-        actual?.valor ?? null,
+        medicionActual?.valor ?? null,
         anterior?.valor ?? null,
         config.tipo
       )
