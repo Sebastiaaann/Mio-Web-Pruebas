@@ -180,6 +180,26 @@ export type {
   EntradaMediciones
 } from '../utils/mediciones'
 
+// ============================================================================
+// TIPOS DE API (src/types/api.ts)
+// ============================================================================
+
+export type {
+  ApiResponse,
+  LoginCredentials,
+  AuthUser,
+  LoginResponse,
+  SessionMetaAuth,
+  Paciente,
+  PacienteResponse,
+  ServicioApiRaw,
+  ServicioOpcionRaw,
+  ServicioNormalizado,
+  ServicioOpcionNormalizada,
+  RequestConfig,
+  ClienteApiConfig
+} from './api'
+
 export {
   UMBRAL_TENDENCIA_ESTABLE,
   PESO_MINIMO_VALIDO,

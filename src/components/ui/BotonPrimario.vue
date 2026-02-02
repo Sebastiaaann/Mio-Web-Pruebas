@@ -1,6 +1,6 @@
 <!-- src/components/ui/BotonPrimario.vue -->
 <script setup>
-import { unirClases } from '@/utils/UnirClases';
+import { unirClases } from '@/utils/UnirClases'
 
 const { 
   variant = 'primario',

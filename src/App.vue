@@ -5,8 +5,8 @@ import { useRoute, useRouter } from 'vue-router';
 import DisposicionApp from '@/layouts/DisposicionApp.vue';
 import { Motion, AnimatePresence } from 'motion-v';
 
-import { useConfigStore } from '@/stores/tiendaConfig.js';
-import { useUserStore } from '@/stores/tiendaUsuario.js';
+import { useConfigStore } from '@/stores/tiendaConfig';
+import { useUserStore } from '@/stores/tiendaUsuario';
 
 const route = useRoute();
 const router = useRouter();

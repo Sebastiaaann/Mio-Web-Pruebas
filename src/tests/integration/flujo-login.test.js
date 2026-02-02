@@ -120,6 +120,13 @@ describe('Flujo de Login - Integración', () => {
         }
       })
 
+      // Preparar sesión mínima para fetchControles
+      localStorage.setItem('mio-session-meta', JSON.stringify({
+        patient_id: 123,
+        health_plan_id: 1,
+        lastLogin: Date.now()
+      }))
+
       // Login
       await userStore.iniciarSesion('test@example.com', 'password123')
       
@@ -173,7 +180,13 @@ describe('Flujo de Login - Integración', () => {
       // Establecer sesión
       userStore.token = 'token'
       userStore.usuario = { name: 'Juan' }
-      healthStore.controlesProximos = [{ id: 1, name: 'Control' }]
+      // Preparar datos de salud usando acciones del store
+      localStorage.setItem('mio-session-meta', JSON.stringify({
+        patient_id: 1,
+        health_plan_id: 1,
+        lastLogin: Date.now()
+      }))
+      await healthStore.fetchControles()
       
       // Ejecutar logout
       userStore.cerrarSesion()
@@ -185,15 +198,19 @@ describe('Flujo de Login - Integración', () => {
       expect(authService.cerrarSesion).toHaveBeenCalled()
     })
 
-    it('debería poder resetear todos los stores después del logout', () => {
+    it('debería poder resetear todos los stores después del logout', async () => {
       const userStore = useTiendaUsuario()
       const healthStore = useHealthStore()
       
       // Establecer estado
       userStore.usuario = { name: 'Juan' }
       userStore.token = 'token'
-      healthStore.controlesProximos = [{ id: 1 }]
-      healthStore.datosInicializados = true
+      localStorage.setItem('mio-session-meta', JSON.stringify({
+        patient_id: 1,
+        health_plan_id: 1,
+        lastLogin: Date.now()
+      }))
+      await healthStore.fetchControles()
       
       // Resetear stores
       userStore.$reset()
