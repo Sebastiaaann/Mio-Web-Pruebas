@@ -13,7 +13,12 @@
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+"test:coverage": "vitest run --coverage",
+    "mcp:testing": "node mcp-servers/mcp-testing/dist/index.js",
+    "mcp:analytics": "node mcp-servers/mcp-firebase-analytics/dist/index.js",
+    "mcp:health": "node mcp-servers/mcp-health-data/dist/index.js",
+    "mcp:build": "cd mcp-servers/mcp-testing && npm run build && cd ../mcp-firebase-analytics && npm run build && cd ../mcp-health-data && npm run build",
+    "mcp:install": "cd mcp-servers/mcp-testing && npm install && cd ../mcp-firebase-analytics && npm install && cd ../mcp-health-data && npm install"
   },
   "dependencies": {
     "@primevue/themes": "^4.5.4",
