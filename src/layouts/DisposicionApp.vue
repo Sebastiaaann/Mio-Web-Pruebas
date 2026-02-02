@@ -3,7 +3,7 @@
 import { ref } from 'vue';
 import NavbarLateral from '@/components/layout/NavbarLateral.vue';
 import NavegacionInferior from '@/components/layout/NavegacionInferior.vue';
-import { unirClases } from '@/utils/UnirClases';
+import { unirClases } from '@/utils/UnirClases'
 
 const sidebarVisible = ref(true);
 

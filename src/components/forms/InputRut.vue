@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import InputText from 'primevue/inputtext';
 import { validarRut } from '@/utils/validadores';
-import { formatearRut, limpiarRut } from '@/utils/formateadores';
+import { formatearRut, limpiarRut } from '@/utils/formateadores'
 
 const props = defineProps({
   id: { type: String, required: false },
