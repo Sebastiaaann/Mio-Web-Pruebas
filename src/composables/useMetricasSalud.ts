@@ -134,16 +134,26 @@ function esPresionValida(valor: string): boolean {
 /**
  * Extrae valor sistólico de una medición de presión
  */
-function extraerSistolica(valor: string): number | null {
-  if (!esPresionValida(valor)) return null
-  const sistolica = parseFloat(valor.split('/')[0].trim())
+function extraerSistolica(valor: string | number): number | null {
+  const valorStr = typeof valor === 'number' ? valor.toString() : valor
+  if (!esPresionValida(valorStr)) return null
+  const sistolica = parseFloat(valorStr.split('/')[0].trim())
   return isNaN(sistolica) ? null : sistolica
 }
 
 /**
  * Extrae valor numérico válido de una medición
  */
-function extraerValorNumerico(valor: string, tipo: 'glicemia' | 'peso'): number | null {
+function extraerValorNumerico(valor: string | number, tipo: 'glicemia' | 'peso'): number | null {
+  // Manejar números directamente
+  if (typeof valor === 'number') {
+    if (isNaN(valor)) return null
+    // Para peso, debe ser menor a 500
+    if (tipo === 'peso' && valor >= 500) return null
+    return valor
+  }
+
+  // Manejar strings
   if (!valor || valor === '--' || valor === 'N/A') return null
   // Para glicemia, no debe contener '/'
   if (tipo === 'glicemia' && valor.includes('/')) return null

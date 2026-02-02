@@ -219,10 +219,11 @@ export function extraerValorNumerico(
  * @param valor - Valor de presión en formato "120/80"
  * @returns Objeto con sistólica y diastólica, o null si el formato es inválido
  */
-export function extraerValoresPresion(valor: string): ValoresPresion | null {
-  if (!valor.includes('/')) return null
+export function extraerValoresPresion(valor: string | number): ValoresPresion | null {
+  const valorStr = typeof valor === 'number' ? valor.toString() : valor
+  if (!valorStr.includes('/')) return null
 
-  const partes = valor.split('/')
+  const partes = valorStr.split('/')
   if (partes.length !== 2) return null
 
   const sistolica = parseFloat(partes[0].trim())
@@ -545,7 +546,7 @@ export function procesarMedicionesGlicemia(
     const ultimaMedicion = medsDelDia[medsDelDia.length - 1]
 
     // Filtrar valores que no contengan '/' (no son presión)
-    if (!ultimaMedicion.valor.includes('/')) {
+    if (!String(ultimaMedicion.valor).includes('/')) {
       const valorNumerico = extraerValorNumerico(ultimaMedicion.valor, 'glucosa')
       if (valorNumerico !== null && esGlicemiaValida(valorNumerico)) {
         fechas.push(fecha)

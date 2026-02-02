@@ -496,9 +496,9 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
         const valorSistolico = extraerValorNumerico(m.valor, 'presion')
         if (valorSistolico === null) return
 
-        medicionesPresion.push({
-          valor: valorSistolico,
-          valorCompleto: m.valor,
+  medicionesPresion.push({
+    valor: valorSistolico,
+    valorCompleto: String(m.valor),
           fecha: m.fecha,
           fechaStr: new Date(m.fecha).toLocaleDateString('es-CL', {
             day: 'numeric',

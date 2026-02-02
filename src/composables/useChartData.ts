@@ -280,10 +280,13 @@ function agruparPorFecha(mediciones: Medicion[]): Map<string, Medicion[]> {
  * Extrae valores de presión (sistólica/diastólica) de una medición
  * @returns Tupla [sistólica, diastólica] o null si el formato es inválido
  */
-function extraerValoresPresion(valor: string): [number, number] | null {
-  if (!valor.includes('/')) return null
+function extraerValoresPresion(valor: string | number): [number, number] | null {
+  // Convertir a string si es número
+  const valorStr = typeof valor === 'number' ? valor.toString() : valor
 
-  const partes = valor.split('/')
+  if (!valorStr.includes('/')) return null
+
+  const partes = valorStr.split('/')
   if (partes.length !== 2) return null
 
   const sistolica = parseFloat(partes[0].trim())
@@ -298,7 +301,13 @@ function extraerValoresPresion(valor: string): [number, number] | null {
  * Extrae valor numérico de una medición
  * @returns El valor numérico o null si no es válido
  */
-function extraerValorNumerico(valor: string): number | null {
+function extraerValorNumerico(valor: string | number): number | null {
+  // Si ya es número, validarlo directamente
+  if (typeof valor === 'number') {
+    return isNaN(valor) ? null : valor
+  }
+
+  // Si es string, parsearlo
   const numero = parseFloat(valor)
   return isNaN(numero) ? null : numero
 }
@@ -448,7 +457,8 @@ function procesarDatosGlicemia(mediciones: Medicion[]): DatosGrafico {
     const ultimaMedicion = medsDelDia[medsDelDia.length - 1]
 
     // Filtrar valores que no contengan '/' (no son presión)
-    if (!ultimaMedicion.valor.includes('/')) {
+    const valorStr = String(ultimaMedicion.valor)
+    if (!valorStr.includes('/')) {
       const valorNumerico = extraerValorNumerico(ultimaMedicion.valor)
       if (valorNumerico !== null && valorNumerico > 0) {
         valores.push(valorNumerico)
@@ -582,7 +592,8 @@ function calcularEstadisticasGlicemia(mediciones: Medicion[]): EstadisticasChart
   const valores: number[] = []
 
   mediciones.forEach((m) => {
-    if (m.valor.includes('/')) return
+    const valorStr = String(m.valor)
+    if (valorStr.includes('/')) return
 
     const valorNumerico = extraerValorNumerico(m.valor)
     if (valorNumerico !== null && valorNumerico > 0) {
