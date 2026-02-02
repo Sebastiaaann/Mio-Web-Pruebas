@@ -78,6 +78,7 @@ export const useMedicionesStore = defineStore('mediciones', () => {
       const observations = response?.data?.observations || []
 
       historialMediciones.value[protocolId] = observations.map((obs: any) => {
+        // 1. Presión arterial
         if (obs.systolic && obs.diastolic) {
           return {
             id: String(obs.id || `${protocolId}-${obs.created}`),
@@ -91,6 +92,25 @@ export const useMedicionesStore = defineStore('mediciones', () => {
           }
         }
 
+        // 2. Peso corporal
+        if (obs.weight !== undefined && obs.weight !== null) {
+          const valorPeso = typeof obs.weight === 'number'
+            ? obs.weight
+            : Number(obs.weight)
+
+          return {
+            id: String(obs.id || `${protocolId}-${obs.created}`),
+            tipo: 'peso',
+            nombre: obs.name || 'Control de Peso',
+            valor: Number.isNaN(valorPeso) ? '' : valorPeso,
+            unidad: 'kg',
+            fecha: obs.created || new Date().toISOString(),
+            estado: 'normal',
+            observation_type_id: obs.observation_type_id
+          }
+        }
+
+        // 3. Glucosa (fallback)
         const valorGlucosa = typeof obs.glucose === 'number'
           ? obs.glucose
           : Number(obs.glucose ?? obs.value ?? '')
