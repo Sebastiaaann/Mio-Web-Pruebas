@@ -130,6 +130,43 @@ export const useHealthStore = defineStore('health', () => {
   }
 
   /**
+   * Agregar nuevo control/medicion a la API
+   * @param control - Datos del control a agregar
+   * @returns Promise con el resultado
+   */
+  async function agregarControl(control: Control & { patient_id?: string | number; protocol_id?: number; value?: any; notes?: string }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { clienteApi } = await import('@/utils/clienteApi')
+      
+      // Preparar datos para la API
+      const payload = {
+        patient_id: control.patient_id,
+        protocol_id: control.protocol_id,
+        value: control.value,
+        notes: control.notes,
+        fecha: control.fechaProgramada || new Date().toISOString()
+      }
+
+      // Llamar a la API para guardar la medición
+      const response = await clienteApi.post('/api/v1/observations', payload) as Record<string, any>
+      
+      if (response?.data) {
+        // Recargar mediciones para actualizar la vista
+        await medicionesStore.fetchUltimaMedicion()
+        return { success: true }
+      }
+      
+      return { success: false, error: 'Error al guardar la medición' }
+    } catch (error) {
+      console.error('Error agregando control:', error)
+      return { 
+        success: false, 
+        error: (error as Error).message || 'Error al guardar la medición' 
+      }
+    }
+  }
+
+  /**
    * Actualizar medición
    * @param medicion - Nueva medición
    * @returns void
@@ -231,6 +268,7 @@ export const useHealthStore = defineStore('health', () => {
     fetchCampanas,
     fetchHistorial,
     addMedicion,
+    agregarControl,
     actualizarMedicion,
     initMockData,
     forzarRecarga,
