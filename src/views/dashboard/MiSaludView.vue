@@ -22,7 +22,7 @@ import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
 import HealthMetricCard from "@/components/mi-salud/HealthMetricCard.vue";
 import ActividadReciente from "@/components/mi-salud/ActividadReciente.vue";
 import NormalRangesCard from "@/components/mi-salud/NormalRangesCard.vue";
-import UpcomingControlsCard from "@/components/mi-salud/UpcomingControlsCard.vue";
+
 import SkeletonCard from "@/components/ui/SkeletonCard.vue";
 import SkeletonTable from "@/components/ui/SkeletonTable.vue";
 import EmptyState from "@/components/ui/EmptyState.vue";
@@ -119,7 +119,8 @@ const {
   metricasPeso,
   getEstadoTexto,
   getEstadoClase,
-  getEstadoDot
+  getEstadoDot,
+  getEstadoTipo
 } = useMetricasSalud(historialMediciones as any)
 
 const {
@@ -165,9 +166,13 @@ const medicionesReales = computed(() => {
         Object.entries(gruposPorFecha).forEach(([fecha, meds]) => {
             const m = meds.find((x: any) => x.valor !== 'N/A') || meds[0];
             const fechaObj = new Date(fecha);
+            const timestamp = fechaObj.getTime();
             
             mediciones.push({
+                id: `${protocolId}-${timestamp}`,
                 date: `${fechaObj.getDate()} ${['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][fechaObj.getMonth()]}, ${fechaObj.getFullYear()}`,
+                dateISO: fecha,
+                timestamp: timestamp,
                 time: fechaObj.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) + ' hrs',
                 type: protocolo.nombre,
                 value: m.valor,
@@ -181,12 +186,8 @@ const medicionesReales = computed(() => {
         });
     });
     
-    // Ordenar por fecha descendente
-    return mediciones.sort((a, b) => {
-        const fechaA = new Date(a.date.split(', ').reverse().join('-'));
-        const fechaB = new Date(b.date.split(', ').reverse().join('-'));
-        return fechaB.getTime() - fechaA.getTime();
-    }).slice(0, 10); // Mostrar últimas 10
+    // Ordenar por timestamp descendente (más reciente primero)
+    return mediciones.sort((a, b) => b.timestamp - a.timestamp);
 });
 
 // Helpers para iconos
@@ -229,7 +230,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
+  <div class="min-h-screen bg-gray-50 flex flex-col font-sans" style="font-family: 'Cabinet Grotesk', sans-serif;">
     
     <!-- Estado de Error -->
     <div v-if="hasError" class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -237,7 +238,7 @@ onBeforeUnmount(() => {
         <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Activity class="w-8 h-8 text-red-500" />
         </div>
-        <h3 class="font-display font-semibold text-lg text-plan mb-2">Error al cargar datos</h3>
+        <h3 class="text-h3 text-slate-900 mb-2">Error al cargar datos</h3>
         <p class="text-plan-alt mb-6">{{ errorMessage }}</p>
         <div class="flex gap-3 justify-center">
           <button 
@@ -300,129 +301,121 @@ onBeforeUnmount(() => {
         <!-- Tabs -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
             <div class="flex border-b border-gray-200 overflow-x-auto">
-                <button class="border-b-2 border-orange-500 text-orange-500 px-6 py-4 font-medium text-sm flex items-center gap-2 whitespace-nowrap bg-orange-50/10">
+                <button :style="{ backgroundColor: 'var(--theme-primary)' }" class="text-white px-6 py-4 font-medium text-sm flex items-center gap-2 whitespace-nowrap">
                     <Activity class="w-4 h-4" />
                     Mediciones
                 </button>
-                <button class="px-6 py-4 text-plan-alt hover:text-plan font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
+                <button class="px-6 py-4 text-slate-600 hover:text-slate-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
                     <TrendingUp class="w-4 h-4" />
                     Análisis
                 </button>
-                <button class="px-6 py-4 text-plan-alt hover:text-plan font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
+                <button class="px-6 py-4 text-slate-600 hover:text-slate-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
                     <Calendar class="w-4 h-4" />
                     Medicamentos
                 </button>
             </div>
         </div>
 
-        <div class="flex flex-col xl:flex-row gap-6">
-            <!-- Main Content -->
-            <div class="flex-1 space-y-6 min-w-0">
-                <!-- Date Filters -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center gap-2">
-                        <Calendar class="w-4 h-4 text-gray-400" />
-                        <span class="text-sm text-plan-alt font-label">Período:</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button 
-                            v-for="rango in ['semana', 'mes', 'trimestre']" 
-                            :key="rango"
-                            @click="aplicarRangoFechas(rango as RangoFechas)"
-                            :class="{ 
-                                'px-4 py-2 text-sm font-medium rounded-lg transition-colors': true,
-                                'text-white bg-orange-500 shadow-sm hover:bg-orange-600': rangoFechas === rango,
-                                'text-plan-alt hover:bg-gray-100': rangoFechas !== rango
-                            }"
-                        >
-                            {{ rango === 'semana' ? '7 días' : rango === 'mes' ? '30 días' : '90 días' }}
-                        </button>
-                    </div>
+        <div class="space-y-6">
+            <!-- Date Filters -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <Calendar class="w-4 h-4 text-gray-400" />
+                    <span class="text-sm text-plan-alt font-label">Período:</span>
                 </div>
-
-                <!-- Charts Grid - Solo 3 controles -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Presión Arterial -->
-                    <HealthMetricCard
-                        title="Presión Arterial"
-                        unit="mmHg"
-                        :status="getEstadoTexto(metricasPresion.tieneDatos ? 'normal' : 'na')"
-                        :status-color="getEstadoClase(metricasPresion.tieneDatos ? 'normal' : 'na')"
-                        :value="metricasPresion.ultimoValor ? String(metricasPresion.ultimoValor) : '--'"
-                        subtitle="última medición"
-                        :trend="statsPresion?.cambioPorcentaje != null ? (statsPresion.cambioPorcentaje > 0 ? '+' : '') + statsPresion.cambioPorcentaje.toFixed(1) + '%' : 'Sin datos'"
-                        icon="lucide:heart"
-                        icon-color="text-red-600"
-                        icon-bg="bg-red-50"
-                        :chart-data="datosPresion"
-                    />
-                    
-                    <!-- Glicemia -->
-                     <HealthMetricCard
-                        title="Glicemia"
-                        unit="mg/dL"
-                        :status="getEstadoTexto(metricasGlicemia.tieneDatos ? 'normal' : 'na')"
-                        :status-color="getEstadoClase(metricasGlicemia.tieneDatos ? 'normal' : 'na')"
-                        :value="metricasGlicemia.ultimoValor ? String(metricasGlicemia.ultimoValor) : '--'"
-                        subtitle="última medición"
-                        :trend="statsGlicemia?.cambioPorcentaje != null ? (statsGlicemia.cambioPorcentaje > 0 ? '+' : '') + statsGlicemia.cambioPorcentaje.toFixed(1) + '%' : 'Sin datos'"
-                        icon="lucide:droplet"
-                        icon-color="text-blue-500"
-                        icon-bg="bg-blue-50"
-                        :chart-data="datosGlicemia"
-                    />
-                    
-                    <!-- Control Peso -->
-                     <HealthMetricCard
-                        title="Peso"
-                        unit="kg"
-                        :status="getEstadoTexto(metricasPeso.tieneDatos ? 'normal' : 'na')"
-                        :status-color="getEstadoClase(metricasPeso.tieneDatos ? 'normal' : 'na')"
-                        :value="metricasPeso.ultimoValor ? String(metricasPeso.ultimoValor) : '--'"
-                        subtitle="última medición"
-                        :trend="statsPeso?.cambioPorcentaje != null ? (statsPeso.cambioPorcentaje > 0 ? '+' : '') + statsPeso.cambioPorcentaje.toFixed(1) + '%' : 'Sin datos'"
-                        icon="lucide:scale"
-                        icon-color="text-orange-500"
-                        icon-bg="bg-orange-50"
-                        :chart-data="datosPeso"
-                    />
+                <div class="flex gap-2">
+                    <button 
+                        v-for="rango in ['semana', 'mes', 'trimestre']" 
+                        :key="rango"
+                        @click="aplicarRangoFechas(rango as RangoFechas)"
+                        :class="{ 
+                            'px-4 py-2 text-sm font-medium rounded-lg transition-colors': true,
+                            'text-white shadow-sm': rangoFechas === rango,
+                            'bg-slate-100 text-slate-600 hover:bg-slate-200': rangoFechas !== rango
+                        }"
+                        :style="rangoFechas === rango ? { backgroundColor: 'var(--theme-primary)' } : {}"
+                    >
+                        {{ rango === 'semana' ? '7 días' : rango === 'mes' ? '30 días' : '90 días' }}
+                    </button>
                 </div>
+            </div>
 
-                <!-- Actividad Reciente - Solo últimas 5 mediciones -->
+            <!-- Charts Grid - Solo 3 controles -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Presión Arterial -->
+                <HealthMetricCard
+                    title="Presión Arterial"
+                    unit="mmHg"
+                    :status="getEstadoTexto(metricasPresion.tieneDatos ? 'normal' : 'na')"
+                    :status-type="getEstadoTipo(metricasPresion.tieneDatos ? 'normal' : 'na')"
+                    :value="metricasPresion.ultimoValor ? String(metricasPresion.ultimoValor) : '--'"
+                    subtitle="última medición"
+                    :trend="statsPresion?.cambioPorcentaje != null ? (statsPresion.cambioPorcentaje > 0 ? '+' : '') + statsPresion.cambioPorcentaje.toFixed(1) + '%' : 'Sin datos'"
+                    icon="lucide:heart"
+                    icon-color="text-red-600"
+                    icon-bg="bg-red-50"
+                    :chart-data="datosPresion"
+                />
+                
+                <!-- Glicemia -->
+                 <HealthMetricCard
+                    title="Glicemia"
+                    unit="mg/dL"
+                    :status="getEstadoTexto(metricasGlicemia.tieneDatos ? 'normal' : 'na')"
+                    :status-type="getEstadoTipo(metricasGlicemia.tieneDatos ? 'normal' : 'na')"
+                    :value="metricasGlicemia.ultimoValor ? String(metricasGlicemia.ultimoValor) : '--'"
+                    subtitle="última medición"
+                    :trend="statsGlicemia?.cambioPorcentaje != null ? (statsGlicemia.cambioPorcentaje > 0 ? '+' : '') + statsGlicemia.cambioPorcentaje.toFixed(1) + '%' : 'Sin datos'"
+                    icon="lucide:droplet"
+                    icon-color="text-blue-500"
+                    icon-bg="bg-blue-50"
+                    :chart-data="datosGlicemia"
+                />
+                
+                <!-- Control Peso -->
+                 <HealthMetricCard
+                    title="Peso"
+                    unit="kg"
+                    :status="getEstadoTexto(metricasPeso.tieneDatos ? 'normal' : 'na')"
+                    :status-type="getEstadoTipo(metricasPeso.tieneDatos ? 'normal' : 'na')"
+                    :value="metricasPeso.ultimoValor ? String(metricasPeso.ultimoValor) : '--'"
+                    subtitle="última medición"
+                    :trend="statsPeso?.cambioPorcentaje != null ? (statsPeso.cambioPorcentaje > 0 ? '+' : '') + statsPeso.cambioPorcentaje.toFixed(1) + '%' : 'Sin datos'"
+                    icon="lucide:scale"
+                    icon-color="text-orange-500"
+                    icon-bg="bg-orange-50"
+                    :chart-data="datosPeso"
+                />
+            </div>
+
+                <!-- Actividad Reciente - Solo últimas 4 controles -->
                 <ActividadReciente 
                   v-if="medicionesReales.length > 0" 
                   :measurements="medicionesReales" 
-                  :max-items="5"
+                  :max-items="4"
                 />
-                
-                <!-- Empty state si no hay mediciones -->
-                <EmptyState
-                  v-else
-                  icon="lucide:activity"
-                  title="Sin mediciones registradas"
-                  description="Aún no tienes mediciones en tu historial. Comienza registrando tu primera medición."
-                  action-text="Registrar Medición"
-                  :show-action="true"
-                  @action="$router.push('/nueva-medicion/tipo')"
-                />
-                
-            </div>
-
-            <!-- Right Sidebar -->
-            <aside class="w-full xl:w-80 space-y-6">
-                <!-- Rangos Normales -->
-                <NormalRangesCard />
-
-                <!-- Próximas Mediciones -->
-                <UpcomingControlsCard :controls="controlesProximos.slice(0,3)" />
-            </aside>
+            
+            <!-- Empty state si no hay mediciones -->
+            <EmptyState
+              v-else
+              icon="lucide:activity"
+              title="Sin mediciones registradas"
+              description="Aún no tienes mediciones en tu historial. Comienza registrando tu primera medición."
+              action-text="Registrar Medición"
+              :show-action="true"
+              @action="$router.push('/nueva-medicion/tipo')"
+            />
+            
+            <!-- Rangos Normales -->
+            <NormalRangesCard />
         </div>
     </div>
 
     <!-- FAB used in HTML reference -->
     <router-link 
         to="/nueva-medicion/tipo"
-        class="fixed bottom-8 right-8 w-14 h-14 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 z-30"
+        :style="{ backgroundColor: 'var(--theme-primary)' }"
+        class="fixed bottom-8 right-8 w-14 h-14 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 hover:opacity-90 transition-all duration-200 z-30"
     >
         <span class="text-3xl font-light">+</span>
     </router-link>
@@ -435,9 +428,9 @@ onBeforeUnmount(() => {
     font-family: 'Cabinet Grotesk', sans-serif;
 }
 .font-body {
-    font-family: 'Satoshi', sans-serif;
+    font-family: 'Cabinet Grotesk', sans-serif;
 }
 .font-label {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Cabinet Grotesk', sans-serif;
 }
 </style>
