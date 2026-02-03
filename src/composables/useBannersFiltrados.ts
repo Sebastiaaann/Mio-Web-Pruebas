@@ -24,6 +24,7 @@ interface OpcionBanner {
   imagen?: string
   imagenUrl?: string
   logo?: string
+  home_position?: string
   [key: string]: unknown
 }
 
@@ -53,7 +54,7 @@ export function useBannersFiltrados(
 ): RetornoUseBannersFiltrados {
   const bannersFiltrados = computed(() => {
     const listaServicios = toValue(servicios)
-    const plan = toValue(planActivo)
+    const plan = String(toValue(planActivo) || '').toLowerCase()
 
     // Buscar el servicio de tipo BANNER
     const servicioBanner = listaServicios.find(s => s.name === 'BANNER' || s.nombre === 'BANNER')
@@ -69,19 +70,26 @@ export function useBannersFiltrados(
       .map(option => ({
         ...option,
         image: option.image || option.imagen || option.imagenUrl || option.logo,
-        title: option.title || option.titulo || option.nombre
+        title: option.title || option.titulo || option.nombre,
+        planName: option.plan_name || option.nombre,
+        homePosition: option.home_position
       }))
       .filter(option => option.image && option.title)
 
-    // Si el plan es esencial, filtrar solo "Clases en vivo con Berni Allen"
-    if (plan === 'esencial') {
-      return todosBanners.filter(banner =>
-        banner.title?.toLowerCase().includes('berni allen')
-      )
-    }
+    // Filtrar por plan cuando el plan_name esté disponible
+    const bannersPorPlan = todosBanners.filter(banner => {
+      if (!banner.planName) return false
 
-    // Si es mutual, mostrar todos los banners
-    return todosBanners
+      const planBanner = String(banner.planName).toLowerCase()
+
+      return planBanner.includes(plan) || plan.includes(planBanner)
+    })
+
+    return bannersPorPlan.sort((a, b) => {
+      const posA = Number(a.homePosition || 0)
+      const posB = Number(b.homePosition || 0)
+      return posA - posB
+    })
   })
 
   return {
