@@ -97,7 +97,10 @@ onUnmounted(() => {
     @mouseleave="resumeAutoplay"
   >
     <!-- Carrusel principal estilo Stripe -->
-    <div class="relative w-full overflow-hidden rounded-xl shadow-md group" :class="height">
+    <div 
+      class="relative w-full overflow-hidden rounded-xl shadow-md group"
+      :class="(currentBanner?.title || '').toString().toLowerCase().includes('berni') ? 'h-80 md:h-96' : height"
+    >
       <!-- Slides Container -->
       <div class="relative w-full h-full">
         <!-- Banner Slides -->
@@ -109,20 +112,21 @@ onUnmounted(() => {
             class="absolute inset-0"
           >
             <!-- Imagen de fondo -->
-            <div class="absolute inset-0">
+            <div 
+              class="absolute inset-0 flex items-center justify-center"
+              :class="(banner.title || '').toString().toLowerCase().includes('berni') ? 'bg-gradient-to-br from-purple-500 to-purple-600' : ''"
+            >
               <img
                 v-if="banner.image"
                 :src="banner.image"
                 :alt="banner.title"
                 loading="eager"
                 decoding="async"
-                width="1200"
-                height="400"
                 :class="[
-                  'w-full h-full transition-transform duration-500',
+                  'transition-transform duration-500',
                   (banner.title || '').toString().toLowerCase().includes('berni')
-                    ? 'object-contain object-center'
-                    : 'object-cover group-hover:scale-105'
+                    ? 'object-contain object-center w-full h-full max-h-full'
+                    : 'object-cover group-hover:scale-105 w-full h-full'
                 ]"
               />
               <div v-else class="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900" />
