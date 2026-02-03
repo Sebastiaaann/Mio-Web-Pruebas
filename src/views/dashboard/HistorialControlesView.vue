@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '@/stores/tiendaUsuario';
+import { useConfigStore } from '@/stores/tiendaConfig'
 import { useHealthStore } from '@/stores/tiendaSalud';
 import { storeToRefs } from 'pinia';
 import { 
@@ -31,11 +32,20 @@ import {
   Activity,
   Loader2
 } from 'lucide-vue-next';
+import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
 
 const userStore = useUserStore();
+const configStore = useConfigStore();
 const healthStore = useHealthStore();
 const { fullName, user } = storeToRefs(userStore);
 const { controlesProximos, historialMediciones, ultimaMedicion, loading: loadingStore } = storeToRefs(healthStore);
+
+const logoMutualHeader = computed(() => {
+  if (configStore.planActivo === 'mutual') {
+    return configStore.logoMutual || '/assets/logo_mutual.png'
+  }
+  return null
+})
 
 // Estado
 const estaCargando = ref(true);
@@ -315,42 +325,25 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
     <!-- Indicador de carga -->
-    <div v-if="estaCargando" class="min-h-screen flex items-center justify-center bg-gray-50">
-      <div class="text-center">
-        <Loader2 class="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
-        <p class="text-gray-600 font-medium">Cargando historial de controles...</p>
+      <div v-if="estaCargando" class="min-h-screen flex items-center justify-center bg-gray-50">
+        <div class="text-center">
+          <Loader2 class="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+          <p class="text-plan-muted font-medium">Cargando historial de controles...</p>
+        </div>
       </div>
-    </div>
 
     <!-- Contenido principal -->
     <template v-else>
       <!-- Header -->
-      <header class="bg-white border-b border-gray-200 px-4 py-4 md:px-8 sticky top-0 z-20">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="font-display font-bold text-2xl text-gray-900">Historial de Controles</h1>
-            <p class="text-gray-500 text-sm mt-1">
-              Revisa tu historial médico completo • 
-              <span class="text-orange-500 font-medium">{{ controlesAPI.length }} controles registrados</span>
-            </p>
-          </div>
-          <div class="flex items-center gap-4">
-            <button class="w-10 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-xl transition-colors relative">
-              <Bell class="w-5 h-5" />
-              <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
-              <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white font-medium">
-                {{ user?.nombres?.[0] }}{{ user?.apellidos?.[0] }}
-              </div>
-              <div class="hidden md:block">
-                <p class="text-sm font-semibold text-gray-900">{{ fullName }}</p>
-                <p class="text-xs text-gray-500">{{ user?.plan_name || 'Plan Mutual' }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+       <HeaderCompleto
+         titulo="Historial de Controles"
+         :subtitulo="`Revisa tu historial médico completo • ${controlesAPI.length} controles registrados`"
+         :mostrar-saludo="false"
+         :show-notification-badge="true"
+         notification-badge-color="#10B981"
+         @click-notification="console.log('Notificaciones clicked')"
+         @click-profile="console.log('Perfil clicked')"
+       />
 
       <!-- Content -->
       <div class="p-4 sm:p-8 space-y-6">
@@ -359,9 +352,9 @@ onMounted(() => {
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between">
               <div>
-                <p class="text-gray-500 text-sm font-mono uppercase tracking-wide">Total Controles</p>
-                <p class="font-display font-bold text-3xl text-gray-900 mt-2">{{ estadisticas.total }}</p>
-                <p class="text-sm text-gray-500 mt-1">Desde 2024</p>
+                <p class="text-plan-muted text-sm font-mono uppercase tracking-wide">Total Controles</p>
+                <p class="font-display font-bold text-3xl text-plan mt-2">{{ estadisticas.total }}</p>
+                <p class="text-sm text-plan-muted mt-1">Desde 2024</p>
               </div>
               <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
                 <ClipboardList class="w-6 h-6 text-blue-500" />
@@ -372,9 +365,9 @@ onMounted(() => {
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between">
               <div>
-                <p class="text-gray-500 text-sm font-mono uppercase tracking-wide">Tasa de Cumplimiento</p>
+                <p class="text-plan-muted text-sm font-mono uppercase tracking-wide">Tasa de Cumplimiento</p>
                 <p class="font-display font-bold text-3xl text-green-600 mt-2">{{ estadisticas.cumplimiento }}%</p>
-                <p class="text-sm text-gray-500 mt-1">Meta: 90%</p>
+                <p class="text-sm text-plan-muted mt-1">Meta: 90%</p>
               </div>
               <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
                 <TrendingUp class="w-6 h-6 text-green-600" />
@@ -385,11 +378,11 @@ onMounted(() => {
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between">
               <div>
-                <p class="text-gray-500 text-sm font-mono uppercase tracking-wide">Último Control</p>
-                <p class="font-display font-bold text-3xl text-gray-900 mt-2">
+                <p class="text-plan-muted text-sm font-mono uppercase tracking-wide">Último Control</p>
+                <p class="font-display font-bold text-3xl text-plan mt-2">
                   {{ controlesAPI[0]?.fecha || 'Sin registros' }}
                 </p>
-                <p class="text-sm text-gray-500 mt-1">
+                <p class="text-sm text-plan-muted mt-1">
                   {{ controlesAPI[0]?.tipo || 'No hay controles recientes' }}
                 </p>
               </div>
@@ -403,7 +396,7 @@ onMounted(() => {
         <!-- Filters -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           <div class="flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-2 text-gray-500">
+            <div class="flex items-center gap-2 text-plan-muted">
               <Filter class="w-5 h-5" />
               <span class="font-medium">Filtros:</span>
             </div>
@@ -437,9 +430,9 @@ onMounted(() => {
         </div>
 
         <!-- View Toggle -->
-        <div class="flex items-center justify-between">
-          <p class="text-gray-500 text-sm">
-            <span class="font-semibold text-gray-900">{{ controlesFiltrados.length }}</span> controles encontrados
+          <div class="flex items-center justify-between">
+          <p class="text-plan-alt text-sm">
+            <span class="font-semibold text-plan">{{ controlesFiltrados.length }}</span> controles encontrados
           </p>
           <div class="flex items-center gap-2 bg-white rounded-xl p-1 shadow-sm border border-gray-100">
             <button 
@@ -462,16 +455,16 @@ onMounted(() => {
         </div>
 
         <!-- Empty State -->
-        <div v-if="controlesFiltrados.length === 0" class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ClipboardList class="w-8 h-8 text-gray-400" />
-          </div>
-          <h3 class="font-display font-semibold text-lg text-gray-900 mb-2">No hay controles registrados</h3>
-          <p class="text-gray-500 mb-4">Aún no tienes controles en tu historial. Comienza registrando tu primera medición.</p>
-          <router-link 
-            to="/nueva-medicion/tipo"
-            class="inline-flex items-center gap-2 bg-orange-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-600 transition-colors"
-          >
+          <div v-if="controlesFiltrados.length === 0" class="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ClipboardList class="w-8 h-8 text-gray-400" />
+            </div>
+          <h3 class="font-display font-semibold text-lg text-plan mb-2">No hay controles registrados</h3>
+          <p class="text-plan-alt mb-4">Aún no tienes controles en tu historial. Comienza registrando tu primera medición.</p>
+            <router-link 
+              to="/nueva-medicion/tipo"
+              class="inline-flex items-center gap-2 bg-orange-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-600 transition-colors"
+            >
             <Activity class="w-4 h-4" />
             Registrar Control
           </router-link>
@@ -495,8 +488,8 @@ onMounted(() => {
                 <tr v-for="control in controlesPaginados" :key="control.id" class="hover:bg-gray-50 transition-colors">
                   <td class="py-4 px-6">
                     <div class="flex flex-col">
-                      <span class="text-sm font-medium text-gray-900">{{ control.fecha }}</span>
-                      <span class="text-xs text-gray-400">{{ control.hora }}</span>
+                  <span class="text-sm font-medium text-plan">{{ control.fecha }}</span>
+                  <span class="text-xs text-gray-400">{{ control.hora }}</span>
                     </div>
                   </td>
                   <td class="py-4 px-6">
@@ -504,12 +497,12 @@ onMounted(() => {
                       <div class="w-8 h-8 rounded-lg flex items-center justify-center" :class="control.tipoBg">
                         <component :is="control.tipoIcono" class="w-4 h-4" :class="control.tipoColor" />
                       </div>
-                      <span class="text-sm font-medium text-gray-900">{{ control.tipo }}</span>
+                      <span class="text-sm font-medium text-plan">{{ control.tipo }}</span>
                     </div>
                   </td>
                   <td class="py-4 px-6">
-                    <span class="text-sm font-semibold text-gray-900">
-                      {{ control.valor }} <span class="text-gray-500 font-normal">{{ control.unidad }}</span>
+                    <span class="text-sm font-semibold text-plan">
+                      {{ control.valor }} <span class="text-plan-alt font-normal">{{ control.unidad }}</span>
                     </span>
                   </td>
                   <td class="py-4 px-6">
@@ -548,7 +541,7 @@ onMounted(() => {
           
           <!-- Pagination -->
           <div v-if="totalPaginas > 1" class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-            <p class="text-sm text-gray-500">
+            <p class="text-plan-alt text-sm">
               Mostrando {{ (paginaActual - 1) * itemsPorPagina + 1 }}-{{ Math.min(paginaActual * itemsPorPagina, controlesFiltrados.length) }} de {{ controlesFiltrados.length }} controles
             </p>
             <div class="flex items-center gap-2">
@@ -594,7 +587,7 @@ onMounted(() => {
                   <component :is="control.tipoIcono" class="w-5 h-5" :class="control.tipoColor" />
                 </div>
                 <div>
-                  <p class="text-sm font-semibold text-gray-900">{{ control.tipo }}</p>
+                  <p class="text-sm font-semibold text-plan">{{ control.tipo }}</p>
                   <p class="text-xs text-gray-400">{{ control.fecha }} • {{ control.hora }}</p>
                 </div>
               </div>
@@ -605,8 +598,8 @@ onMounted(() => {
             
             <div class="mb-4">
               <p class="text-xs text-gray-400 mb-1">Valor medido</p>
-              <p class="text-lg font-semibold text-gray-900">
-                {{ control.valor }} <span class="text-sm text-gray-500 font-normal">{{ control.unidad }}</span>
+              <p class="text-lg font-semibold text-plan">
+                {{ control.valor }} <span class="text-sm text-plan-alt font-normal">{{ control.unidad }}</span>
               </p>
             </div>
             
@@ -639,7 +632,7 @@ onMounted(() => {
         <!-- Protocolos Disponibles -->
         <div class="mt-8">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-display font-bold text-lg text-gray-900">Tus Protocolos de Control</h3>
+            <h3 class="font-display font-bold text-lg text-plan">Tus Protocolos de Control</h3>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -653,7 +646,7 @@ onMounted(() => {
                   <component :is="getIconoPorTipo(protocolo.nombre)" class="w-5 h-5" :style="protocolo.color ? { color: protocolo.color } : {}" />
                 </div>
                 <div class="flex-1">
-                  <p class="text-sm font-semibold text-gray-900">{{ protocolo.nombre }}</p>
+                  <p class="text-sm font-semibold text-plan">{{ protocolo.nombre }}</p>
                   <p class="text-xs text-gray-400 mt-1">{{ protocolo.descripcion }}</p>
                 </div>
               </div>
