@@ -54,9 +54,12 @@ const renderChart = () => {
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9CA3AF' } },
-      y: { grid: { color: '#F3F4F6' }, ticks: { font: { size: 10 }, color: '#9CA3AF' } }
+      y: { grid: { display: false }, ticks: { display: false } }
     },
-    elements: { point: { radius: 0, hitRadius: 10, hoverRadius: 4 } }
+    elements: { 
+      point: { radius: 0, hitRadius: 10, hoverRadius: 4 },
+      line: { tension: 0.4 }
+    }
   };
 
   try {
@@ -65,9 +68,29 @@ const renderChart = () => {
       // Deep clone to ensure no reactivity issues with Chart.js
       const clonedData = JSON.parse(JSON.stringify(rawData));
       
+      // Agregar fill: true y backgroundColor con gradiente a todos los datasets
+      const enhancedDatasets = clonedData.datasets?.map((dataset: any) => {
+        const borderColor = dataset.borderColor || '#3B82F6';
+        return {
+          ...dataset,
+          fill: true,
+          backgroundColor: (ctx: any) => {
+            const canvas = ctx.chart.ctx;
+            const gradient = canvas.createLinearGradient(0, 0, 0, 128);
+            // Extraer color base y crear versión transparente
+            gradient.addColorStop(0, borderColor + '20'); // 20 = 12% opacidad
+            gradient.addColorStop(1, borderColor + '05'); // 05 = 2% opacidad
+            return gradient;
+          }
+        };
+      });
+      
       chartInstance = new Chart(chartRef.value, {
         type: props.chartType || 'line',
-        data: clonedData,
+        data: {
+          ...clonedData,
+          datasets: enhancedDatasets
+        },
         options: commonOptions
       });
     }
@@ -103,10 +126,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="targetRef" class="metric-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-200 cursor-pointer hover:shadow-md">
+  <div ref="targetRef" class="metric-card bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] p-5 transition-all duration-200 cursor-pointer hover:shadow-md hover:-translate-y-0.5">
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
-        <div :class="['w-10 h-10 rounded-lg flex items-center justify-center', iconBg]">
+        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center', iconBg]">
           <iconify-icon :icon="icon" :class="`${iconColor} text-xl`"></iconify-icon>
         </div>
         <div>
@@ -114,7 +137,7 @@ onBeforeUnmount(() => {
           <p v-if="subtitle" class="text-xs text-gray-500">{{ subtitle }}</p>
         </div>
       </div>
-      <span v-if="status" :class="['px-2 py-1 rounded-full text-xs font-medium', statusColor]">
+      <span v-if="status" :class="['px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide', statusColor]">
         {{ status }}
       </span>
     </div>
