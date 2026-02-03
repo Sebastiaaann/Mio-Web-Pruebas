@@ -85,6 +85,12 @@
   --background: #fdfbff;
   --foreground: #1f2937;
   /* slate-800 */
+  
+  /* Colores dinámicos según plan - Por defecto (Esencial) */
+  --plan-text: #1A1A1A;
+  --plan-text-alt: #333333;
+  --plan-primary: #c4b0ff;
+  --plan-accent: #996BEF;
 
   --card: #ffffff;
   --card-foreground: #1f2937;
@@ -273,6 +279,36 @@ body {
     @apply transition-transform transition-shadow transition-colors duration-300;
   }
 
+  /* Colores dinámicos según plan */
+  .text-plan {
+    color: var(--plan-text);
+  }
+
+  .text-plan-alt {
+    color: var(--plan-text-alt);
+  }
+
+  .text-plan-muted {
+    color: var(--plan-text);
+    opacity: 0.7;
+  }
+
+  .text-plan-primary {
+    color: var(--plan-primary);
+  }
+
+  .text-plan-accent {
+    color: var(--plan-accent);
+  }
+
+  .bg-plan-primary {
+    background-color: var(--plan-primary);
+  }
+
+  .bg-plan-accent {
+    background-color: var(--plan-accent);
+  }
+
   /* Primary Button */
   .homa-button {
     @apply bg-homa-primary text-white font-medium px-5 py-2.5 rounded-xl;
@@ -341,6 +377,12 @@ body {
   --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  
+  /* Colores dinámicos según plan */
+  --color-plan-text: var(--plan-text);
+  --color-plan-text-alt: var(--plan-text-alt);
+  --color-plan-primary: var(--plan-primary);
+  --color-plan-accent: var(--plan-accent);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);

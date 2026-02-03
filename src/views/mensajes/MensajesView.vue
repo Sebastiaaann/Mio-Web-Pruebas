@@ -49,7 +49,7 @@ function isSectionOpen(id) {
         <div class="p-2 bg-gray-100 dark:bg-neutral-800 rounded-lg">
           <Inbox class="w-5 h-5 text-gray-600 dark:text-gray-400" />
         </div>
-        <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h1 class="text-lg font-semibold text-plan dark:text-white">
           Bandeja de Entrada
         </h1>
       </div>
@@ -142,13 +142,13 @@ function isSectionOpen(id) {
                         :class="item.iconColor"
                       />
                     </div>
-                    <span class="text-[13px] text-gray-800 dark:text-gray-200 font-medium truncate">
+                    <span class="text-[13px] text-plan dark:text-gray-200 font-medium truncate">
                       {{ item.title }}
                     </span>
                   </div>
                   
                   <!-- Description -->
-                  <div class="text-[12px] text-gray-500 dark:text-gray-400 truncate pr-4">
+                  <div class="text-[12px] text-plan-alt dark:text-gray-400 truncate pr-4">
                     {{ item.description }}
                   </div>
                 </Motion>

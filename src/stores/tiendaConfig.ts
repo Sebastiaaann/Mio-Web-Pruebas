@@ -42,6 +42,7 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   const currentConfig = ref<ConfiguracionCliente>({ ...defaultConfig })
+  const logoMutual = ref<string | null>(null)
 
   // Actions
   function setClientConfig(configRaw: ConfiguracionRaw | null | undefined): void {
@@ -54,6 +55,10 @@ export const useConfigStore = defineStore('config', () => {
       // Logo
       currentConfig.value.logo = configRaw.config.logo || null
 
+      if (planActivo.value === 'mutual') {
+        logoMutual.value = configRaw.config.logo || null
+      }
+
       // Colors - Merge con defaults para seguridad
       currentConfig.value.colors = {
         ...defaultConfig.colors,
@@ -64,15 +69,45 @@ export const useConfigStore = defineStore('config', () => {
     }
   }
 
+  function setLogoMutual(logo: string | null): void {
+    logoMutual.value = logo
+  }
+
   // Aplica las variables CSS al root del documento
   function applyTheme(colors: Record<string, string>): void {
     const root = document.documentElement
 
     Object.entries(colors).forEach(([key, value]) => {
+      // NO aplicar variables de sidebar - mantener neutro para todos los planes
+      if (key.startsWith('sidebar') || key.startsWith('--sidebar')) {
+        return
+      }
+
+      // NO aplicar variables de background - mantener fondo neutro para todos los planes
+      if (key === 'background' || key === '--background' || key === 'background_alt' || key === '--background_alt') {
+        return
+      }
+      
       // Si la llave ya empieza con --, usarla tal cual. Si no, agregar --
       const cssVarName = key.startsWith('--') ? key : `--${key}`
       root.style.setProperty(cssVarName, value)
     })
+
+    // Aplicar colores específicos para títulos y subtítulos según el plan
+    const plan = planActivo.value
+    if (plan === 'mutual') {
+      // Colores para Mutual
+      root.style.setProperty('--plan-text', colors.text || '#505050')
+      root.style.setProperty('--plan-text-alt', colors.text_alt || '#FFFFFF')
+      root.style.setProperty('--plan-primary', colors.primary || '#C4D600')
+      root.style.setProperty('--plan-accent', colors.accent || '#505050')
+    } else {
+      // Colores para Esencial (default)
+      root.style.setProperty('--plan-text', colors.text || '#333333')
+      root.style.setProperty('--plan-text-alt', colors.text_alt || '#1A1A1A')
+      root.style.setProperty('--plan-primary', colors.primary || '#c4b0ff')
+      root.style.setProperty('--plan-accent', colors.accent || '#996BEF')
+    }
   }
 
   // Presets para pruebas
@@ -142,6 +177,13 @@ export const useConfigStore = defineStore('config', () => {
   function setPlanActivo(plan: string): void {
     planActivo.value = plan.toLowerCase()
     localStorage.setItem('mio-plan-activo', planActivo.value)
+    
+    // Aplicar colores del preset correspondiente
+    loadPreset(planActivo.value)
+
+    if (planActivo.value !== 'mutual') {
+      logoMutual.value = null
+    }
   }
 
   /**
@@ -152,6 +194,7 @@ export const useConfigStore = defineStore('config', () => {
     clientBrand.value = 'homa'
     planActivo.value = 'esencial'
     currentConfig.value = { ...defaultConfig }
+    logoMutual.value = null
     localStorage.removeItem('mio-plan-activo')
   }
 
@@ -160,7 +203,9 @@ export const useConfigStore = defineStore('config', () => {
     clientBrand,
     currentConfig,
     planActivo,
+    logoMutual,
     setClientConfig,
+    setLogoMutual,
     loadPreset,
     setPlanActivo,
     $reset,
