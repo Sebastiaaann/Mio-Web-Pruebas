@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/tiendaUsuario'
 import { useConfigStore } from '@/stores/tiendaConfig'
@@ -7,8 +8,9 @@ import { useTiendaServicios } from '@/stores/tiendaServicios'
 import { useHealthStore } from '@/stores/tiendaSalud'
 import { pacienteService } from '@/services/pacienteService'
 import { logger } from '@/utils/logger'
-import { ArrowLeft, Sun, Moon, Bell, LogOut, CheckCircle, Heart } from 'lucide-vue-next'
+import { ArrowLeft, Sun, Moon, Bell, LogOut, CheckCircle, Heart, User } from 'lucide-vue-next'
 import { useDark, useToggle } from '@vueuse/core'
+import { useUserInitials } from '@/composables/useUserInitials'
 
 // Components
 import ProfileCard from '@/components/perfil/ProfileCard.vue'
@@ -33,6 +35,18 @@ const healthStore = useHealthStore()
 const isDark = useDark({ storageKey: 'mio-theme' })
 const toggleDark = useToggle(isDark)
 
+// User initials composable
+const { firstName, nombreCompleto } = storeToRefs(userStore)
+const { iniciales: userInitials } = useUserInitials(firstName, nombreCompleto)
+
+const logoMutualHeader = computed(() => {
+  if (configStore.planActivo === 'mutual') {
+    return configStore.logoMutual || '/assets/logo_mutual.png'
+  }
+  return null
+})
+
+
 // Logout
 const isLoggingOut = ref(false)
 async function handleLogout() {
@@ -47,7 +61,7 @@ async function handleLogout() {
 }
 
 // --- LOGICA DE PLANES (Migrada de PerfilView) ---
-const selectedPlanType = ref('mutual') // 'esencial' or 'mutual'
+const selectedPlanType = ref('esencial') // 'esencial' or 'mutual'
 const availablePlans = ref([])
 const currentPlanMeta = ref(null)
 const isLoadingPlans = ref(false)
@@ -66,21 +80,22 @@ const planThemes = {
   mutual: { primary: '#C4D600', text_alt: '#FFFFFF', logo: '/assets/logo_mutual.png' }
 }
 
-watch(selectedPlanType, (newPlanType, oldPlanType) => {
+watch(selectedPlanType, async (newPlanType, oldPlanType) => {
   if (!newPlanType) return
   
   if (oldPlanType && newPlanType !== oldPlanType) {
     planCambiadoManualmente.value = true
     configStore.setPlanActivo(newPlanType)
+    await serviciosStore.cargarServicios()
   }
   
-  // Update Local Meta logic (simplified for brevity but functional)
+  // Buscar el plan en availablePlans o en el plan activo de la API
   let foundPlan = availablePlans.value.find(p => (p.nombre || p.subtitle || '').toLowerCase().includes(newPlanType.toLowerCase()))
   if (!foundPlan && planActivoAPI.value && (planActivoAPI.value.name_plan || '').toLowerCase().includes(newPlanType.toLowerCase())) {
     foundPlan = planActivoAPI.value
   }
   
-  const theme = planThemes[newPlanType] || planThemes.mutual
+  const theme = planThemes[newPlanType] || planThemes.esencial
   
   if (foundPlan) {
     let mergedLogo = foundPlan.logo || theme.logo
@@ -93,6 +108,24 @@ watch(selectedPlanType, (newPlanType, oldPlanType) => {
         colorPrimario: foundPlan.colorPrimario || theme.primary,
         colors: theme
     }
+    
+    // Aplicar configuración de colores desde el plan encontrado
+    if (foundPlan.config?.colors) {
+      configStore.setClientConfig({
+        client_name: foundPlan.client_name,
+        client_brand: foundPlan.client_brand,
+        config: foundPlan.config
+      })
+    } else {
+      // Si no hay config, aplicar el preset correspondiente
+      configStore.loadPreset(newPlanType)
+    }
+
+    if (newPlanType.toLowerCase() === 'mutual') {
+      configStore.setLogoMutual(foundPlan.config?.logo || null)
+    } else {
+      configStore.setLogoMutual(null)
+    }
   } else {
      currentPlanMeta.value = {
         nombre: newPlanType.charAt(0).toUpperCase() + newPlanType.slice(1),
@@ -100,6 +133,9 @@ watch(selectedPlanType, (newPlanType, oldPlanType) => {
         colorPrimario: theme?.primary,
         colors: theme
      }
+     // Aplicar preset si no se encontró el plan
+     configStore.loadPreset(newPlanType)
+     configStore.setLogoMutual(null)
   }
 })
 
@@ -122,16 +158,31 @@ onMounted(async () => {
       const plansResponse = await pacienteService.obtenerPlanes(patientId)
       if (plansResponse.success && plansResponse.data?.plans) {
         const activePlan = plansResponse.data.plans.find(p => p.active_plan === "1")
-        if (activePlan) {
-          planActivoAPI.value = activePlan
-          const planName = activePlan.name_plan.toLowerCase()
-          let tipoPlanAPI = 'mutual'
-          if (planName.includes('esencial') || planName.includes('vital')) tipoPlanAPI = 'esencial'
+          if (activePlan) {
+            planActivoAPI.value = activePlan
+            const planName = activePlan.name_plan.toLowerCase()
+            let tipoPlanAPI = 'mutual'
+            if (planName.includes('esencial') || planName.includes('vital')) tipoPlanAPI = 'esencial'
           
-          if (!planCambiadoManualmente.value) {
-            selectedPlanType.value = tipoPlanAPI
-            configStore.setPlanActivo(tipoPlanAPI)
-          }
+           if (!planCambiadoManualmente.value) {
+             selectedPlanType.value = tipoPlanAPI
+             configStore.setPlanActivo(tipoPlanAPI)
+             await serviciosStore.cargarServicios()
+           }
+          
+           // Aplicar configuración de colores desde la API solo si no hay cambio manual
+           if (!planCambiadoManualmente.value && activePlan.config?.colors) {
+             configStore.setClientConfig({
+               client_name: activePlan.client_name,
+               client_brand: activePlan.client_brand,
+               config: activePlan.config
+             })
+           }
+
+           if (tipoPlanAPI === 'mutual') {
+             configStore.setLogoMutual(activePlan.config?.logo || null)
+           }
+          
           currentPlanMeta.value = { ...activePlan, logo: activePlan.config?.logo || planThemes[selectedPlanType.value]?.logo }
         }
       }
@@ -166,7 +217,7 @@ onMounted(async () => {
             <ArrowLeft class="w-5 h-5" />
           </button>
           <div>
-            <h1 class="font-display font-bold text-2xl text-gray-900">Perfil</h1>
+            <h1 class="font-display font-bold text-2xl text-plan">Perfil</h1>
           </div>
         </div>
         <div class="flex items-center gap-4">
@@ -174,9 +225,26 @@ onMounted(async () => {
             <Sun v-if="!isDark" class="w-5 h-5" />
             <Moon v-else class="w-5 h-5" />
           </button>
+          <img
+            v-if="logoMutualHeader"
+            :src="logoMutualHeader"
+            alt="Logo Mutual"
+            class="h-7 w-auto object-contain"
+          />
           <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
             <Bell class="w-5 h-5" />
           </button>
+          <!-- Avatar de Perfil -->
+          <div 
+            class="relative flex-shrink-0 cursor-pointer"
+            @click="router.push('/perfil')"
+          >
+            <div class="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-violet-100 to-purple-100 border-2 border-gray-200 flex items-center justify-center hover:border-violet-300 transition-all duration-200">
+              <span class="text-sm font-semibold text-violet-600">{{ userInitials }}</span>
+            </div>
+            <!-- Indicador Online -->
+            <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></div>
+          </div>
         </div>
       </div>
     </header>
