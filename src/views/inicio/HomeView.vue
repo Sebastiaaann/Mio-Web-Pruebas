@@ -505,7 +505,6 @@ watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
                                 }"
                                 :color-style="{ backgroundColor: colors.primaryHover }"
                                 text-class="text-white font-bold text-sm"
-                                @success="abrirCampana(campana.url || undefined)"
                                 @click="abrirCampana(campana.url || undefined)"
                             >
                                 <template #baseIcon>Comenzar ahora</template>
