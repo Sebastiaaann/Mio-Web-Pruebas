@@ -83,7 +83,16 @@ const menuSections = [
         ]
       },
       { name: 'Citas', ruta: '/citas', icono: Calendar },
-      { name: 'Mensajes', ruta: '/mensajes', icono: Inbox },
+      { 
+        name: 'Mensajes', 
+        ruta: '/mensajes', 
+        icono: Inbox,
+        hasSubmenu: true,
+        subItems: [
+          { name: 'Bandeja', ruta: '/mensajes', icono: Inbox },
+          { name: 'Controles', ruta: '/mensajes/controles', icono: Activity },
+        ]
+      },
       { name: 'Ayuda', ruta: '/ayuda', icono: HelpCircle },
     ]
   },

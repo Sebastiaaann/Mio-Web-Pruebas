@@ -88,7 +88,8 @@ const userEmail = computed(() => userStore.usuario?.email || 'usuario@mio.cl')
 const userInitials = computed(() => userStore.iniciales || 'U')
 
 const memberSince = computed(() => {
-  const date = userStore.usuario?.createdAt ? new Date(userStore.usuario.createdAt) : new Date()
+  const createdAt = userStore.usuario?.createdAt
+  const date = createdAt ? new Date(String(createdAt)) : new Date()
   return date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })
 })
 
@@ -192,13 +193,13 @@ onMounted(async () => {
                   </div>
                   
                   <p v-else class="text-sm font-bold text-gray-800">
-                    MIO <span :style="{ color: userStore.usuario?.current_plan?.color || '#a3e635' }">{{ userStore.usuario?.current_plan?.name || 'Mutual' }}</span>
+                    MIO <span :style="{ color: (userStore.usuario?.current_plan as any)?.color || '#a3e635' }">{{ (userStore.usuario?.current_plan as any)?.name || 'Mutual' }}</span>
                   </p>
 
                   <button 
                     @click="openPlanInfo"
                     class="text-xs mt-1 font-medium hover:underline" 
-                    :style="{ color: currentPlanMeta?.colorPrimario || userStore.usuario?.current_plan?.color || '#a3e635' }"
+                    :style="{ color: currentPlanMeta?.colorPrimario || (userStore.usuario?.current_plan as any)?.color || '#a3e635' }"
                   >
                     Más información de tu plan
                   </button>

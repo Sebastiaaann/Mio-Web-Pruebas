@@ -1,94 +1,50 @@
 <script setup>
 /**
  * AyudaView - Vista de ayuda y soporte
- * Menú de lista con iconos para FAQ, Asistencia, etc.
- * Migrado a shadcn-vue
+ * Diseño basado en Cards con Robots y Botones de Contacto
  */
 import { ref } from 'vue'
-// Base Components
-import SectionHeader from '@/components/ui/base/SectionHeader.vue'
-import BaseCard from '@/components/ui/base/BaseCard.vue'
-import SearchInput from '@/components/ui/base/SearchInput.vue'
-import IconContainer from '@/components/ui/base/IconContainer.vue'
-
-// Shadcn
-import { Button } from '@/components/ui/button'
+import { useRouter } from 'vue-router'
+import HeaderCompleto from "@/components/ui/HeaderCompleto.vue"
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle,
-  DialogFooter,
   DialogClose
 } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { HelpCircle, ExternalLink } from 'lucide-vue-next'
 
-// Lucide icons
-import { 
-  HelpCircle, 
-  Headphones, 
-  Activity, 
-  Heart,
-  ChevronRight,
-  X
-} from 'lucide-vue-next'
-import { useUserStore } from '@/stores/tiendaUsuario'
-import { useUserInitials } from '@/composables/useUserInitials'
-import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
-
-const showFaqDialog = ref(false)
-const searchQuery = ref('')
-
-// User store and initials
 const router = useRouter()
-const userStore = useUserStore()
-const { firstName, nombreCompleto } = storeToRefs(userStore)
-const { iniciales: userInitials } = useUserInitials(firstName, nombreCompleto)
+const showFaqDialog = ref(false)
 
-// Helper to extract proper color name for Tailwind
-const getTailwindColor = (hexOrName) => {
-  // Map hex colors to nearest tailwind palette name (simple mapping for this view)
-  const colorMap = {
-    '#7B61FF': 'violet',
-    '#3B82F6': 'blue',
-    '#10B981': 'emerald',
-    '#EF4444': 'rose'
-  }
-  return colorMap[hexOrName] || 'gray'
-}
-
-const menuItems = [
+// Configuración de las Cards de Ayuda
+const helpCards = [
   {
-    id: 'faq',
-    titulo: 'Preguntas Frecuentes',
-    descripcion: 'Encuentra respuestas a las dudas más comunes',
-    icon: HelpCircle,
-    color: '#7B61FF',
-    action: () => { showFaqDialog.value = true }
+    id: 'salud',
+    title: 'Asistencia en Salud',
+    description: 'En MIO APP estamos atentos a tu estado de salud. Podemos darte soporte médico y guiarte en el proceso',
+    image: '/images-vista-ayuda/Personalizado.png',
+    whatsapp: 'https://wa.me/56939504383', // Número genérico o placeholder
+    phone: 'tel:6002001234'
   },
   {
-    id: 'asistencia-mio',
-    titulo: 'Asistencia MIO',
-    descripcion: 'Contacta con nuestro equipo de soporte',
-    icon: Headphones,
-    color: '#3B82F6',
-    action: () => { console.log('Asistencia MIO') }
+    id: 'controles',
+    title: 'Asistencia en Controles y Campañas',
+    description: 'En MIO APP estamos atentos a tu estado de salud. Podemos darte soporte y guiarte en el proceso',
+    image: '/images-vista-ayuda/asiste-controles-campañas.png',
+    whatsapp: 'https://wa.me/56939504383',
+    phone: 'tel:6002001234'
   },
   {
-    id: 'ayuda-controles',
-    titulo: 'Ayuda en Controles',
-    descripcion: 'Cómo realizar tus mediciones correctamente',
-    icon: Activity,
-    color: '#10B981',
-    action: () => { console.log('Ayuda en controles') }
-  },
-  {
-    id: 'asistencia-salud',
-    titulo: 'Asistencia en Salud',
-    descripcion: 'Consulta con profesionales de salud',
-    icon: Heart,
-    color: '#EF4444',
-    action: () => { console.log('Asistencia en salud') }
+    id: 'tecnica',
+    title: 'Asistencia técnica MIO APP',
+    description: 'Te recomendamos revisar la sección de preguntas frecuentes antes de contactarnos.',
+    image: '/images-vista-ayuda/Estado=EditInfo.png',
+    whatsapp: 'https://wa.me/56939504383',
+    phone: 'tel:6002001234',
+    showFaq: true
   }
 ]
 
@@ -110,152 +66,131 @@ const faqs = [
     respuesta: 'Sí, todos tus datos de salud están protegidos con encriptación de nivel bancario y cumplimos con todas las normativas de protección de datos de salud.'
   }
 ]
-
-function handleItemClick(item) {
-  if (item.action) {
-    item.action()
-  }
-}
 </script>
 
 <template>
-  <div class="ayuda-view pb-20 md:pb-6">
+  <div class="ayuda-view pb-20 md:pb-6 font-sans bg-white min-h-screen" style="font-family: 'Cabinet Grotesk', sans-serif;">
     <!-- Header -->
-    <header class="flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-gray-border px-6 md:px-8 py-3 md:py-4 sticky top-0 z-20 transition-all duration-300 -mx-6 md:-mx-8 mb-6">
-      <div>
-        <h1 class="font-display font-bold text-2xl text-plan">Centro de Ayuda</h1>
-        <p class="text-plan-alt text-sm mt-1 font-medium">¿En qué podemos ayudarte hoy?</p>
-      </div>
-      <!-- Avatar de Perfil -->
-      <div 
-        class="relative flex-shrink-0 cursor-pointer"
-        @click="router.push('/perfil')"
-      >
-        <div class="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-violet-100 to-purple-100 border-2 border-gray-200 flex items-center justify-center hover:border-violet-300 transition-all duration-200">
-          <span class="text-sm font-semibold text-violet-600">{{ userInitials }}</span>
-        </div>
-        <!-- Indicador Online -->
-        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></div>
-      </div>
-    </header>
-    
-    <!-- Content Container -->
-    <div class="space-y-6 px-6 md:px-8">
-
-    <!-- Search -->
-    <SearchInput 
-      v-model="searchQuery" 
-      placeholder="Buscar en ayuda..." 
+    <HeaderCompleto 
+      titulo="Centro de Ayuda" 
+      subtitulo="¿En qué podemos ayudarte hoy?" 
+      :mostrar-saludo="false" 
+      :show-notification-badge="false" 
+      @click-profile="router.push('/perfil')" 
     />
-
-    <!-- Menu List -->
-    <div class="grid gap-4 mt-6">
-      <BaseCard
-        v-for="item in menuItems"
-        :key="item.id"
-        padding="normal"
-        rounded="large"
-        hoverable
-        clickable
-        @click="handleItemClick(item)"
-        class="flex items-center group"
+    
+    <!-- Cards Container -->
+    <div class="px-4 md:px-8 py-4 space-y-12 md:space-y-0 md:grid md:grid-cols-3 md:gap-8 max-w-7xl mx-auto">
+      
+      <div 
+        v-for="card in helpCards" 
+        :key="card.id" 
+        class="flex flex-col items-center text-center h-full p-6 rounded-3xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-50"
       >
-        <!-- Icon -->
-        <IconContainer 
-          size="large" 
-          :bg-color="getTailwindColor(item.color)" 
-          bg-intensity="50"
-          :icon-color="getTailwindColor(item.color)"
-          :style="{ backgroundColor: `${item.color}15`, color: item.color }"
-          rounded="xl"
-          class="mr-4 group-hover:scale-110 transition-transform"
-        >
-          <component :is="item.icon" stroke-width="2.5" />
-        </IconContainer>
+        <!-- Imagen Robot -->
+        <div class="h-40 mb-2 flex items-end justify-center transform hover:scale-105 transition-transform duration-300">
+           <img 
+             :src="card.image" 
+             :alt="card.title" 
+             class="h-full w-auto object-contain drop-shadow-xl" 
+           />
+        </div>
         
-        <!-- Content -->
-        <div class="flex-1">
-          <h3 class="font-semibold text-plan group-hover:text-plan-primary transition-colors text-lg">
-            {{ item.titulo }}
-          </h3>
-          <p class="text-sm text-plan-alt mt-0.5">
-            {{ item.descripcion }}
+        <!-- Título -->
+        <h2 class="text-[22px] font-bold text-slate-800 leading-tight mb-4 px-2">
+          {{ card.title }}
+        </h2>
+        
+        <!-- Descripción -->
+        <div class="mb-8 px-4 flex-grow flex flex-col justify-start">
+          <p class="text-slate-600 text-[15px] leading-relaxed">
+            {{ card.description }}
           </p>
-        </div>
-        
-        <!-- Arrow -->
-        <ChevronRight class="h-5 w-5 text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-      </BaseCard>
-    </div>
-
-    <!-- Contact Card - WhatsApp Real -->
-    <BaseCard 
-      padding="large" 
-      rounded="large" 
-      :hoverable="false"
-      class="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-100"
-    >
-        <div class="flex items-center">
-          <div class="flex-1">
-        <h3 class="font-bold text-plan mb-1">¿Necesitas más ayuda?</h3>
-        <p class="text-sm text-plan-alt">Contáctanos directamente por WhatsApp</p>
-          </div>
-          <a 
-            href="https://wa.me/56912345678?text=Hola%2C%20necesito%20ayuda%20con%20la%20app%20MIO%2B" 
-            target="_blank"
-            rel="noopener noreferrer"
-            class="bg-green-500 hover:bg-green-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-            aria-label="Contactar por WhatsApp"
+          <button 
+            v-if="card.showFaq" 
+            @click="showFaqDialog = true"
+            class="text-violet-600 font-bold text-sm mt-2 hover:underline inline-flex items-center justify-center gap-1 mx-auto"
           >
-            <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-          </a>
+            Ver Preguntas Frecuentes
+            <ExternalLink :size="14" />
+          </button>
         </div>
-    </BaseCard>
+
+        <!-- Botones de Contacto (Aligned to bottom) -->
+        <div class="w-full space-y-4 max-w-sm mt-auto">
+           <!-- Whatsapp Button -->
+           <a 
+             :href="card.whatsapp" 
+             target="_blank" 
+             class="block w-full border-[2px] border-[#D4E157] rounded-[32px] py-3 px-4 hover:bg-[#D4E157]/10 transition-all active:scale-95 group bg-white"
+           >
+             <div class="font-bold text-slate-800 text-[14px] mb-0.5 group-hover:text-slate-900">ESCRÍBENOS POR WHATSAPP</div>
+             <div class="text-[10px] text-slate-500 font-semibold tracking-wide uppercase">Lun a Vie de 9:00 a 18:00 hrs.</div>
+           </a>
+
+           <!-- Teléfono Button -->
+           <a 
+             :href="card.phone" 
+             class="block w-full border-[2px] border-[#D4E157] rounded-[32px] py-3 px-4 hover:bg-[#D4E157]/10 transition-all active:scale-95 group bg-white"
+           >
+             <div class="font-bold text-slate-800 text-[14px] mb-0.5 group-hover:text-slate-900">LLÁMANOS</div>
+             <div class="text-[10px] text-slate-500 font-semibold tracking-wide uppercase">Lun a Vie de 9:00 a 18:00 hrs.</div>
+           </a>
+        </div>
+      </div>
+
+    </div>
 
     <!-- FAQ Dialog -->
     <Dialog v-model:open="showFaqDialog">
-      <DialogContent class="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Preguntas Frecuentes</DialogTitle>
-        </DialogHeader>
-        
-        <div class="space-y-4 py-4 max-h-96 overflow-y-auto">
-          <BaseCard 
-            v-for="(faq, index) in faqs" 
-            :key="index"
-            padding="normal"
-            rounded="medium"
-            variant="gray"
-            :hoverable="false"
-          >
-            <h4 class="font-semibold text-plan mb-2 flex items-start">
-              <HelpCircle class="h-4 w-4 text-plan-primary mr-2 mt-0.5 flex-shrink-0" />
-              {{ faq.pregunta }}
-            </h4>
-            <p class="text-sm text-plan-alt pl-6">
-              {{ faq.respuesta }}
-            </p>
-          </BaseCard>
+      <DialogContent class="sm:max-w-lg bg-white border-0 shadow-2xl rounded-3xl p-0 overflow-hidden" style="font-family: 'Cabinet Grotesk', sans-serif;">
+        <div class="bg-violet-50 p-6 border-b border-violet-100">
+          <DialogHeader>
+            <DialogTitle class="text-2xl font-bold text-violet-900 flex items-center gap-3">
+              <div class="p-2 bg-white rounded-xl shadow-sm">
+                <HelpCircle class="h-6 w-6 text-violet-600" />
+              </div>
+              Preguntas Frecuentes
+            </DialogTitle>
+          </DialogHeader>
         </div>
         
-        <DialogFooter>
+        <div class="space-y-3 p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          <div 
+            v-for="(faq, index) in faqs" 
+            :key="index"
+            class="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors border border-gray-100"
+          >
+            <h4 class="font-bold text-slate-800 mb-2 text-base">
+              {{ faq.pregunta }}
+            </h4>
+            <p class="text-slate-600 text-sm leading-relaxed">
+              {{ faq.respuesta }}
+            </p>
+          </div>
+        </div>
+        
+        <div class="p-6 pt-2 bg-white border-t border-gray-50">
           <DialogClose as-child>
-            <Button variant="outline">
-              <X class="mr-2 h-4 w-4" />
-              Cerrar
+            <Button class="w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800 h-12 font-bold text-base">
+              Entendido
             </Button>
           </DialogClose>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
-    </div>
   </div>
 </template>
 
 <style scoped>
-.font-display {
-  font-family: 'Cabinet Grotesk', sans-serif;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
 }
 </style>
