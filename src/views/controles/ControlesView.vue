@@ -9,7 +9,6 @@ import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { getAvailableProtocols } from '@/services/healthPlanService'
 import {
   HelpCircle,
-  Bell,
   Check,
   Heart,
   Scale,
@@ -19,6 +18,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-vue-next'
+import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
 
 // Router y Store
 const router = useRouter()
@@ -119,40 +119,32 @@ function getProtocolColor(name) {
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
 
-    <!-- Header Personalizado -->
-    <header class="bg-white border-b border-gray-200 px-8 py-5 flex-shrink-0">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="font-display font-bold text-2xl text-gray-900">Nueva Medición</h1>
-          <p class="text-gray-500 text-sm mt-1">Selecciona un control para registrar tus valores</p>
-        </div>
-        <div class="flex items-center gap-4">
-          <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-            <HelpCircle class="w-6 h-6" />
-          </button>
-          <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative">
-            <Bell class="w-6 h-6" />
-            <span class="absolute top-2 right-2 w-2 h-2 bg-[#DC2626] rounded-full"></span>
-          </button>
-        </div>
-      </div>
-    </header>
+    <!-- Header Completo -->
+    <HeaderCompleto
+      titulo="Nueva Medición"
+      subtitulo="Selecciona un control para registrar tus valores"
+      :mostrar-saludo="false"
+      :show-notification-badge="true"
+      notification-badge-color="#10B981"
+      @click-notification="console.log('Notificaciones clicked')"
+      @click-profile="console.log('Perfil clicked')"
+    />
 
     <!-- Content Area -->
     <div class="flex-1 overflow-y-auto p-8">
       <div class="max-w-5xl mx-auto">
         <!-- Greeting Section -->
         <div class="mb-10">
-          <h2 class="font-display font-bold text-4xl text-gray-900 mb-2">
+          <h2 class="font-display font-bold text-4xl text-plan mb-2">
             Hola, {{ userStore.nombreCompleto?.split(' ')[0] || 'Usuario' }} 👋
           </h2>
-          <p class="text-gray-500 text-lg">Selecciona el control que deseas realizar hoy</p>
+          <p class="text-plan-alt text-lg">Selecciona el control que deseas realizar hoy</p>
         </div>
 
         <!-- Loading State -->
         <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
           <Loader2 class="w-12 h-12 text-[#FF9500] animate-spin mb-4" />
-          <p class="text-gray-500">Cargando controles disponibles...</p>
+          <p class="text-plan-alt">Cargando controles disponibles...</p>
         </div>
 
         <!-- Error State -->
@@ -170,8 +162,8 @@ function getProtocolColor(name) {
         <!-- Empty State -->
         <div v-else-if="protocols.length === 0" class="flex flex-col items-center justify-center py-20">
           <Activity class="w-12 h-12 text-gray-400 mb-4" />
-          <p class="text-gray-600 text-lg font-medium mb-2">No hay controles disponibles</p>
-          <p class="text-gray-500 text-center max-w-md">
+          <p class="text-plan text-lg font-medium mb-2">No hay controles disponibles</p>
+          <p class="text-plan-alt text-center max-w-md">
             No tienes protocolos de control asignados en tu plan actual.
             Contacta a tu equipo de salud para más información.
           </p>
@@ -180,11 +172,11 @@ function getProtocolColor(name) {
         <!-- Protocols Grid -->
         <template v-else>
           <div class="mb-8">
-            <h3 class="font-display font-bold text-xl text-gray-900 mb-6">
+            <h3 class="font-display font-bold text-xl text-plan mb-6">
               Controles disponibles ({{ protocols.length }})
             </h3>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div
                 v-for="protocol in protocols"
                 :key="protocol.id"
@@ -215,16 +207,16 @@ function getProtocolColor(name) {
                 </div>
 
                 <!-- Content -->
-                <h4 class="font-display font-bold text-xl text-gray-900 mb-2">
+                <h4 class="font-display font-bold text-xl text-plan mb-2">
                   {{ protocol.name }}
                 </h4>
-                <p class="text-gray-500 mb-4 text-sm">
+                <p class="text-plan-alt mb-4 text-sm">
                   {{ protocol.description || 'Control de salud programado' }}
                 </p>
 
                 <!-- Health Plan Badge -->
                 <div class="flex items-center gap-2">
-                  <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                  <span class="px-3 py-1 bg-gray-100 text-plan-alt text-xs rounded-full">
                     {{ protocol.healthPlanName || 'Plan de Salud' }}
                   </span>
                 </div>

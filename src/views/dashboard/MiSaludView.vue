@@ -4,22 +4,23 @@ import { storeToRefs } from "pinia";
 import { useUserStore } from "@/stores/tiendaUsuario";
 import { useHealthStore } from "@/stores/tiendaSalud";
 import { useRouter, useRoute } from "vue-router";
+import { useConfigStore } from '@/stores/tiendaConfig'
 import { 
-  Heart, 
-  Droplet, 
-  Scale, 
-  Activity,
-  Loader2,
-  TrendingDown,
-  TrendingUp,
-  Minus,
-  Calendar,
-  Bell,
-  Download,
-  MoreVertical
+    Heart, 
+    Droplet, 
+    Scale, 
+    Activity,
+    Loader2,
+    TrendingDown,
+    TrendingUp,
+    Minus,
+    Calendar,
+    Download,
+    MoreVertical
 } from 'lucide-vue-next';
+import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
 import HealthMetricCard from "@/components/mi-salud/HealthMetricCard.vue";
-import MeasurementHistoryTable from "@/components/mi-salud/MeasurementHistoryTable.vue";
+import ActividadReciente from "@/components/mi-salud/ActividadReciente.vue";
 import NormalRangesCard from "@/components/mi-salud/NormalRangesCard.vue";
 import UpcomingControlsCard from "@/components/mi-salud/UpcomingControlsCard.vue";
 import SkeletonCard from "@/components/ui/SkeletonCard.vue";
@@ -38,6 +39,7 @@ import type { RangoFechas } from '@/types/miSalud'
 
 const userStore = useUserStore();
 const healthStore = useHealthStore();
+const configStore = useConfigStore();
 const router = useRouter();
 const route = useRoute();
 const { firstName, nombreCompleto, usuario } = storeToRefs(userStore);
@@ -45,6 +47,13 @@ const { firstName, nombreCompleto, usuario } = storeToRefs(userStore);
 const fullName = nombreCompleto;
 const user = usuario;
 const { historialMediciones, controlesProximos, ultimaMedicion } = storeToRefs(healthStore);
+
+const logoMutualHeader = computed(() => {
+  if (configStore.planActivo === 'mutual') {
+    return configStore.logoMutual || '/assets/logo_mutual.png'
+  }
+  return null
+})
 
 // Estado de carga
 const estaCargando = ref(true);
@@ -228,12 +237,12 @@ onBeforeUnmount(() => {
         <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Activity class="w-8 h-8 text-red-500" />
         </div>
-        <h3 class="font-display font-semibold text-lg text-gray-900 mb-2">Error al cargar datos</h3>
-        <p class="text-gray-500 mb-6">{{ errorMessage }}</p>
+        <h3 class="font-display font-semibold text-lg text-plan mb-2">Error al cargar datos</h3>
+        <p class="text-plan-alt mb-6">{{ errorMessage }}</p>
         <div class="flex gap-3 justify-center">
           <button 
             @click="clearError"
-            class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            class="px-4 py-2 text-plan-alt hover:text-plan font-medium transition-colors"
           >
             Cerrar
           </button>
@@ -275,31 +284,16 @@ onBeforeUnmount(() => {
 
     <!-- Contenido principal -->
     <template v-else>
-    <!-- Custom Header per Design Reference -->
-    <header class="bg-white border-b border-gray-200 px-4 py-4 md:px-8 flex items-center justify-between sticky top-0 z-20">
-        <div>
-            <h2 class="font-display font-bold text-2xl text-gray-900">Mi Salud</h2>
-            <p class="text-xs md:text-sm text-gray-500 font-body">
-                Monitoreo y seguimiento de tus métricas • 
-                <span class="text-orange-500 font-medium">{{ controlesProximos.length }} protocolos activos</span>
-            </p>
-        </div>
-        <div class="flex items-center gap-4 md:gap-6">
-            <button class="relative p-2 text-gray-500 hover:text-gray-700 transition-colors">
-                <Bell class="w-5 h-5" />
-                <span class="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
-            </button>
-            <div class="flex items-center gap-3 pl-4 md:pl-6 border-l border-gray-200">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-gray-900">{{ fullName }}</p>
-                    <p class="text-xs text-gray-500">{{ user?.plan_name || 'Plan Mutual' }}</p>
-                </div>
-                <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-400 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
-                    {{ user?.nombres?.[0] }}{{ user?.apellidos?.[0] }}
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Header Completo -->
+     <HeaderCompleto
+        titulo="Mi Salud"
+        :subtitulo="`Monitoreo y seguimiento de tus métricas • ${controlesProximos.length} protocolos activos`"
+        :mostrar-saludo="false"
+        :show-notification-badge="true"
+        notification-badge-color="#10B981"
+        @click-notification="console.log('Notificaciones clicked')"
+        @click-profile="console.log('Perfil clicked')"
+    />
 
     <!-- Content Area -->
     <div class="p-4 sm:p-8 space-y-6">
@@ -310,11 +304,11 @@ onBeforeUnmount(() => {
                     <Activity class="w-4 h-4" />
                     Mediciones
                 </button>
-                <button class="px-6 py-4 text-gray-500 hover:text-gray-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
+                <button class="px-6 py-4 text-plan-alt hover:text-plan font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
                     <TrendingUp class="w-4 h-4" />
                     Análisis
                 </button>
-                <button class="px-6 py-4 text-gray-500 hover:text-gray-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
+                <button class="px-6 py-4 text-plan-alt hover:text-plan font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
                     <Calendar class="w-4 h-4" />
                     Medicamentos
                 </button>
@@ -328,7 +322,7 @@ onBeforeUnmount(() => {
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
                         <Calendar class="w-4 h-4 text-gray-400" />
-                        <span class="text-sm text-gray-700 font-label">Período:</span>
+                        <span class="text-sm text-plan-alt font-label">Período:</span>
                     </div>
                     <div class="flex gap-2">
                         <button 
@@ -338,7 +332,7 @@ onBeforeUnmount(() => {
                             :class="{ 
                                 'px-4 py-2 text-sm font-medium rounded-lg transition-colors': true,
                                 'text-white bg-orange-500 shadow-sm hover:bg-orange-600': rangoFechas === rango,
-                                'text-gray-700 hover:bg-gray-100': rangoFechas !== rango
+                                'text-plan-alt hover:bg-gray-100': rangoFechas !== rango
                             }"
                         >
                             {{ rango === 'semana' ? '7 días' : rango === 'mes' ? '30 días' : '90 días' }}
@@ -394,8 +388,12 @@ onBeforeUnmount(() => {
                     />
                 </div>
 
-                <!-- Measurements Table con datos reales -->
-                <MeasurementHistoryTable v-if="medicionesReales.length > 0" :measurements="medicionesReales" />
+                <!-- Actividad Reciente - Solo últimas 5 mediciones -->
+                <ActividadReciente 
+                  v-if="medicionesReales.length > 0" 
+                  :measurements="medicionesReales" 
+                  :max-items="5"
+                />
                 
                 <!-- Empty state si no hay mediciones -->
                 <EmptyState
