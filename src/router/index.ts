@@ -84,6 +84,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, title: 'Mensajes' }
   },
   {
+    path: '/mensajes/controles',
+    name: 'mensajes-controles',
+    component: lazyLoad(() => import('@/views/mensajes/MensajesControlesView.vue'), 'Mensajes Controles'),
+    meta: { requiresAuth: true, title: 'Controles Pendientes' }
+  },
+  {
     path: '/recursos',
     name: 'recursos',
     component: lazyLoad(() => import('@/views/recursos/RecursosView.vue'), 'Recursos'),

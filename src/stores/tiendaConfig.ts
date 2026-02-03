@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 interface ConfiguracionCliente {
   logo: string | null
@@ -27,22 +27,27 @@ export const useConfigStore = defineStore('config', () => {
     planActivo.value = planGuardado
   }
 
-  // Configuracion por defecto (Homa)
+  // Configuracion por defecto (Esencial - Indigo)
   const defaultConfig: ConfiguracionCliente = {
-    logo: null, // Se llenara con base64 o url
+    logo: null,
     colors: {
-      text: '#333333',
-      accent: '#996BEF',
-      primary: '#7D58E9',
-      text_alt: '#1A1A1A',
-      secondary: '#7D58E9',
-      background: '#FFFFFF',
-      background_alt: '#F5F7FA'
+      text: '#334155',
+      accent: '#8B5CF6',
+      primary: '#6366F1',
+      text_alt: '#0F172A',
+      secondary: '#6366F1',
+      background: '#F8FAFC',
+      background_alt: '#F1F5F9'
     }
   }
 
   const currentConfig = ref<ConfiguracionCliente>({ ...defaultConfig })
   const logoMutual = ref<string | null>(null)
+
+  // Computed para obtener la clase de tema actual
+  const themeClass = computed(() => {
+    return `theme-${planActivo.value}`
+  })
 
   // Actions
   function setClientConfig(configRaw: ConfiguracionRaw | null | undefined): void {
@@ -65,7 +70,8 @@ export const useConfigStore = defineStore('config', () => {
         ...configRaw.config.colors
       }
 
-      applyTheme(currentConfig.value.colors)
+      // Aplicar tema mediante clase CSS
+      applyTheme(planActivo.value)
     }
   }
 
@@ -73,40 +79,30 @@ export const useConfigStore = defineStore('config', () => {
     logoMutual.value = logo
   }
 
-  // Aplica las variables CSS al root del documento
-  function applyTheme(colors: Record<string, string>): void {
+  /**
+   * Aplica el tema mediante clases CSS en el body
+   * Esto activa las variables CSS definidas en principal.css
+   */
+  function applyTheme(plan: string): void {
+    const body = document.body
+    
+    // Remover clases de tema anteriores
+    body.classList.remove('theme-mutual', 'theme-esencial', 'theme-vital')
+    
+    // Agregar clase del tema actual
+    const themeName = plan.toLowerCase()
+    body.classList.add(`theme-${themeName}`)
+    
+    // Aplicar colores específicos como variables CSS para compatibilidad legacy
+    const colors = currentConfig.value.colors
     const root = document.documentElement
-
-    Object.entries(colors).forEach(([key, value]) => {
-      // NO aplicar variables de sidebar - mantener neutro para todos los planes
-      if (key.startsWith('sidebar') || key.startsWith('--sidebar')) {
-        return
-      }
-
-      // NO aplicar variables de background - mantener fondo neutro para todos los planes
-      if (key === 'background' || key === '--background' || key === 'background_alt' || key === '--background_alt') {
-        return
-      }
-      
-      // Si la llave ya empieza con --, usarla tal cual. Si no, agregar --
-      const cssVarName = key.startsWith('--') ? key : `--${key}`
-      root.style.setProperty(cssVarName, value)
-    })
-
-    // Aplicar colores específicos para títulos y subtítulos según el plan
-    const plan = planActivo.value
-    if (plan === 'mutual') {
-      // Colores para Mutual
-      root.style.setProperty('--plan-text', colors.text || '#505050')
-      root.style.setProperty('--plan-text-alt', colors.text_alt || '#FFFFFF')
-      root.style.setProperty('--plan-primary', colors.primary || '#C4D600')
-      root.style.setProperty('--plan-accent', colors.accent || '#505050')
-    } else {
-      // Colores para Esencial (default)
-      root.style.setProperty('--plan-text', colors.text || '#333333')
-      root.style.setProperty('--plan-text-alt', colors.text_alt || '#1A1A1A')
-      root.style.setProperty('--plan-primary', colors.primary || '#c4b0ff')
-      root.style.setProperty('--plan-accent', colors.accent || '#996BEF')
+    
+    // Solo aplicar variables que no son de tema (logo, etc.)
+    if (colors.primary) {
+      root.style.setProperty('--client-primary', colors.primary)
+    }
+    if (colors.accent) {
+      root.style.setProperty('--client-accent', colors.accent)
     }
   }
 
@@ -118,22 +114,22 @@ export const useConfigStore = defineStore('config', () => {
       config: {
         logo: null,
         colors: {
-          // Base
-          primary: '#7D58E9',
+          // Base - Índigo Esencial
+          primary: '#6366F1',
           'primary-foreground': '#FFFFFF',
-          secondary: '#7D58E9',
-          accent: '#F5F3FF',
+          secondary: '#8B5CF6',
+          accent: '#E0E7FF',
 
-          // Sidebar (Violeta Homa)
+          // Sidebar
           sidebar: '#FFFFFF',
-          'sidebar-foreground': '#1f2937',
-          'sidebar-primary': '#7D58E9',
+          'sidebar-foreground': '#0F172A',
+          'sidebar-primary': '#6366F1',
           'sidebar-primary-foreground': '#FFFFFF',
-          'sidebar-accent': '#F3F4F6',
-          'sidebar-border': '#e5e7eb',
+          'sidebar-accent': '#F1F5F9',
+          'sidebar-border': '#E2E8F0',
 
           // Backgrounds
-          background: '#fdfbff',
+          background: '#F8FAFC',
           card: '#FFFFFF'
         }
       }
@@ -144,22 +140,22 @@ export const useConfigStore = defineStore('config', () => {
       config: {
         logo: null,
         colors: {
-          // Base (Verde Mutual)
+          // Base - Verde Lima #C4D600
           primary: '#C4D600',
-          'primary-foreground': '#000000',
-          secondary: '#00B6AE',
-          accent: '#F7F9E6',
+          'primary-foreground': '#FFFFFF',
+          secondary: '#D4E000',
+          accent: '#F0F5C8',
 
-          // Sidebar (Dark/Verde Mutual)
-          sidebar: '#C4D600',
-          'sidebar-foreground': '#000000',
-          'sidebar-primary': '#005C55',
+          // Sidebar
+          sidebar: '#FFFFFF',
+          'sidebar-foreground': '#0F172A',
+          'sidebar-primary': '#C4D600',
           'sidebar-primary-foreground': '#FFFFFF',
-          'sidebar-accent': '#B3C300',
-          'sidebar-border': '#AAB800',
+          'sidebar-accent': '#F1F5F9',
+          'sidebar-border': '#E2E8F0',
 
           // Backgrounds
-          background: '#F9FAFB',
+          background: '#F8FAFC',
           card: '#FFFFFF'
         }
       }
@@ -175,13 +171,17 @@ export const useConfigStore = defineStore('config', () => {
 
   // Actualizar plan activo
   function setPlanActivo(plan: string): void {
-    planActivo.value = plan.toLowerCase()
-    localStorage.setItem('mio-plan-activo', planActivo.value)
+    const planLower = plan.toLowerCase()
+    planActivo.value = planLower
+    localStorage.setItem('mio-plan-activo', planLower)
+    
+    // Aplicar tema mediante clase CSS
+    applyTheme(planLower)
     
     // Aplicar colores del preset correspondiente
-    loadPreset(planActivo.value)
+    loadPreset(planLower)
 
-    if (planActivo.value !== 'mutual') {
+    if (planLower !== 'mutual') {
       logoMutual.value = null
     }
   }
@@ -196,6 +196,15 @@ export const useConfigStore = defineStore('config', () => {
     currentConfig.value = { ...defaultConfig }
     logoMutual.value = null
     localStorage.removeItem('mio-plan-activo')
+    
+    // Remover clases de tema
+    const body = document.body
+    body.classList.remove('theme-mutual', 'theme-esencial', 'theme-vital')
+  }
+
+  // Inicializar tema al cargar
+  function initTheme(): void {
+    applyTheme(planActivo.value)
   }
 
   return {
@@ -204,10 +213,13 @@ export const useConfigStore = defineStore('config', () => {
     currentConfig,
     planActivo,
     logoMutual,
+    themeClass,
     setClientConfig,
     setLogoMutual,
     loadPreset,
     setPlanActivo,
+    applyTheme,
+    initTheme,
     $reset,
     presets
   }

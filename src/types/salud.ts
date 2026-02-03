@@ -107,6 +107,8 @@ export interface Campana {
   fechaInicio?: string | null;
   /** Fecha de fin de la campaña (ISO 8601) */
   fechaFin?: string | null;
+  /** Logo de la campaña en base64 o URL (opcional) */
+  logo?: string | null;
 }
 
 // ============================================================================
