@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { clienteApi } from '@/utils/clienteApi'
+import { getAvailableProtocols } from '@/services/healthPlanService'
 import type { Control, EstadoControl } from '@/types/salud'
 
 export const useControlesStore = defineStore('controles', () => {
@@ -33,14 +34,24 @@ export const useControlesStore = defineStore('controles', () => {
         health_plan_id?: string | number
       }
 
-      if (!health_plan_id) {
-        error.value = 'Plan de salud no disponible'
+      if (!patient_id) {
+        error.value = 'Paciente no disponible'
         return
       }
 
-      // 1) Protocolos por plan
-      const protocolosResponse = await clienteApi.get<Record<string, any>>(`/api/v1/protocols/${health_plan_id}`)
-      const protocolos = protocolosResponse?.data?.protocol || protocolosResponse?.data || []
+      let protocolos: any[] = []
+
+      if (health_plan_id) {
+        // 1) Protocolos por plan
+        const protocolosResponse = await clienteApi.get<Record<string, any>>(`/api/v1/protocols/${health_plan_id}`)
+        const respuestaProtocolos = protocolosResponse?.data?.protocol || protocolosResponse?.data || []
+        protocolos = Array.isArray(respuestaProtocolos) ? respuestaProtocolos : []
+      } else {
+        // Fallback: obtener protocolos disponibles a partir del paciente
+        const protocolosResponse = await getAvailableProtocols(String(patient_id))
+        const respuestaProtocolos = (protocolosResponse as any)?.data || []
+        protocolos = Array.isArray(respuestaProtocolos) ? respuestaProtocolos : []
+      }
 
       if (Array.isArray(protocolos) && protocolos.length === 0) {
         initMockData()
