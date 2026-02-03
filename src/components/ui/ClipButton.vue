@@ -25,6 +25,7 @@ const emit = defineEmits(['success', 'click', 'hold-start', 'hold-end'])
 // Estados: 'idle' | 'holding' | 'success'
 const status = ref('idle')
 const isMounted = ref(false)
+const estaSosteniendo = ref(false)
 
 // Esperar al próximo tick después de mount para ignorar transitionend iniciales
 onMounted(() => {
@@ -36,12 +37,14 @@ onMounted(() => {
 // Manejadores de eventos
 const startHold = () => {
   if (status.value === 'success') return
+  estaSosteniendo.value = true
   status.value = 'holding'
   emit('hold-start')
 }
 
 const endHold = (e) => {
-  if (status.value === 'success') return
+  if (status.value === 'success' || !estaSosteniendo.value) return
+  estaSosteniendo.value = false
   status.value = 'idle'
   emit('hold-end')
   // Emitir click para comportamiento estándar si no se completó el hold
