@@ -54,6 +54,8 @@ interface RetornoUseMetricasSalud {
   getEstadoClase: (estado: EstadoMedicion | string) => string
   /** Obtiene color de indicador para un estado */
   getEstadoDot: (estado: EstadoMedicion | string) => string
+  /** Obtiene tipo de estado para badges (success/warning/error/info/neutral) */
+  getEstadoTipo: (estado: EstadoMedicion | string) => 'success' | 'warning' | 'error' | 'info' | 'neutral'
 }
 
 // ============================================================================
@@ -512,6 +514,29 @@ export function useMetricasSalud(
     return ESTADOS_DOT[estado] || 'bg-gray-400'
   }
 
+  /**
+   * Obtiene el tipo de estado para badges (compatible con HealthMetricCard)
+   *
+   * @param estado - Estado de la medición
+   * @returns Tipo de estado: 'success' | 'warning' | 'error' | 'info' | 'neutral'
+   */
+  const getEstadoTipo = (estado: EstadoMedicion | string): 'success' | 'warning' | 'error' | 'info' | 'neutral' => {
+    const tipoMap: Record<string, 'success' | 'warning' | 'error' | 'info' | 'neutral'> = {
+      normal: 'success',
+      green: 'success',
+      success: 'success',
+      warning: 'warning',
+      orange: 'warning',
+      alerta: 'warning',
+      red: 'error',
+      critico: 'error',
+      danger: 'error',
+      none: 'neutral',
+      na: 'neutral'
+    }
+    return tipoMap[estado] || 'neutral'
+  }
+
   return {
     metricasPresion,
     metricasGlicemia,
@@ -519,7 +544,8 @@ export function useMetricasSalud(
     estadoGeneral,
     getEstadoTexto,
     getEstadoClase,
-    getEstadoDot
+    getEstadoDot,
+    getEstadoTipo
   }
 }
 

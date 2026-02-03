@@ -1,7 +1,9 @@
 <script setup>
 import { ref } from 'vue'
 import { Bell } from 'lucide-vue-next'
+import { useTheme } from '@/composables/useTheme'
 
+const { colors } = useTheme()
 const emailNotifications = ref(true)
 const smsNotifications = ref(false)
 </script>
@@ -9,7 +11,10 @@ const smsNotifications = ref(false)
 <template>
   <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
     <div class="flex items-center gap-3 mb-6">
-      <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-[#FF9500]">
+      <div 
+        class="w-10 h-10 rounded-xl flex items-center justify-center"
+        :style="{ backgroundColor: colors.primaryLight, color: colors.primary }"
+      >
         <Bell class="w-5 h-5" />
       </div>
       <h3 class="font-bold text-lg text-gray-900 font-display">Preferencias y Notificaciones</h3>
@@ -22,7 +27,10 @@ const smsNotifications = ref(false)
         </div>
         <label class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" v-model="emailNotifications" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF9500]"></div>
+          <div 
+            class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all transition-colors"
+            :style="emailNotifications ? { backgroundColor: colors.primary } : {}"
+          ></div>
         </label>
       </div>
       <div class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors">
@@ -32,7 +40,10 @@ const smsNotifications = ref(false)
         </div>
         <label class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" v-model="smsNotifications" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF9500]"></div>
+          <div 
+            class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all transition-colors"
+            :style="smsNotifications ? { backgroundColor: colors.primary } : {}"
+          ></div>
         </label>
       </div>
     </div>

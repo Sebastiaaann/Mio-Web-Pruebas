@@ -2,7 +2,9 @@
 import { computed } from 'vue'
 import { Mail, Phone } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/tiendaUsuario'
+import { useTheme } from '@/composables/useTheme'
 
+const { colors } = useTheme()
 const userStore = useUserStore()
 const email = computed(() => userStore.usuario?.email || 'sebastian.almo9@gmail.com')
 const phone = computed(() => userStore.usuario?.phone || '+56 9 1234 5678') // Fallback as mostly this data might be missing
@@ -13,8 +15,11 @@ const phone = computed(() => userStore.usuario?.phone || '+56 9 1234 5678') // F
     <h4 class="font-bold text-lg text-gray-900 mb-4 font-display">Información de Contacto</h4>
     <div class="space-y-4">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
-          <Mail class="w-5 h-5 text-[#FF9500]" />
+        <div 
+          class="w-10 h-10 rounded-xl flex items-center justify-center"
+          :style="{ backgroundColor: colors.primaryLight, color: colors.primary }"
+        >
+          <Mail class="w-5 h-5" />
         </div>
         <div>
           <p class="text-xs text-gray-500">Email</p>
@@ -22,8 +27,11 @@ const phone = computed(() => userStore.usuario?.phone || '+56 9 1234 5678') // F
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
-          <Phone class="w-5 h-5 text-[#FF9500]" />
+        <div 
+          class="w-10 h-10 rounded-xl flex items-center justify-center"
+          :style="{ backgroundColor: colors.primaryLight, color: colors.primary }"
+        >
+          <Phone class="w-5 h-5" />
         </div>
         <div>
           <p class="text-xs text-gray-500">Teléfono</p>

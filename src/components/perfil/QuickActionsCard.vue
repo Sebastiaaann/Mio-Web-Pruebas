@@ -1,5 +1,8 @@
 <script setup>
 import { CreditCard, Download, HelpCircle, ChevronRight } from 'lucide-vue-next'
+import { useTheme } from '@/composables/useTheme'
+
+const { colors } = useTheme()
 </script>
 
 <template>
@@ -7,8 +10,11 @@ import { CreditCard, Download, HelpCircle, ChevronRight } from 'lucide-vue-next'
     <h4 class="font-bold text-lg text-gray-900 mb-4 font-display">Acciones Rápidas</h4>
     <div class="space-y-3">
       <a href="#" class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-        <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
-          <CreditCard class="w-5 h-5 text-[#FF9500]" />
+        <div 
+          class="w-10 h-10 rounded-xl flex items-center justify-center"
+          :style="{ backgroundColor: colors.primaryLight, color: colors.primary }"
+        >
+          <CreditCard class="w-5 h-5" />
         </div>
         <div class="flex-1">
           <p class="font-medium text-gray-900 text-sm">Historial de pagos</p>
