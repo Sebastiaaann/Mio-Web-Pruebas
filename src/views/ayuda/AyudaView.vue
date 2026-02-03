@@ -31,9 +31,19 @@ import {
   ChevronRight,
   X
 } from 'lucide-vue-next'
+import { useUserStore } from '@/stores/tiendaUsuario'
+import { useUserInitials } from '@/composables/useUserInitials'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 
 const showFaqDialog = ref(false)
 const searchQuery = ref('')
+
+// User store and initials
+const router = useRouter()
+const userStore = useUserStore()
+const { firstName, nombreCompleto } = storeToRefs(userStore)
+const { iniciales: userInitials } = useUserInitials(firstName, nombreCompleto)
 
 // Helper to extract proper color name for Tailwind
 const getTailwindColor = (hexOrName) => {
@@ -109,13 +119,28 @@ function handleItemClick(item) {
 </script>
 
 <template>
-  <div class="ayuda-view space-y-6 pb-20 md:pb-6">
+  <div class="ayuda-view pb-20 md:pb-6">
     <!-- Header -->
-    <SectionHeader 
-      title="Centro de Ayuda" 
-      subtitle="¿En qué podemos ayudarte hoy?"
-      size="large"
-    />
+    <header class="flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-gray-border px-6 md:px-8 py-3 md:py-4 sticky top-0 z-20 transition-all duration-300 -mx-6 md:-mx-8 mb-6">
+      <div>
+        <h1 class="font-display font-bold text-2xl text-plan">Centro de Ayuda</h1>
+        <p class="text-plan-alt text-sm mt-1 font-medium">¿En qué podemos ayudarte hoy?</p>
+      </div>
+      <!-- Avatar de Perfil -->
+      <div 
+        class="relative flex-shrink-0 cursor-pointer"
+        @click="router.push('/perfil')"
+      >
+        <div class="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-violet-100 to-purple-100 border-2 border-gray-200 flex items-center justify-center hover:border-violet-300 transition-all duration-200">
+          <span class="text-sm font-semibold text-violet-600">{{ userInitials }}</span>
+        </div>
+        <!-- Indicador Online -->
+        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></div>
+      </div>
+    </header>
+    
+    <!-- Content Container -->
+    <div class="space-y-6 px-6 md:px-8">
 
     <!-- Search -->
     <SearchInput 
@@ -150,10 +175,10 @@ function handleItemClick(item) {
         
         <!-- Content -->
         <div class="flex-1">
-          <h3 class="font-semibold text-gray-800 group-hover:text-primary transition-colors text-lg">
+          <h3 class="font-semibold text-plan group-hover:text-plan-primary transition-colors text-lg">
             {{ item.titulo }}
           </h3>
-          <p class="text-sm text-gray-500 mt-0.5">
+          <p class="text-sm text-plan-alt mt-0.5">
             {{ item.descripcion }}
           </p>
         </div>
@@ -172,8 +197,8 @@ function handleItemClick(item) {
     >
         <div class="flex items-center">
           <div class="flex-1">
-            <h3 class="font-bold text-gray-800 mb-1">¿Necesitas más ayuda?</h3>
-            <p class="text-sm text-gray-600">Contáctanos directamente por WhatsApp</p>
+        <h3 class="font-bold text-plan mb-1">¿Necesitas más ayuda?</h3>
+        <p class="text-sm text-plan-alt">Contáctanos directamente por WhatsApp</p>
           </div>
           <a 
             href="https://wa.me/56912345678?text=Hola%2C%20necesito%20ayuda%20con%20la%20app%20MIO%2B" 
@@ -205,11 +230,11 @@ function handleItemClick(item) {
             variant="gray"
             :hoverable="false"
           >
-            <h4 class="font-semibold text-gray-800 mb-2 flex items-start">
-              <HelpCircle class="h-4 w-4 text-primary mr-2 mt-0.5 flex-shrink-0" />
+            <h4 class="font-semibold text-plan mb-2 flex items-start">
+              <HelpCircle class="h-4 w-4 text-plan-primary mr-2 mt-0.5 flex-shrink-0" />
               {{ faq.pregunta }}
             </h4>
-            <p class="text-sm text-gray-600 pl-6">
+            <p class="text-sm text-plan-alt pl-6">
               {{ faq.respuesta }}
             </p>
           </BaseCard>
@@ -225,5 +250,12 @@ function handleItemClick(item) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.font-display {
+  font-family: 'Cabinet Grotesk', sans-serif;
+}
+</style>
