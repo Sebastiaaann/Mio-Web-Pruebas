@@ -4,6 +4,7 @@
  * Adaptado con indicador inferior, navegación con íconos y transiciones suaves
  */
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useTheme } from '@/composables/useTheme'
 
 const props = defineProps({
   banners: {
@@ -27,6 +28,28 @@ const props = defineProps({
 const currentIndex = ref(0)
 const isPaused = ref(false)
 let autoplayTimer = null
+
+// Obtener colores del tema
+const { colors, isMutual } = useTheme()
+
+// Color de fondo dinámico según el tema
+const bgGradientClass = computed(() => {
+  if (isBerniBanner.value && isMutual.value) {
+    // Usar verde lima del tema cuando es plan Mutual
+    return ''
+  }
+  return 'bg-gradient-to-br from-purple-500 to-purple-600'
+})
+
+// Estilo inline para el fondo del banner Berni
+const bannerBgStyle = computed(() => {
+  if (isBerniBanner.value && isMutual.value) {
+    return {
+      background: `linear-gradient(to bottom right, ${colors.value.primary}, ${colors.value.primaryHover})`
+    }
+  }
+  return {}
+})
 
 const totalSlides = computed(() => props.banners.length)
 
@@ -114,7 +137,8 @@ onUnmounted(() => {
             <!-- Imagen de fondo -->
             <div 
               class="absolute inset-0 flex items-center justify-center"
-              :class="(banner.title || '').toString().toLowerCase().includes('berni') ? 'bg-gradient-to-br from-purple-500 to-purple-600' : ''"
+              :class="(banner.title || '').toString().toLowerCase().includes('berni') ? bgGradientClass : ''"
+              :style="(banner.title || '').toString().toLowerCase().includes('berni') ? bannerBgStyle : {}"
             >
               <img
                 v-if="banner.image"

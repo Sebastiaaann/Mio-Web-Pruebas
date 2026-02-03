@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useTheme } from '@/composables/useTheme'
 import {
   Carousel,
   CarouselContent,
@@ -23,6 +24,7 @@ const props = withDefaults(defineProps<{
 })
 
 const router = useRouter()
+const { isMutual } = useTheme()
 
 function irADetalle(): void {
   router.push(props.rutaDetalle)
@@ -69,11 +71,28 @@ function irADetalle(): void {
               </span>
             </div>
           </div>
-          <div class="space-y-1">
-            <p class="font-bold text-gray-text text-base group-hover:text-primary transition-colors line-clamp-1">
+          <div 
+            class="relative transition-all duration-300"
+            :class="[
+              isMutual ? '-mx-2 -mb-2 p-4 pt-6 mt-[-1rem] rounded-b-xl' : 'space-y-1'
+            ]"
+            :style="isMutual ? { backgroundColor: '#C4D600', zIndex: 10 } : {}"
+          >
+            <!-- Robot Mascota (Solo Modo Mutual) -->
+            <img 
+                v-if="isMutual"
+                src="/assets/robot_mascot.png"
+                alt="Mio Robot"
+                class="absolute -top-10 right-2 w-12 h-auto z-20 drop-shadow-sm hover:scale-110 transition-transform"
+            />
+
+            <p class="font-bold text-gray-text text-base group-hover:text-primary transition-colors line-clamp-1 relative z-10">
               {{ item.titulo }}
             </p>
-            <p class="text-sm text-gray-text-light font-medium line-clamp-2">
+            <p 
+              class="text-sm text-gray-text-light font-medium line-clamp-2 relative z-10"
+              :class="isMutual ? 'text-slate-800/80' : ''"
+            >
               {{ item.descripcion }}
             </p>
           </div>

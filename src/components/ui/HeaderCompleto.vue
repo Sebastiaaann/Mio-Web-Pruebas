@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * HeaderCompleto - Header unificado para todas las vistas
- * Basado en el diseño de HomeView con soporte para títulos personalizados
+ * Diseño Premium/SaaS Financiero con soporte para temas dinámicos
  * Incluye: saludo dinámico, notificaciones, chatbot y perfil de usuario
  */
 import { computed, ref } from 'vue'
@@ -11,6 +11,7 @@ import { storeToRefs } from 'pinia'
 import { Bot, Bell } from 'lucide-vue-next'
 import { useSaludo } from '@/composables/useSaludo'
 import { useUserInitials } from '@/composables/useUserInitials'
+import { useTheme } from '@/composables/useTheme'
 import ChatbotBanner from '@/components/ui/home-ios/ChatbotBanner.vue'
 import {
   Sheet,
@@ -62,6 +63,7 @@ const { nombreCompleto, firstName } = storeToRefs(userStore)
 // Composables
 const { saludo } = useSaludo()
 const { iniciales: userInitials } = useUserInitials(firstName, nombreCompleto)
+const { colors, themeClass } = useTheme()
 
 // Estado para controlar el panel del chatbot
 const chatbotAbierto = ref<boolean>(false)
@@ -97,36 +99,41 @@ const handleProfileClick = () => {
 <template>
   <div class="header-completo-container">
     <!-- Header Principal -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-gray-border px-4 md:px-8 py-4 sticky top-0 z-20 transition-all duration-300">
+    <header 
+      :class="themeClass"
+      class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 md:px-8 py-4 sticky top-0 z-20 transition-all duration-300"
+    >
       <div class="flex items-center justify-between">
         <!-- Lado Izquierdo: Título/Subtítulo -->
         <div>
-          <h1 class="font-display font-bold text-2xl text-plan">
+          <h1 class="h1-premium">
             {{ tituloMostrado }}
           </h1>
-          <p v-if="subtitulo" class="text-plan-alt text-sm mt-1 font-medium">
+          <p v-if="subtitulo" class="text-secondary text-sm mt-1 font-medium">
             {{ subtitulo }}
           </p>
         </div>
 
         <!-- Lado Derecho: Notificaciones, Chatbot y Perfil -->
-        <div class="flex items-center gap-4 md:gap-6">
+        <div class="flex items-center gap-3 md:gap-5">
+          <!-- Logo Mutual si aplica -->
           <img
             v-if="logoHeader"
             :src="logoHeader"
             alt="Logo Mutual"
             class="h-7 w-auto object-contain"
           />
+          
           <!-- Botón de Notificaciones -->
           <button 
             @click="handleNotificationClick"
-            class="relative p-2 text-plan hover:bg-gray-bg rounded-xl transition-all group"
+            class="relative p-2.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all group"
             aria-label="Notificaciones"
           >
-            <Bell class="text-xl group-hover:text-plan-primary transition-colors" />
+            <Bell class="w-5 h-5" />
             <span 
               v-if="showNotificationBadge && hasNotifications" 
-              class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full border-2 border-white"
+              class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white"
               :style="{ backgroundColor: notificationBadgeColor }"
             ></span>
             <span 
@@ -139,13 +146,13 @@ const handleProfileClick = () => {
           </button>
 
           <!-- Separador -->
-          <div class="hidden md:block w-px h-6 bg-gray-300"></div>
+          <div class="hidden md:block w-px h-6 bg-slate-200"></div>
 
           <!-- Avatar Chatbot -->
           <Sheet v-model:open="chatbotAbierto">
             <SheetTrigger as-child>
               <button 
-                class="relative w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-110 transition-all shadow-lg shadow-emerald-200/50 flex items-center justify-center group"
+                class="relative w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 hover:scale-105 transition-all shadow-lg shadow-emerald-200/50 flex items-center justify-center group"
                 aria-label="Abrir asistente virtual"
               >
                 <Bot class="w-5 h-5 text-white" />
@@ -155,13 +162,13 @@ const handleProfileClick = () => {
             </SheetTrigger>
             
             <SheetContent side="right" class="w-full sm:w-[450px] p-0 flex flex-col">
-              <SheetHeader class="px-4 py-3 border-b border-gray-border shrink-0">
+              <SheetHeader class="px-4 py-3 border-b border-slate-200 shrink-0">
                 <SheetTitle class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
                     <Bot class="w-5 h-5 text-white" />
                   </div>
                   <div class="flex flex-col">
-                    <span class="text-base font-semibold text-plan">Asistente Virtual</span>
+                    <span class="text-base font-semibold text-slate-900">Asistente Virtual</span>
                     <div class="flex items-center gap-1.5">
                       <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                       <span class="text-xs text-green-600 font-medium">En línea</span>
@@ -178,15 +185,26 @@ const handleProfileClick = () => {
           </Sheet>
 
           <!-- Separador -->
-          <div class="hidden md:block w-px h-6 bg-gray-300"></div>
+          <div class="hidden md:block w-px h-6 bg-slate-200"></div>
 
           <!-- Perfil de Usuario - Avatar Circular -->
           <div 
             class="relative flex-shrink-0 cursor-pointer"
             @click="handleProfileClick"
           >
-            <div class="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-violet-100 to-purple-100 border-2 border-gray-200 flex items-center justify-center hover:border-violet-300 transition-all duration-200">
-              <span class="text-sm font-semibold text-violet-600">{{ userInitials }}</span>
+            <div 
+              class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 border-slate-200 hover:border-slate-300 transition-all duration-200"
+              :style="{ 
+                backgroundColor: colors.primaryLight,
+                borderColor: colors.primary + '30'
+              }"
+            >
+              <span 
+                class="text-sm font-semibold"
+                :style="{ color: colors.primary }"
+              >
+                {{ userInitials }}
+              </span>
             </div>
             <!-- Indicador Online -->
             <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></div>
@@ -205,10 +223,6 @@ const handleProfileClick = () => {
 <style scoped>
 .header-completo-container {
   width: 100%;
-}
-
-.font-display {
-  font-family: 'Cabinet Grotesk', sans-serif;
 }
 
 /* Animaciones suaves */
