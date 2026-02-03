@@ -69,6 +69,7 @@ export function useBannersFiltrados(
     const todosBanners = opciones
       .map(option => ({
         ...option,
+        id: option.id || option.title || option.titulo || Math.random().toString(36).substr(2, 9),
         image: option.image || option.imagen || option.imagenUrl || option.logo,
         title: option.title || option.titulo || option.nombre,
         planName: option.plan_name || option.nombre,
@@ -76,8 +77,13 @@ export function useBannersFiltrados(
       }))
       .filter(option => option.image && option.title)
 
+    // Eliminar duplicados por ID o título
+    const bannersUnicos = todosBanners.filter((banner, index, self) => 
+      index === self.findIndex(b => b.id === banner.id || b.title === banner.title)
+    )
+
     // Filtrar por plan cuando el plan_name esté disponible
-    const bannersPorPlan = todosBanners.filter(banner => {
+    const bannersPorPlan = bannersUnicos.filter(banner => {
       if (!banner.planName) return false
 
       const planBanner = String(banner.planName).toLowerCase()

@@ -110,7 +110,7 @@ export interface RetornoUseMediciones {
   /** Calcula tendencia entre dos valores */
   calcularTendencia: (actual: string | number | null, anterior: string | number | null, tipo: TipoMedicion) => Tendencia
   /** Genera path SVG para gráfico de presión */
-  generarPathPresion: (mediciones: MedicionResumen[]) => string
+  generarPathPresion: (mediciones: MedicionResumen[], areaCompleta?: boolean) => string
   /** Calcula coordenada Y del último punto para SVG */
   generarYUltimoPunto: (mediciones: MedicionResumen[]) => number
 }
@@ -300,9 +300,10 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
    * Genera un path SVG suavizado para gráfico de presión
    *
    * @param mediciones - Lista de mediciones a graficar
+   * @param areaCompleta - Si es true, genera path cerrado para área rellena
    * @returns String con el path SVG
    */
-  const generarPathPresion = (mediciones: MedicionResumen[]): string => {
+  const generarPathPresion = (mediciones: MedicionResumen[], areaCompleta = false): string => {
     if (mediciones.length < 2) return ''
 
     const valores = mediciones.map((m) => m.valor)
@@ -310,10 +311,11 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
     const max = Math.max(...valores)
     const rango = max - min || 1
 
-    // Normalizar valores a coordenadas Y (0-40, invertido)
+    // Normalizar valores a coordenadas Y (0-50, invertido) con padding superior
     const puntos = mediciones.map((m, idx) => {
       const x = (idx / (mediciones.length - 1)) * 100
-      const y = 40 - ((m.valor - min) / rango) * 30 - 5 // Entre 5 y 35
+      // Entre 10 y 40 (con padding de 10 arriba y 10 abajo)
+      const y = 40 - ((m.valor - min) / rango) * 25 - 5
       return `${x},${y}`
     })
 
@@ -332,6 +334,13 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
       path += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${currX},${currY}`
     }
 
+    // Si se solicita área completa, cerrar el path hacia abajo y volver al inicio
+    if (areaCompleta) {
+      const ultimoPunto = puntos[puntos.length - 1].split(',').map(Number)
+      const primerPunto = puntos[0].split(',').map(Number)
+      path += ` L${ultimoPunto[0]},50 L${primerPunto[0]},50 Z`
+    }
+
     return path
   }
 
@@ -342,7 +351,7 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
    * @returns Coordenada Y normalizada
    */
   const generarYUltimoPunto = (mediciones: MedicionResumen[]): number => {
-    if (mediciones.length === 0) return 20
+    if (mediciones.length === 0) return 25
 
     const ultimo = mediciones[mediciones.length - 1]
     const valores = mediciones.map((m) => m.valor)
@@ -350,7 +359,8 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
     const max = Math.max(...valores)
     const rango = max - min || 1
 
-    return 40 - ((ultimo.valor - min) / rango) * 30 - 5
+    // Entre 10 y 40 (con padding)
+    return 40 - ((ultimo.valor - min) / rango) * 25 - 5
   }
 
   /**
