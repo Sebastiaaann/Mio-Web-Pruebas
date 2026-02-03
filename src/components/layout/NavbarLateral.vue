@@ -222,7 +222,7 @@ onUnmounted(() => {
       x: isMobileOpen ? 0 : 0
     }"
     :transition="{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }"
-    class="fixed inset-y-0 left-0 z-50 flex flex-col h-full bg-[#F9FAFB] border-r border-gray-200/80 transition-transform duration-300 md:translate-x-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+    class="fixed inset-y-2 left-2 z-50 flex flex-col h-[calc(100vh-16px)] bg-[#F9FAFB] rounded-2xl border border-gray-200/80 transition-transform duration-300 md:translate-x-0 shadow-lg"
     :class="isMobileOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <!-- Sidebar Header -->
@@ -252,7 +252,7 @@ onUnmounted(() => {
         @mouseenter="showTooltip = 'toggle'"
         @mouseleave="showTooltip = ''"
         class="hidden md:flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-violet-600 hover:border-violet-200 hover:bg-violet-50 transition-all duration-200 shadow-sm flex-shrink-0 ml-2 relative"
-        :class="collapsed ? 'absolute -right-3.5 top-5 bg-white shadow-md' : ''"
+        :class="collapsed ? 'absolute -right-4 top-4 bg-white shadow-md' : ''"
       >
         <PanelLeft v-if="collapsed" :size="14" :stroke-width="2" />
         <ChevronLeft v-else :size="14" :stroke-width="2" />
@@ -631,9 +631,8 @@ onUnmounted(() => {
             class="flex-1 min-w-0"
           >
             <p class="text-sm font-semibold text-gray-900 truncate">
-              {{ userStore.nombreCompleto }}
+              Hola, {{ userStore.firstName || 'Usuario' }}
             </p>
-            <p class="text-xs text-gray-500 truncate">{{ userStore.usuario?.email || '' }}</p>
           </Motion>
         </AnimatePresence>
         
