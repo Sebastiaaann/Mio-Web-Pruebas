@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Loader2 } from 'lucide-vue-next'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -24,6 +24,14 @@ const emit = defineEmits(['success', 'click', 'hold-start', 'hold-end'])
 
 // Estados: 'idle' | 'holding' | 'success'
 const status = ref('idle')
+const isMounted = ref(false)
+
+// Esperar al próximo tick después de mount para ignorar transitionend iniciales
+onMounted(() => {
+  setTimeout(() => {
+    isMounted.value = true
+  }, 100)
+})
 
 // Manejadores de eventos
 const startHold = () => {
@@ -44,6 +52,8 @@ const endHold = (e) => {
 
 // Detectar cuando termina la transición CSS
 const onTransitionEnd = (e) => {
+  // Ignorar transitionend hasta que el componente esté completamente montado
+  if (!isMounted.value) return
   if (e.propertyName === 'clip-path' && status.value === 'holding') {
     status.value = 'success'
     emit('success')
