@@ -73,9 +73,7 @@ const isLoadingPlans = ref(false)
 const planCambiadoManualmente = ref(false)
 const planActivoAPI = ref(null)
 const tienePlanesAlternativos = computed(() => {
-  const planesActuales = planesPaciente.value.length
-  const planesMarketplace = availablePlans.value.length
-  return planesActuales > 1 || planesMarketplace > 0
+  return planesPaciente.value.length > 1
 })
 
 // Cargar preferencia
