@@ -67,10 +67,16 @@ async function handleLogout() {
 // --- LOGICA DE PLANES (Migrada de PerfilView) ---
 const selectedPlanType = ref('esencial') // 'esencial' or 'mutual'
 const availablePlans = ref([])
+const planesPaciente = ref([])
 const currentPlanMeta = ref(null)
 const isLoadingPlans = ref(false)
 const planCambiadoManualmente = ref(false)
 const planActivoAPI = ref(null)
+const tienePlanesAlternativos = computed(() => {
+  const planesActuales = planesPaciente.value.length
+  const planesMarketplace = availablePlans.value.length
+  return planesActuales > 1 || planesMarketplace > 0
+})
 
 // Cargar preferencia
 const preferenciaPlanGuardada = localStorage.getItem('mio-plan-activo')
@@ -177,8 +183,13 @@ onMounted(async () => {
     if (patientId) {
       // Planes actuales
       const plansResponse = await pacienteService.obtenerPlanes(patientId)
-      if (plansResponse.success && plansResponse.data?.plans) {
-        const activePlan = plansResponse.data.plans.find(p => p.active_plan === "1")
+      const planesActuales = plansResponse.success
+        ? (plansResponse.data?.plans || plansResponse.planes || [])
+        : []
+
+      if (Array.isArray(planesActuales)) {
+        planesPaciente.value = planesActuales
+        const activePlan = planesActuales.find(p => p.active_plan === "1")
           if (activePlan) {
             planActivoAPI.value = activePlan
             const planName = activePlan.name_plan.toLowerCase()
@@ -258,7 +269,7 @@ onMounted(async () => {
         </div>
 
         <!-- Full Width - Selecciona tu plan (Movido abajo) -->
-        <div class="col-span-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
+        <div v-if="tienePlanesAlternativos" class="col-span-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
            <SectionHeader 
             title="Selecciona tu plan"
             subtitle="Elige el plan que mejor se adapte a tus necesidades"
