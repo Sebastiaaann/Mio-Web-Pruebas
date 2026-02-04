@@ -48,7 +48,7 @@ export function usePlanManager() {
   const configStore = useConfigStore()
 
   // Estado reactivo
-  const selectedPlanType = ref<PlanType>('mutual')
+  const selectedPlanType = ref<PlanType>('esencial')
   const availablePlans = ref<PlanAPI[]>([])
   const currentPlanMeta = ref<PlanMeta | null>(null)
   const isLoading = ref(false)
@@ -56,7 +56,7 @@ export function usePlanManager() {
   const planFromAPI = ref<PlanAPI | null>(null)
 
   // Usar useStorage para persistencia reactiva
-  const storedPlanPreference = useStorage<PlanType>('mio-plan-activo', 'mutual')
+  const storedPlanPreference = useStorage<PlanType>('mio-plan-activo', 'esencial')
 
   // Inicializar desde localStorage si existe preferencia guardada
   if (storedPlanPreference.value && storedPlanPreference.value !== selectedPlanType.value) {
@@ -68,7 +68,7 @@ export function usePlanManager() {
    * Tema actual basado en el plan seleccionado
    */
   const currentTheme = computed<PlanTheme>(() => {
-    return PLAN_THEMES[selectedPlanType.value] || PLAN_THEMES.mutual
+    return PLAN_THEMES[selectedPlanType.value] || PLAN_THEMES.esencial
   })
 
   /**
@@ -80,7 +80,7 @@ export function usePlanManager() {
     const lower = name.toLowerCase()
     if (lower.includes('mutual')) return 'mutual'
     if (lower.includes('esencial') || lower.includes('vital')) return 'esencial'
-    return 'mutual'
+    return 'esencial'
   }
 
   /**

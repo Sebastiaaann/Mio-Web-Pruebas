@@ -182,7 +182,7 @@ onMounted(async () => {
           if (activePlan) {
             planActivoAPI.value = activePlan
             const planName = activePlan.name_plan.toLowerCase()
-            let tipoPlanAPI = 'mutual'
+            let tipoPlanAPI = 'esencial'
             if (planName.includes('esencial') || planName.includes('vital')) tipoPlanAPI = 'esencial'
           
            if (!planCambiadoManualmente.value) {

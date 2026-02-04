@@ -504,13 +504,13 @@ export function validarControl(control: Partial<Control>): boolean {
  * @returns Tipo de plan ('esencial' | 'mutual')
  */
 export function obtenerTipoPlan(nombrePlan: string | undefined): PlanType {
-  if (!nombrePlan) return 'mutual'
+  if (!nombrePlan) return 'esencial'
   
   const nombre = nombrePlan.toLowerCase()
   if (nombre.includes('esencial') || nombre.includes('vital')) {
     return 'esencial'
   }
-  return 'mutual'
+  return 'esencial'
 }
 
 /**
@@ -557,7 +557,7 @@ export function obtenerTemaPlan(tipoPlan: PlanType): PlanTheme {
     }
   }
 
-  return temas[tipoPlan] || temas.mutual
+  return temas[tipoPlan] || temas.esencial
 }
 
 // ============================================================================
