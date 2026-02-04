@@ -4,6 +4,7 @@
  */
 
 import { clienteApi } from '@/utils/clienteApi'
+import { logger } from '@/utils/logger'
 
 /**
  * Obtener un protocolo específico por ID
@@ -32,11 +33,11 @@ export async function saveProtocolObservations(
     })
     return result as Record<string, unknown>
   } catch (error) {
-    console.error('Error en endpoint setuseservice:', (error as Error).message)
+    logger.error('Error en endpoint setuseservice', error)
 
     // Si falla, simular éxito para no bloquear al usuario
     // TODO: Implementar endpoint correcto cuando se tenga la documentación
-    console.warn('No se pudo guardar en la API, simulando éxito')
+    logger.warn('No se pudo guardar en la API, simulando éxito')
     return {
       success: true,
       message: 'Datos guardados localmente (modo offline)',
