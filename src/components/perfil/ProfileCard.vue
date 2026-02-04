@@ -1,15 +1,26 @@
 <script setup>
 import { computed } from 'vue'
 import { useUserStore } from '@/stores/tiendaUsuario'
+import { useConfigStore } from '@/stores/tiendaConfig'
 import { CheckCircle } from 'lucide-vue-next'
 import { useTheme } from '@/composables/useTheme'
 
 const userStore = useUserStore()
+const configStore = useConfigStore()
 const { colors } = useTheme()
 
 const userName = computed(() => userStore.nombreCompleto || 'Usuario')
 const userEmail = computed(() => userStore.usuario?.email || 'usuario@mio.cl')
 const userInitials = computed(() => userStore.iniciales || 'U')
+const planActualNombre = computed(() => {
+  const planDesdeApi = userStore.usuario?.current_plan?.name
+  if (planDesdeApi && String(planDesdeApi).trim()) {
+    return String(planDesdeApi).toUpperCase()
+  }
+
+  const planLocal = configStore.planActivo || 'esencial'
+  return String(planLocal).toUpperCase()
+})
 const memberSince = computed(() => {
   const date = userStore.usuario?.createdAt ? new Date(userStore.usuario.createdAt) : new Date()
   return date.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })
@@ -41,7 +52,7 @@ const memberSince = computed(() => {
             :style="{ backgroundColor: colors.primaryLight, color: colors.primary }"
           >
             <CheckCircle class="w-3 h-3" />
-            {{ userStore.usuario?.current_plan?.name || 'MUTUAL' }}
+            {{ planActualNombre }}
           </span>
         </div>
         <button 
