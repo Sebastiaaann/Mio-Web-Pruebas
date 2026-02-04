@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { authService } from '@/services/authService'
 import { pacienteService } from '@/services/pacienteService'
+import { useConfigStore } from '@/stores/tiendaConfig'
+import { obtenerTipoPlan } from '@/composables/usePerfilHelpers'
 import { logger } from '@/utils/logger'
 import type { AuthUser } from '@/types'
 
@@ -169,10 +171,21 @@ export const useTiendaUsuario = defineStore('usuario', () => {
    */
   async function hidratarPerfil(patientId: string | number): Promise<void> {
     try {
+      const configStore = useConfigStore()
       const resp = await pacienteService.obtenerPerfil(patientId)
       if (resp?.success && resp.paciente) {
         // Mezclamos lo que ya tenemos (token, uid) con los datos frescos del perfil
         usuario.value = { ...usuario.value, ...resp.paciente }
+
+        const planNombre = resp.paciente.plan_name
+          || resp.paciente.plan_subtitle
+          || (resp.paciente as { current_plan?: { name?: string } }).current_plan?.name
+
+        if (planNombre) {
+          const tipoPlan = obtenerTipoPlan(String(planNombre))
+          configStore.setPlanActivo(tipoPlan)
+        }
+
         logger.info('✅ Perfil hidratado con datos médicos')
       }
     } catch (e) {
