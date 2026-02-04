@@ -4,6 +4,7 @@
  */
 
 import { clienteApi } from '@/utils/clienteApi'
+import { logger } from '@/utils/logger'
 
 /**
  * Obtener health plans de un paciente
@@ -46,7 +47,7 @@ export async function getAvailableProtocols(patientId: string): Promise<Record<s
       || healthPlansResponse.data
 
     if (!Array.isArray(healthPlans)) {
-      console.error('Health plans no es un array:', healthPlans)
+      logger.error('Formato de respuesta inesperado: healthPlans no es un array')
       throw new Error('Formato de respuesta inesperado: healthPlans no es un array')
     }
 
@@ -75,7 +76,7 @@ export async function getAvailableProtocols(patientId: string): Promise<Record<s
           }
         }
       } catch (err) {
-        console.warn(`Error cargando protocolos para health plan ${healthPlan.id}:`, err)
+        logger.warn(`Error cargando protocolos para health plan ${healthPlan.id}`)
         // Continuar con el siguiente health plan
       }
     }
@@ -85,7 +86,7 @@ export async function getAvailableProtocols(patientId: string): Promise<Record<s
       data: allProtocols
     }
   } catch (err) {
-    console.error('Error obteniendo protocolos disponibles:', err)
+    logger.error('Error obteniendo protocolos disponibles', err)
     return {
       success: false,
       error: (err as Error).message,

@@ -6,6 +6,7 @@
 
 import { authService } from './authService'
 import { clienteApi } from '@/utils/clienteApi'
+import { logger } from '@/utils/logger'
 import type { ServicioApiRaw, ServicioNormalizado } from '@/types'
 
 // MODO DESARROLLO: Cambiar a false para usar backend real
@@ -95,7 +96,7 @@ export const serviciosService = {
         servicios: serviciosNormalizados
       }
     } catch (error) {
-      console.error('Error fetching services:', error)
+      logger.error('Error fetching services', error)
       return { success: false, error: (error as Error).message || 'Error de conexión' }
     }
   },

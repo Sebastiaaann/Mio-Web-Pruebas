@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { serviciosService } from '@/services/serviciosService'
+import { logger } from '@/utils/logger'
 import type { ServicioNormalizado } from '@/types'
 
 /**
@@ -77,11 +78,11 @@ export const useTiendaServicios = defineStore('servicios', () => {
         }
       } else {
         error.value = resultado.error || null
-        console.error('❌ Error cargando servicios:', resultado.error)
+        logger.error('Error cargando servicios', new Error(resultado.error || 'Error desconocido'))
       }
     } catch (e) {
       error.value = (e as Error).message || 'Error al cargar servicios'
-      console.error('❌ Error en cargarServicios:', e)
+      logger.error('Error en cargarServicios', e)
     } finally {
       cargando.value = false
     }
@@ -97,11 +98,11 @@ export const useTiendaServicios = defineStore('servicios', () => {
       if (resultado.success) {
         return resultado.servicio || null
       } else {
-        console.error('❌ Error obteniendo servicio:', resultado.error)
+        logger.error('Error obteniendo servicio', new Error(resultado.error || 'Error desconocido'))
         return null
       }
     } catch (e) {
-      console.error('❌ Error en obtenerServicio:', e)
+      logger.error('Error en obtenerServicio', e)
       return null
     }
   }

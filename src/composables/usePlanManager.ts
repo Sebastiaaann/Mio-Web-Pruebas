@@ -32,6 +32,7 @@ import { ref, computed, watch, readonly } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { useConfigStore } from '@/stores/tiendaConfig'
 import { pacienteService } from '@/services/pacienteService'
+import { logger } from '@/utils/logger'
 import type {
   PlanType,
   PlanTheme,
@@ -146,7 +147,7 @@ export function usePlanManager() {
         planChangedManually.value = true
         configStore.setPlanActivo(newType)
         storedPlanPreference.value = newType
-        console.info('💾 Preferencia de plan guardada:', newType)
+        logger.info('Preferencia de plan guardada:', { type: newType })
       }
 
       // Actualizar metadatos del plan
@@ -213,7 +214,7 @@ export function usePlanManager() {
         updatePlanMeta(selectedPlanType.value)
       }
     } catch (error) {
-      console.error('Error al cargar planes:', error)
+      logger.error('Error al cargar planes', error)
       throw error
     } finally {
       isLoading.value = false
@@ -225,7 +226,7 @@ export function usePlanManager() {
    * @param plan - Plan seleccionado
    */
   const selectPlanForPurchase = (plan: PlanAPI): void => {
-    console.info('Plan seleccionado:', {
+    logger.info('Plan seleccionado para compra:', {
       nombre: plan.subtitle,
       precio: plan.price,
       store_id: plan.store_id
