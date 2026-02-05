@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { clienteApi } from '@/utils/clienteApi'
 import { getAvailableProtocols } from '@/services/healthPlanService'
-import type { Control, EstadoControl } from '@/types/salud'
+import type { Control, EstadoControl, ProtocoloAPI, ServicioAPI } from '@/types/salud'
+import type { ProtocolResponse, ServiciosPacienteResponse } from '@/types/api'
 
 export const useControlesStore = defineStore('controles', () => {
   const controlesProximos = ref<Control[]>([])
@@ -39,18 +40,19 @@ export const useControlesStore = defineStore('controles', () => {
         return
       }
 
-      let protocolos: any[] = []
+      let protocolos: ProtocoloAPI[] = []
 
       if (health_plan_id) {
         // 1) Protocolos por plan
-        const protocolosResponse = await clienteApi.get<Record<string, any>>(`/api/v1/protocols/${health_plan_id}`)
-        const respuestaProtocolos = protocolosResponse?.data?.protocol || protocolosResponse?.data || []
+        const protocolosResponse = await clienteApi.get<ProtocolResponse>(`/api/v1/protocols/${health_plan_id}`)
+        const respuestaProtocolos = protocolosResponse?.data?.protocol 
+          || protocolosResponse?.data?.protocols 
+          || []
         protocolos = Array.isArray(respuestaProtocolos) ? respuestaProtocolos : []
       } else {
         // Fallback: obtener protocolos disponibles a partir del paciente
         const protocolosResponse = await getAvailableProtocols(String(patient_id))
-        const respuestaProtocolos = (protocolosResponse as any)?.data || []
-        protocolos = Array.isArray(respuestaProtocolos) ? respuestaProtocolos : []
+        protocolos = protocolosResponse?.data || []
       }
 
       if (Array.isArray(protocolos) && protocolos.length === 0) {
@@ -59,16 +61,18 @@ export const useControlesStore = defineStore('controles', () => {
       }
 
       // 2) Servicios del paciente (opcional, para mapear opciones)
-      let servicios: any[] = []
+      let servicios: ServicioAPI[] = []
       if (patient_id) {
-        const serviciosResponse = await clienteApi.get<Record<string, any>>(`/api/v1/patients/${patient_id}/services`)
-        servicios = serviciosResponse?.data?.services || serviciosResponse?.services || []
+        const serviciosResponse = await clienteApi.get<ServiciosPacienteResponse>(`/api/v1/patients/${patient_id}/services`)
+        servicios = serviciosResponse?.data?.services 
+          || serviciosResponse?.servicios 
+          || []
       }
 
-      const controles: Control[] = (Array.isArray(protocolos) ? protocolos : []).map((protocol: any) => ({
-        id: String(protocol.id ?? protocol.protocol_id ?? protocol.name ?? Math.random()),
+      const controles: Control[] = (Array.isArray(protocolos) ? protocolos : []).map((protocol: ProtocoloAPI) => ({
+        id: String(protocol.id ?? protocol.protocol_id ?? 'control'),
         nombre: protocol.name || protocol.nombre || 'Control',
-        descripcion: protocol.description || protocol.descripcion || 'Control médico',
+        descripcion: protocol.description || 'Control médico',
         icono: 'pi pi-heart',
         color: '#3B82F6',
         fechaProgramada: null,
@@ -77,11 +81,11 @@ export const useControlesStore = defineStore('controles', () => {
 
       // Si no hay protocolos, fallback a servicios si existen
       if (controles.length === 0 && servicios.length > 0) {
-        servicios.forEach((service: any) => {
+        servicios.forEach((service: ServicioAPI) => {
           if (service.name === 'CONTROLES' && Array.isArray(service.options)) {
-            service.options.forEach((opt: any) => {
+            service.options.forEach((opt: ProtocoloAPI) => {
               controles.push({
-                id: String(opt.protocol_id ?? opt.id ?? Math.random()),
+                id: String(opt.protocol_id ?? opt.id ?? 'control'),
                 nombre: opt.protocol_name || opt.name || 'Control',
                 descripcion: opt.description || 'Control médico',
                 icono: 'pi pi-heart',
