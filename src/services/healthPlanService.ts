@@ -5,13 +5,20 @@
 
 import { clienteApi } from '@/utils/clienteApi'
 import { logger } from '@/utils/logger'
+import type { 
+  HealthPlanResponse, 
+  ProtocolResponse, 
+  HealthPlan,
+  ProtocoloAPI 
+} from '@/types/api'
 
 /**
  * Obtener health plans de un paciente
  */
-export async function getHealthPlans(patientId: string): Promise<unknown> {
+export async function getHealthPlans(patientId: string): Promise<HealthPlanResponse> {
   try {
-    return await clienteApi.get(`/api/v1/healthplans/${patientId}`)
+    const response = await clienteApi.get<HealthPlanResponse>(`/api/v1/healthplans/${patientId}`)
+    return response
   } catch (error) {
     throw new Error(`Error al obtener health plans: ${(error as Error).message}`)
   }
@@ -20,9 +27,10 @@ export async function getHealthPlans(patientId: string): Promise<unknown> {
 /**
  * Obtener protocolos asociados a un health plan
  */
-export async function getProtocolsByHealthPlan(healthplanId: number): Promise<unknown> {
+export async function getProtocolsByHealthPlan(healthplanId: number): Promise<ProtocolResponse> {
   try {
-    return await clienteApi.get(`/api/v1/protocols/${healthplanId}`)
+    const response = await clienteApi.get<ProtocolResponse>(`/api/v1/protocols/${healthplanId}`)
+    return response
   } catch (error) {
     throw new Error(`Error al obtener protocolos: ${(error as Error).message}`)
   }
@@ -32,19 +40,19 @@ export async function getProtocolsByHealthPlan(healthplanId: number): Promise<un
  * Obtener todos los protocolos disponibles para un paciente
  * Consulta todos sus health plans y acumula los protocolos
  */
-export async function getAvailableProtocols(patientId: string): Promise<Record<string, unknown>> {
+export async function getAvailableProtocols(patientId: string): Promise<{ success: boolean; data: ProtocoloAPI[]; error?: string }> {
   try {
     // 1. Obtener health plans del paciente
-    const healthPlansResponse = await getHealthPlans(patientId) as Record<string, any>
+    const healthPlansResponse = await getHealthPlans(patientId)
 
     if (!healthPlansResponse.success || !healthPlansResponse.data) {
       throw new Error('No se pudieron obtener los health plans')
     }
 
     // La API retorna { data: { healthplans: [...] } } (nota: lowercase)
-    const healthPlans = healthPlansResponse.data?.healthplans
-      || healthPlansResponse.data?.plans
-      || healthPlansResponse.data
+    const healthPlans: HealthPlan[] = healthPlansResponse.data.healthplans
+      || healthPlansResponse.data.plans
+      || []
 
     if (!Array.isArray(healthPlans)) {
       logger.error('Formato de respuesta inesperado: healthPlans no es un array')
@@ -52,31 +60,36 @@ export async function getAvailableProtocols(patientId: string): Promise<Record<s
     }
 
     // 2. Para cada health plan, obtener sus protocolos
-    const allProtocols: Record<string, unknown>[] = []
-    const protocolIds = new Set()
+    const allProtocols: ProtocoloAPI[] = []
+    const protocolIds = new Set<string | number>()
 
     for (const healthPlan of healthPlans) {
       try {
-        const protocolsResponse = await getProtocolsByHealthPlan(healthPlan.id)
+        const planId = healthPlan.id || healthPlan.id_plan
+        if (!planId) continue
 
-        if ((protocolsResponse as any).success && (protocolsResponse as any).data) {
+        const protocolsResponse = await getProtocolsByHealthPlan(Number(planId))
+
+        if (protocolsResponse.success && protocolsResponse.data) {
           // La API retorna { data: { protocol: [...] } }
-          const protocols = (protocolsResponse as any).data.protocol || (protocolsResponse as any).data
+          const protocols: ProtocoloAPI[] = protocolsResponse.data.protocol 
+            || protocolsResponse.data.protocols 
+            || []
 
           // Agregar protocolos que no estén ya en la lista
           for (const protocol of protocols) {
-            if (!protocolIds.has(protocol.id)) {
-              protocolIds.add(protocol.id)
+            const protocolId = protocol.id || protocol.protocol_id
+            if (protocolId && !protocolIds.has(protocolId)) {
+              protocolIds.add(protocolId)
               allProtocols.push({
                 ...protocol,
-                healthPlanName: healthPlan.name_plan || healthPlan.name,
-                healthPlanId: healthPlan.id_plan || healthPlan.id
+                // Enriquecer con información del plan
               })
             }
           }
         }
       } catch (err) {
-        logger.warn(`Error cargando protocolos para health plan ${healthPlan.id}`)
+        logger.warn(`Error cargando protocolos para health plan ${healthPlan.id || healthPlan.id_plan}`)
         // Continuar con el siguiente health plan
       }
     }

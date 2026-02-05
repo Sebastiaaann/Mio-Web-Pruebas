@@ -7,7 +7,11 @@
 import { authService } from './authService'
 import { clienteApi } from '@/utils/clienteApi'
 import { logger } from '@/utils/logger'
-import type { ServicioApiRaw, ServicioNormalizado } from '@/types'
+import type { 
+  ServicioApiRaw, 
+  ServicioNormalizado, 
+  ServiciosPacienteResponse 
+} from '@/types/api'
 
 // MODO DESARROLLO: Cambiar a false para usar backend real
 const USE_MOCK = false
@@ -50,26 +54,25 @@ export const serviciosService = {
       }
 
       // Usar clienteApi centralizado para la petición
-      const data = await clienteApi.get<ServicioApiRaw[] | Record<string, unknown>>(
+      const response = await clienteApi.get<ServiciosPacienteResponse>(
         `/api/v1/patients/${user.patient_id}/services`
       )
 
       // Extracción robusta del array de servicios
       let servicesArray: ServicioApiRaw[] = []
-      if (Array.isArray(data)) {
-        servicesArray = data
-      } else if (Array.isArray((data as any).services)) {
-        servicesArray = (data as any).services
-      } else if (Array.isArray((data as any).servicios)) {
-        servicesArray = (data as any).servicios
-      } else if ((data as any).data) {
-        if (Array.isArray((data as any).data)) {
-          servicesArray = (data as any).data
-        } else if (Array.isArray((data as any).data.services)) {
-          servicesArray = (data as any).data.services
-        } else if (Array.isArray((data as any).data.servicios)) {
-          servicesArray = (data as any).data.servicios
+      
+      if (Array.isArray(response)) {
+        servicesArray = response as ServicioApiRaw[]
+      } else if (response.data) {
+        if (Array.isArray(response.data.services)) {
+          servicesArray = response.data.services
+        } else if (Array.isArray(response.data.servicios)) {
+          servicesArray = response.data.servicios
+        } else if (Array.isArray(response.data)) {
+          servicesArray = response.data as ServicioApiRaw[]
         }
+      } else if (Array.isArray(response.servicios)) {
+        servicesArray = response.servicios
       }
 
       // Normalización de datos (Mapping English API -> Spanish App Model)
@@ -108,7 +111,7 @@ export const serviciosService = {
   async obtenerServicioPorId(id: number): Promise<{ success: boolean; servicio?: ServicioNormalizado; error?: string }> {
     const resultado = await this.obtenerServicios()
     if (resultado.success && resultado.servicios) {
-      const servicio = resultado.servicios.find((s) => s.id === id || (s as any).service_id === id)
+      const servicio = resultado.servicios.find((s) => s.id === id)
       if (servicio) return { success: true, servicio }
     }
     return { success: false, error: 'Servicio no encontrado' }

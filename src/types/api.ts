@@ -3,6 +3,11 @@
  * Centraliza contratos para servicios HOMA y auth
  */
 
+import type { ProtocoloAPI as ProtocoloAPISalud } from './salud'
+
+// Re-exportar para uso local
+export type ProtocoloAPI = ProtocoloAPISalud
+
 // === RESPUESTAS API ===
 export interface ApiResponse<T = unknown> {
   success: boolean
@@ -111,6 +116,54 @@ export interface ServicioOpcionNormalizada {
   descripcion?: string
   tipo_mensaje?: string
   [key: string]: unknown
+}
+
+// === HEALTH PLANS ===
+export interface HealthPlan {
+  id?: number
+  id_plan?: number
+  name?: string
+  name_plan?: string
+  subtitle?: string
+  description?: string
+  active_plan?: string
+  logo?: string
+  config?: {
+    logo?: string
+    colors?: {
+      primary?: string
+      secondary?: string
+    }
+  }
+}
+
+export interface HealthPlanResponse {
+  success: boolean
+  data?: {
+    healthplans?: HealthPlan[]
+    plans?: HealthPlan[]
+  }
+  error?: string
+}
+
+export interface ProtocolResponse {
+  success: boolean
+  data?: {
+    protocol?: ProtocoloAPI[]
+    protocols?: ProtocoloAPI[]
+  }
+  error?: string
+}
+
+// === SERVICIOS PACIENTE ===
+export interface ServiciosPacienteResponse {
+  success: boolean
+  data?: {
+    services?: ServicioApiRaw[]
+    servicios?: ServicioApiRaw[]
+  }
+  servicios?: ServicioApiRaw[]
+  error?: string
 }
 
 // === CLIENTE API ===
