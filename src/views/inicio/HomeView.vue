@@ -14,9 +14,7 @@ import { useSaludo } from '@/composables/useSaludo';
 import { useFormatoFecha, formatDateFriendly } from '@/composables/useFormatoFecha';
 import { useMediciones, type MedicionDisplay, type Tendencia, type DatosResumen } from '@/composables/useMediciones';
 import { useUserInitials } from '@/composables/useUserInitials';
-import { useBannersFiltrados } from '@/composables/useBannersFiltrados';
 import { useTheme } from '@/composables/useTheme';
-import BannerCarousel from '@/components/ui/BannerCarousel.vue';
 import MaterialAudiovisualCarousel from '@/components/ui/MaterialAudiovisualCarousel.vue';
 import ClipButton from '@/components/ui/ClipButton.vue';
 import {
@@ -89,12 +87,9 @@ const chatbotAbierto = ref<boolean>(false);
 // Estado para controlar el Sheet de nueva medicion
 const nuevaMedicionAbierta = ref<boolean>(false);
 
-// Estado para el plan activo (usar configStore para sincronización entre vistas)
-const planActivo = computed(() => configStore.planActivo || 'esencial');
-
 // Composables
 const { saludo } = useSaludo();
-const { colors, themeClass, isMutual } = useTheme();
+const { colors, themeClass } = useTheme();
 
 // Usar composable de mediciones
 const {
@@ -109,9 +104,6 @@ const {
   historialMediciones,
   ultimaMedicion
 });
-
-// Banners filtrados según el plan
-const { bannersFiltrados } = useBannersFiltrados(servicios, planActivo);
 
 const logoMutualHeader = computed(() => {
   if (configStore.planActivo === 'mutual') {
@@ -172,7 +164,7 @@ const materialAudiovisualItems = computed<MaterialAudiovisualItem[]>(() => {
   }
 
   // Obtener opciones según el plan activo
-  const planActual = planActivo.value?.toLowerCase() || 'esencial';
+  const planActual = (configStore.planActivo || 'esencial').toLowerCase();
   const opcionesPlan = opciones.filter((opt: any) => {
     const planOpcion = String(opt.plan_name || '').toLowerCase()
     return planOpcion.includes(planActual) || planActual.includes(planOpcion)
@@ -638,7 +630,7 @@ watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
                                     
                                     <p v-if="datosResumenPeso.tieneDatos" class="text-2xl font-bold text-slate-900"
                                     >
-                                        {{ datosResumenPeso.promedio }} 
+                                        {{ datosResumenPeso.mediciones[datosResumenPeso.mediciones.length - 1]?.valor ?? datosResumenPeso.promedio }}
                                         <span 
                                             class="text-sm font-sans font-bold"
                                             :style="{ color: colors.primary }"
@@ -805,13 +797,6 @@ watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
                     </section>
                 </div>
 
-                <!-- Carousel de Banners (al final de la página) -->
-                <section 
-                    v-if="bannersFiltrados.length > 0" 
-                    class="fade-in stagger-2 mt-16 pt-8 border-t border-slate-200"
-                >
-                    <BannerCarousel :banners="bannersFiltrados" :autoplay="true" :interval="6000" />
-                </section>
             </div>
         </div>
     </div>

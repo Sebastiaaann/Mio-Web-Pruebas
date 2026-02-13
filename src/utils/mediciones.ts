@@ -431,7 +431,7 @@ export function normalizarAlturasGrafico(
 
   return mediciones.map((m) => ({
     ...m,
-    altura: Math.max(20, Math.min(100, ((m.valor - min) / rango) * 80 + 20))
+    altura: Math.max(10, Math.min(100, ((m.valor - min) / rango) * 90 + 10))
   }))
 }
 

@@ -13,12 +13,22 @@ const props = defineProps({
   },
   modelValue: {
     type: Object,
-    default: () => ({ weight: null, IMC: null })
+    default: () => ({ weight: null, height: null, IMC: null })
   },
-  // Altura del paciente para calcular IMC (podría venir del store o props)
+  // Altura del paciente en metros para calcular IMC
   patientHeight: {
     type: Number,
-    default: 1.70 // metros
+    default: null
+  },
+  // Altura guardada en cm
+  patientHeightCm: {
+    type: Number,
+    default: null
+  },
+  // Mostrar input de altura
+  mostrarAltura: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -26,6 +36,8 @@ const emit = defineEmits(['update:modelValue', 'valid'])
 
 // Valores locales
 const weight = ref(props.modelValue?.weight || '')
+const heightCm = ref(props.modelValue?.height || props.patientHeightCm || '')
+const editarAltura = ref(false)
 
 // Rangos de referencia
 const ranges = {
@@ -38,10 +50,17 @@ const ranges = {
 }
 
 // Calcular IMC
+const alturaMetros = computed(() => {
+  if (props.patientHeight) return props.patientHeight
+  const altura = parseFloat(String(heightCm.value))
+  if (!altura || altura <= 0) return null
+  return altura / 100
+})
+
 const calculatedIMC = computed(() => {
   const w = parseFloat(weight.value)
-  if (!w || !props.patientHeight) return null
-  return (w / (props.patientHeight * props.patientHeight)).toFixed(1)
+  if (!w || !alturaMetros.value) return null
+  return (w / (alturaMetros.value * alturaMetros.value)).toFixed(1)
 })
 
 // Evaluación del IMC
@@ -57,18 +76,29 @@ const imcEvaluation = computed(() => {
 // Validación
 const isValid = computed(() => {
   const w = parseFloat(weight.value)
-  return w > 0 && w >= ranges.weight.min && w <= ranges.weight.max
+  const pesoValido = w > 0 && w >= ranges.weight.min && w <= ranges.weight.max
+  if (!props.mostrarAltura && !editarAltura.value) return pesoValido
+  const altura = parseFloat(String(heightCm.value))
+  const alturaValida = altura > 0 && altura >= 50 && altura <= 250
+  return pesoValido && alturaValida
 })
 
 // Emitir cambios
-watch(weight, () => {
+watch([weight, heightCm], () => {
   const values = {
     weight: parseFloat(weight.value) || null,
+    height: parseFloat(String(heightCm.value)) || null,
     IMC: calculatedIMC.value ? parseFloat(calculatedIMC.value) : null
   }
   emit('update:modelValue', values)
   emit('valid', isValid.value)
 }, { immediate: true })
+
+watch(() => props.patientHeightCm, (nuevoValor) => {
+  if (!editarAltura.value && nuevoValor) {
+    heightCm.value = nuevoValor
+  }
+})
 
 // Colores según evaluación
 const evalColors = {
@@ -118,6 +148,16 @@ function onlyNumbersAndDot(event) {
   if (charCode > 31 && (charCode < 48 || charCode > 57) && charCode !== 46) {
     event.preventDefault()
   }
+}
+
+watch(() => props.mostrarAltura, (mostrar) => {
+  if (mostrar) {
+    editarAltura.value = true
+  }
+}, { immediate: true })
+
+function toggleEditarAltura() {
+  editarAltura.value = !editarAltura.value
 }
 </script>
 
@@ -178,7 +218,7 @@ function onlyNumbersAndDot(event) {
         </div>
       </div>
 
-      <!-- Resultado IMC -->
+      <!-- Resultado IMC y altura -->
       <div class="space-y-6">
         <div 
           class="p-6 rounded-2xl border-2 transition-all duration-300"
@@ -222,12 +262,43 @@ function onlyNumbersAndDot(event) {
         </div>
 
         <!-- Información adicional -->
-        <div class="bg-blue-50 rounded-xl p-4">
-          <p class="text-sm text-blue-700">
-            <strong>Altura registrada:</strong> {{ (props.patientHeight * 100).toFixed(0) }} cm
-          </p>
-          <p class="text-xs text-blue-600 mt-1">
-            El IMC se calcula automáticamente basado en tu peso y altura
+        <div class="bg-blue-50 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-blue-700">
+              <strong>Altura registrada:</strong>
+              <span v-if="alturaMetros"> {{ (alturaMetros * 100).toFixed(0) }} cm</span>
+              <span v-else> Sin registrar</span>
+            </p>
+            <button
+              v-if="!mostrarAltura"
+              type="button"
+              class="text-xs font-semibold text-blue-700 hover:text-blue-900"
+              @click="toggleEditarAltura"
+            >
+              {{ editarAltura ? 'Cancelar' : 'Editar altura' }}
+            </button>
+          </div>
+
+          <div v-if="mostrarAltura || editarAltura" class="space-y-2">
+            <label class="block text-xs font-medium text-blue-700">
+              Ingresa tu altura (cm)
+            </label>
+            <input
+              v-model="heightCm"
+              type="number"
+              min="50"
+              max="250"
+              step="1"
+              placeholder="Ej: 170"
+              class="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm placeholder:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+            />
+            <p class="text-xs text-blue-600">
+              Usamos tu altura para calcular el IMC en todos los controles de peso.
+            </p>
+          </div>
+
+          <p class="text-xs text-blue-600">
+            El IMC se calcula automáticamente basado en tu peso y altura.
           </p>
         </div>
       </div>
@@ -240,6 +311,9 @@ function onlyNumbersAndDot(event) {
     >
       <p class="text-red-600 text-sm">
         Por favor ingresa un peso válido entre {{ ranges.weight.min }} y {{ ranges.weight.max }} kg
+      </p>
+      <p v-if="(mostrarAltura || editarAltura)" class="text-red-600 text-xs mt-1">
+        También necesitas ingresar una altura válida entre 50 y 250 cm
       </p>
     </div>
   </div>

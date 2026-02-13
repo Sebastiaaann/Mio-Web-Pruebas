@@ -155,23 +155,26 @@ const medicionesReales = computed(() => {
         const protocolo = controlesProximos.value.find(p => p.id === protocolId);
         if (!protocolo || !Array.isArray(obs)) return;
         
-        // Agrupar por fecha
+        // Agrupar por fecha (local)
         const gruposPorFecha: Record<string, any[]> = {};
         obs.forEach(m => {
-            const fecha = new Date(m.fecha).toISOString().split('T')[0];
-            if (!gruposPorFecha[fecha]) gruposPorFecha[fecha] = [];
-            gruposPorFecha[fecha].push(m);
+            const fechaObj = new Date(m.fecha);
+            const fechaKey = `${fechaObj.getFullYear()}-${String(fechaObj.getMonth() + 1).padStart(2, '0')}-${String(fechaObj.getDate()).padStart(2, '0')}`;
+            if (!gruposPorFecha[fechaKey]) gruposPorFecha[fechaKey] = [];
+            gruposPorFecha[fechaKey].push(m);
         });
         
-        Object.entries(gruposPorFecha).forEach(([fecha, meds]) => {
-            const m = meds.find((x: any) => x.valor !== 'N/A') || meds[0];
-            const fechaObj = new Date(fecha);
+        Object.entries(gruposPorFecha).forEach(([fechaKey, meds]) => {
+            const ordenadas = [...meds].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+            const m = ordenadas.find((x: any) => x.valor !== 'N/A') || ordenadas[0];
+            const fechaObj = new Date(m.fecha);
             const timestamp = fechaObj.getTime();
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
             
             mediciones.push({
                 id: `${protocolId}-${timestamp}`,
-                date: `${fechaObj.getDate()} ${['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][fechaObj.getMonth()]}, ${fechaObj.getFullYear()}`,
-                dateISO: fecha,
+                date: `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}, ${fechaObj.getFullYear()}`,
+                dateISO: fechaKey,
                 timestamp: timestamp,
                 time: fechaObj.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) + ' hrs',
                 type: protocolo.nombre,

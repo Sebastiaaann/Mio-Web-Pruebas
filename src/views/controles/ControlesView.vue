@@ -83,12 +83,17 @@ function selectProtocol(protocol) {
 function continueMeasurement() {
   if (!selectedProtocol.value) return
 
+  const planId = selectedProtocol.value.healthPlanId || selectedProtocol.value.health_plan_id
+  const planName = selectedProtocol.value.healthPlanName || selectedProtocol.value.plan_name
+
   // Navegar al wizard dinámico con el ID del protocolo (como integer)
   router.push({
     path: '/nueva-medicion/wizard',
     query: {
       protocol: selectedProtocol.value.id,
-      name: selectedProtocol.value.name
+      name: selectedProtocol.value.name,
+      planId: planId ? String(planId) : undefined,
+      planName: planName || undefined
     }
   })
 }
