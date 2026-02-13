@@ -56,3 +56,4 @@ homa-prod-*.json
 .env.example
 
 docs/
+.vercel

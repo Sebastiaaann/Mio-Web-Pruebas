@@ -25,7 +25,7 @@ import TextStep from './step-types/TextStep.vue'
 // Componentes UI
 import WizardProgress from './WizardProgress.vue'
 import WizardNavigation from './WizardNavigation.vue'
-import { Loader2, AlertCircle } from 'lucide-vue-next'
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-vue-next'
 
 const props = defineProps({
   protocolId: {
@@ -54,6 +54,9 @@ const steps = ref([])
 const currentStepIndex = ref(0)
 const responses = ref({})
 const stepValid = ref(false)
+const mostrarResumen = ref(false)
+const observacionesGuardadas = ref([])
+const fechaGuardado = ref(null)
 
 // Mapeo de tipos de paso a componentes
 const stepComponents = {
@@ -79,10 +82,43 @@ const currentStepValue = computed(() => {
   return responses.value[currentStep.value.id] || null
 })
 
+const fechaResumen = computed(() => {
+  const fecha = fechaGuardado.value
+  if (!fecha) return ''
+  const fechaTexto = fecha.toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+  const horaTexto = fecha.toLocaleTimeString('es-CL', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+  return `${fechaTexto} · ${horaTexto}`
+})
+
+const resumenItems = computed(() => {
+  return (observacionesGuardadas.value || []).map(observacion => {
+    const step = steps.value.find(s => String(s.id) === String(observacion.stepId))
+    const titulo = step?.question?.question || step?.header || obtenerTituloPorTipo(observacion.stepType)
+    const valor = formatearRespuesta(observacion.stepType, observacion.response)
+
+    return {
+      id: observacion.stepId,
+      titulo,
+      valor
+    }
+  }).filter(item => item.valor)
+})
+
 // Cargar protocolo desde API
 async function loadProtocol() {
   isLoading.value = true
   error.value = null
+  mostrarResumen.value = false
+  observacionesGuardadas.value = []
+  fechaGuardado.value = null
+  stepValid.value = false
 
   try {
     console.log('Cargando protocolo:', props.protocolId)
@@ -289,20 +325,115 @@ function handleStepValid(isValid) {
   stepValid.value = isValid
 }
 
+function obtenerTituloPorTipo(tipo) {
+  const mapa = {
+    question: 'Pregunta',
+    tensiometer: 'Presión arterial',
+    weight: 'Peso',
+    glucometer: 'Glucosa',
+    text: 'Información'
+  }
+  return mapa[tipo] || 'Medición'
+}
+
+function formatearNumero(valor) {
+  if (typeof valor === 'number' && Number.isFinite(valor)) {
+    return `${valor}`
+  }
+  if (typeof valor === 'string' && valor.trim() !== '' && Number.isFinite(Number(valor))) {
+    return `${Number(valor)}`
+  }
+  return null
+}
+
+function formatearRespuesta(tipo, respuesta) {
+  if (respuesta === null || respuesta === undefined) return null
+
+  if (typeof respuesta === 'string' || typeof respuesta === 'number') {
+    return String(respuesta)
+  }
+
+  if (typeof respuesta !== 'object') return null
+
+  if (tipo === 'tensiometer') {
+    const sistolica = formatearNumero(respuesta.Systolic)
+    const diastolica = formatearNumero(respuesta.Diastolic)
+    const bpm = formatearNumero(respuesta.bpm)
+    const presion = sistolica && diastolica ? `${sistolica}/${diastolica} mmHg` : null
+    const partes = []
+    if (presion) partes.push(presion)
+    if (bpm) partes.push(`${bpm} BPM`)
+    return partes.join(' · ') || null
+  }
+
+  if (tipo === 'weight') {
+    const peso = formatearNumero(respuesta.weight)
+    const imc = formatearNumero(respuesta.IMC)
+    const partes = []
+    if (peso) partes.push(`${peso} kg`)
+    if (imc) partes.push(`IMC ${imc}`)
+    return partes.join(' · ') || null
+  }
+
+  if (tipo === 'glucometer') {
+    const glucosa = formatearNumero(respuesta.glucose)
+    return glucosa ? `${glucosa} mg/dL` : null
+  }
+
+  const aliasCampos = {
+    Systolic: 'Sistólica',
+    Diastolic: 'Diastólica',
+    bpm: 'BPM',
+    glucose: 'Glucosa',
+    weight: 'Peso',
+    IMC: 'IMC'
+  }
+
+  const respuestaRecord = respuesta || {}
+  const partes = Object.entries(respuestaRecord)
+    .map(([key, value]) => {
+      const numero = formatearNumero(value)
+      if (numero) return `${aliasCampos[key] || key}: ${numero}`
+      if (value === null || value === undefined || value === '') return null
+      return `${aliasCampos[key] || key}: ${value}`
+    })
+    .filter(Boolean)
+
+  return partes.length > 0 ? partes.join(' · ') : null
+}
+
+function volverAControles() {
+  router.push('/controles')
+}
+
+function handleCloseClick() {
+  if (mostrarResumen.value) {
+    volverAControles()
+    return
+  }
+  emit('close')
+}
+
 // Enviar datos al completar
 async function submitWizard() {
   isSubmitting.value = true
   error.value = null
   
   try {
-    const patientId = props.patientId || userStore.usuario?._id || userStore.usuario?.uid
+    const patientId = props.patientId || userStore.usuario?.patient_id || userStore.usuario?._id || userStore.usuario?.uid
     
     if (!patientId) {
       throw new Error('No se encontró ID del paciente')
     }
     
-    // Preparar datos en el formato que espera la API HOMA
-    // La API espera un array de observaciones
+    // Obtener datos del paciente del store
+    const patientName = userStore.usuario?.name || userStore.usuario?.nombre || ''
+    const patientSurname = userStore.usuario?.lastname || userStore.usuario?.apellido || ''
+    
+    // Obtener nombre del protocolo
+    const protocolName = protocolData.value?.name || ''
+    
+    // Preparar observaciones en formato Controls Engine
     const observations = []
     
     // Recorrer las respuestas y crear observaciones para cada paso
@@ -310,35 +441,53 @@ async function submitWizard() {
       const step = steps.value.find(s => s.id === stepId)
       if (!step || !step.observationType) continue
       
-      const observation = {
-        observation_type_id: step.observationType.id,
-        parameters: {}
-      }
-      
-      // Mapear los parámetros según el tipo de observación
-      if (step.type === 'glucometer' && response.glucose) {
-        observation.parameters.glucose = response.glucose
-      } else if (step.type === 'question' && response.answer) {
-        observation.parameters.answer = response.answer
-      } else if (typeof response === 'object') {
-        // Para otros tipos, copiar todos los valores
-        Object.assign(observation.parameters, response)
-      }
-      
-      observations.push(observation)
+      // Construir observación en formato Controls Engine
+      observations.push({
+        stepId: stepId,
+        stepType: step.type,
+        stepData: {
+          question: step.question,
+          observationType: step.observationType
+        },
+        response: response
+      })
     }
     
-    console.log('Enviando observaciones:', observations)
+    if (observations.length === 0) {
+      throw new Error('No hay observaciones para guardar')
+    }
     
-    // Enviar a la API usando el servicio REST
-    const result = await saveProtocolObservations(patientId, props.protocolId, observations)
+    console.log('Enviando observaciones a HOMA Center:', {
+      patientId,
+      protocolId: props.protocolId,
+      observationsCount: observations.length
+    })
     
-    if (result && result.success) {
-      // Éxito - redirigir al dashboard
+    // Enviar a la API HOMA Center usando el servicio actualizado
+    const result = await saveProtocolObservations(
+      String(patientId),
+      patientName,
+      patientSurname,
+      props.protocolId,
+      protocolName,
+      observations
+    )
+    
+    // Verificar que se guardó correctamente (la API retorna el batch con ID)
+    if (result && result.id) {
+      console.log('Control guardado exitosamente:', {
+        batchId: result.id,
+        patientId: result.patientId,
+        observationsCount: result.observations.length
+      })
+      
+      // Éxito - mostrar resumen
+      observacionesGuardadas.value = observations
+      fechaGuardado.value = new Date()
+      mostrarResumen.value = true
       emit('complete', observations)
-      emit('close')
     } else {
-      throw new Error(result?.message || 'Error al guardar')
+      throw new Error('La API no retornó un ID de batch válido')
     }
   } catch (err) {
     console.error('Error enviando datos:', err)
@@ -372,7 +521,7 @@ watch(() => props.protocolId, () => {
           </p>
         </div>
         <button 
-          @click="$emit('close')"
+          @click="handleCloseClick"
           class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <span class="sr-only">Cerrar</span>
@@ -406,46 +555,105 @@ watch(() => props.protocolId, () => {
 
         <!-- Wizard Content -->
         <template v-else>
-          <!-- Progress -->
-          <div class="mb-12">
-            <WizardProgress
-              :current-step="currentStepIndex"
-              :total-steps="visibleSteps.length"
-              :steps="visibleSteps"
-            />
+          <!-- Resumen final -->
+          <div v-if="mostrarResumen" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12">
+            <div class="flex flex-col items-center text-center mb-10">
+              <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+                <CheckCircle2 class="w-8 h-8 text-emerald-600" />
+              </div>
+              <h2 class="font-display font-bold text-2xl text-gray-900 mb-2">Resumen del control</h2>
+              <p class="text-gray-500">
+                Tu control fue guardado correctamente.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+              <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Protocolo</p>
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ protocolData?.name || 'Control' }}
+                </p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Fecha y hora</p>
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ fechaResumen }}
+                </p>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Observaciones</p>
+                <p class="text-sm font-semibold text-gray-900">
+                  {{ observacionesGuardadas.length }}
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div
+                v-for="item in resumenItems"
+                :key="item.id"
+                class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50"
+              >
+                <div>
+                  <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">{{ item.titulo }}</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ item.valor }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-10 flex justify-center">
+              <button
+                @click="volverAControles"
+                class="px-8 py-3 rounded-xl font-semibold bg-[#FF9500] text-white hover:bg-orange-600 transition-colors shadow-lg hover:shadow-orange-500/25"
+              >
+                Volver a la vista Controles
+              </button>
+            </div>
           </div>
 
-          <!-- Step Card -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12">
-            <!-- Dynamic Step Component -->
-            <component
-              :is="currentStepComponent"
-              v-if="currentStep"
-              :step="currentStep"
-              :model-value="currentStepValue"
-              @update:model-value="handleStepUpdate"
-              @valid="handleStepValid"
-            />
+          <!-- Wizard normal -->
+          <template v-else>
+            <!-- Progress -->
+            <div class="mb-12">
+              <WizardProgress
+                :current-step="currentStepIndex"
+                :total-steps="visibleSteps.length"
+                :steps="visibleSteps"
+              />
+            </div>
 
-            <!-- Navigation -->
-            <WizardNavigation
-              :current-step="currentStepIndex"
-              :total-steps="visibleSteps.length"
-              :is-valid="stepValid"
-              :is-loading="isLoading"
-              :is-submitting="isSubmitting"
-              @back="goToPreviousStep"
-              @continue="goToNextStep"
-              @submit="submitWizard"
-            />
-          </div>
+            <!-- Step Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12">
+              <!-- Dynamic Step Component -->
+              <component
+                :is="currentStepComponent"
+                v-if="currentStep"
+                :step="currentStep"
+                :model-value="currentStepValue"
+                @update:model-value="handleStepUpdate"
+                @valid="handleStepValid"
+              />
 
-          <!-- Help Text -->
-          <div class="mt-8 text-center">
-            <p class="text-sm text-gray-400">
-              Esta información nos ayuda a monitorear tu salud de manera más efectiva
-            </p>
-          </div>
+              <!-- Navigation -->
+              <WizardNavigation
+                :current-step="currentStepIndex"
+                :total-steps="visibleSteps.length"
+                :is-valid="stepValid"
+                :is-loading="isLoading"
+                :is-submitting="isSubmitting"
+                @back="goToPreviousStep"
+                @continue="goToNextStep"
+                @submit="submitWizard"
+              />
+            </div>
+
+            <!-- Help Text -->
+            <div class="mt-8 text-center">
+              <p class="text-sm text-gray-400">
+                Esta información nos ayuda a monitorear tu salud de manera más efectiva
+              </p>
+            </div>
+          </template>
         </template>
       </div>
     </div>
