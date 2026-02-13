@@ -58,7 +58,7 @@ async function loadProtocols() {
 
     console.log('Cargando protocolos para paciente ID:', patientId)
 
-    const result = await getAvailableProtocols(patientId)
+    const result = await getAvailableProtocols(patientId, { incluirDuplicados: true })
 
     if (result.success) {
       protocols.value = result.data
@@ -205,7 +205,7 @@ function getProtocolColor(name) {
                 <CarouselContent>
                   <CarouselItem
                     v-for="protocol in protocols"
-                    :key="protocol.id"
+                    :key="protocol.uid || protocol.id"
                     class="basis-full md:basis-1/2 lg:basis-1/3"
                   >
                     <div

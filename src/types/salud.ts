@@ -249,6 +249,10 @@ export interface ProtocoloAPI {
   /** Fecha programada */
   due_date?: string;
   fecha_programada?: string;
+  /** Metadata del plan asociado (opcional) */
+  healthPlanId?: number;
+  healthPlanName?: string;
+  uid?: string;
   /** Opciones del protocolo */
   options?: ProtocoloAPI[];
 }
