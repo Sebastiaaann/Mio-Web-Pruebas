@@ -4,7 +4,7 @@
  * Muestra texto estático sin interacción del usuario
  * Ejemplos: Indicaciones previas, resultados, felicitaciones
  */
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { Info, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-vue-next'
 import DOMPurify from 'dompurify'
 
@@ -85,7 +85,14 @@ const messageConfig = {
 const config = computed(() => messageConfig[messageType.value])
 
 // Este paso siempre es válido (no requiere input del usuario)
-emit('valid', true)
+// Emitir al montar y cuando cambia el step para evitar reuso de instancia
+watch(
+  () => props.step?.id,
+  () => {
+    emit('valid', true)
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

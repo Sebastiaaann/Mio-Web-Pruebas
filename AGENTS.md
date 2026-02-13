@@ -1008,6 +1008,187 @@ Usuario: "Necesito implementar un sistema de autenticación completo"
 
 ---
 
+## 🛡️ Directrices de Seguridad - CRÍTICO
+
+### Análisis de Seguridad: Implementación de Guardado de Controles
+
+**Fecha:** 2026-02-12  
+**Contexto:** Implementación de guardado de controles médicos en API HOMA Center  
+**Estado:** ✅ Vulnerabilidades críticas corregidas
+
+---
+
+### 🔴 Vulnerabilidades Críticas Corregidas
+
+#### **1. Falta de Autenticación en API HOMA Center** ✅
+
+**Problema:** Las peticiones a HOMA Center no incluían headers de autenticación.
+
+**Solución Implementada:**
+```typescript
+// src/services/homaCenterService.ts
+function obtenerTokenAuth(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('mio-token')
+  }
+  return null
+}
+
+// En cada request:
+const token = obtenerTokenAuth()
+if (!token) {
+  throw new Error('No se encontró token de autenticación...')
+}
+
+const response = await fetch(url, {
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-KEY': token  // ← Ahora requerido
+  }
+})
+```
+
+**Impacto:** Previene acceso no autorizado a la API de controles médicos.
+
+---
+
+#### **2. Falta de Validación de Datos Médicos** ✅
+
+**Problema:** No se validaban rangos médicos (ej: presión arterial negativa, glucosa extrema).
+
+**Solución Implementada:**
+```typescript
+// Validadores específicos por tipo de medición
+function validarValorNumerico(valor: number, min: number, max: number, nombre: string): number
+function validarDatosTensiometer(data: { Systolic?, Diastolic?, bpm? })
+function validarDatosGlucometer(data: { glucose? })
+function validarDatosWeight(data: { weight?, height?, IMC? })
+function validarDatosOxymeter(data: { bpm?, spo2? })
+function validarDatosTermometer(data: { temperature? })
+
+// Ejemplo de rangos validados:
+- Presión Sistólica: 50-300 mmHg
+- Presión Diastólica: 30-200 mmHg
+- Pulsaciones: 30-250 BPM
+- Glucosa: 20-1000 mg/dL
+- Peso: 1-500 Kg
+- Temperatura: 30-45 °C
+```
+
+**Impacto:** Previene ingreso de valores médicamente imposibles o peligrosos.
+
+---
+
+#### **3. Exposición de Datos Sensibles en Logs** ✅
+
+**Problema:** Los logs podrían exponer información médica protegida (PHI/ePHI).
+
+**Solución Implementada:**
+```typescript
+// ANTES (inseguro):
+logger.info('Enviando batch:', {
+  patientId: params.patientId,  // ID completo expuesto
+  observations: observations    // Valores médicos expuestos
+})
+
+// DESPUÉS (seguro):
+logger.info('Enviando batch:', {
+  patientId: `[ID:${params.patientId.toString().slice(0, 3)}...]`, // Truncado
+  protocolId: params.protocolId,
+  observationsCount: observations.length  // Solo conteo
+  // NUNCA incluir: valores médicos, diagnósticos, nombres completos
+})
+```
+
+**Impacto:** Protege información médica en logs de aplicación.
+
+---
+
+### 📋 Checklist de Seguridad para Desarrollos Futuros
+
+#### Antes de implementar cualquier feature que maneje datos médicos:
+
+- [ ] **Autenticación:** ¿Se requiere token válido para acceder?
+- [ ] **Autorización:** ¿Se valida que el usuario tiene permiso sobre el recurso?
+- [ ] **Validación:** ¿Se validan rangos médicos de los valores?
+- [ ] **Sanitización:** ¿Se sanitizan los inputs antes de procesar?
+- [ ] **Logs:** ¿Se truncan/evitan datos sensibles en logs?
+- [ ] **Errores:** ¿Los mensajes de error no exponen información interna?
+- [ ] **HTTPS:** ¿Todas las comunicaciones usan HTTPS?
+- [ ] **Rate Limiting:** ¿Se implementa límite de frecuencia?
+
+---
+
+### 🔐 Patrones de Código Seguro
+
+#### **Manejo de Datos Médicos (PHI)**
+```typescript
+// ✅ CORRECTO - Nunca loggear valores médicos
+logger.info('Control guardado', {
+  batchId: result.id,
+  patientId: hashId(result.patientId),
+  observationsCount: result.observations.length
+})
+
+// ❌ INCORRECTO - Exponer datos médicos
+logger.info('Control guardado', {
+  patientId: patientId,
+  bloodPressure: '120/80',  // PHI expuesto
+  glucose: 95               // PHI expuesto
+})
+```
+
+#### **Validación de Rangos Médicos**
+```typescript
+// ✅ CORRECTO - Validar antes de usar
+function validarPresion(sistolica: number, diastolica: number) {
+  if (sistolica < 50 || sistolica > 300) {
+    throw new Error('Presión sistólica fuera de rango')
+  }
+  // ...
+}
+
+// ❌ INCORRECTO - Usar sin validar
+const valores = { Systolic: data.systolic }  // Podría ser -999999
+```
+
+#### **Autenticación de Requests**
+```typescript
+// ✅ CORRECTO - Siempre incluir token
+const token = localStorage.getItem('mio-token')
+if (!token) throw new AuthError('Sesión expirada')
+
+await fetch(url, {
+  headers: { 'X-API-KEY': token }
+})
+
+// ❌ INCORRECTO - Sin autenticación
+await fetch(url)  // Cualquiera puede acceder
+```
+
+---
+
+### ⚠️ Vulnerabilidades Pendientes (Media/Baja Prioridad)
+
+#### No bloqueantes pero importantes:
+
+1. **Rate Limiting** - Implementar debounce/throttle
+2. **CSRF Protection** - Agregar tokens CSRF
+3. **Content Security Policy (CSP)** - Configurar headers CSP
+4. **Certificate Pinning** - Validar certificados SSL
+5. **Input Sanitization** - Prevenir XSS en campos de texto
+
+---
+
+### 📚 Referencias de Seguridad
+
+- **HIPAA Compliance:** Datos de salud requieren protección especial
+- **OWASP Top 10:** [https://owasp.org/www-project-top-ten/](https://owasp.org/www-project-top-ten/)
+- **Contexto de Controles:** `agents/CONTEXT_CONTROLES.md`
+- **Análisis Completo:** Documentos de análisis en `docs/`
+
+---
+
 ## Notas Finales
 
 - **Las skills de Vue tienen PRIORIDAD ABSOLUTA** en este proyecto

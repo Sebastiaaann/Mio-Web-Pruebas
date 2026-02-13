@@ -5,6 +5,8 @@
 
 import { clienteApi } from '@/utils/clienteApi'
 import { logger } from '@/utils/logger'
+import { guardarBatchObservaciones } from './homaCenterService'
+import type { BatchResponse } from './homaCenterService'
 
 /**
  * Obtener un protocolo específico por ID
@@ -18,33 +20,64 @@ export async function getProtocol(protocolId: string): Promise<unknown> {
 }
 
 /**
- * Guardar observaciones de un protocolo
+ * Estructura de datos de una observación del wizard
+ */
+interface WizardObservation {
+  stepId: string
+  stepType: string
+  stepData: {
+    question?: { question: string; answers: Array<{ text: string; evaluation: string }> }
+    observationType?: { id: number }
+  }
+  response: unknown
+}
+
+/**
+ * Guardar observaciones de un protocolo en API HOMA Center
+ * 
+ * @param patientId - ID del paciente
+ * @param patientName - Nombre del paciente
+ * @param patientSurname - Apellido del paciente
+ * @param protocolId - ID del protocolo
+ * @param protocolName - Nombre del protocolo
+ * @param observations - Array de observaciones del wizard
+ * @returns Respuesta del batch guardado
  */
 export async function saveProtocolObservations(
   patientId: string,
+  patientName: string,
+  patientSurname: string,
   protocolId: string,
-  observations: unknown[]
-): Promise<Record<string, unknown>> {
+  protocolName: string,
+  observations: WizardObservation[]
+): Promise<BatchResponse> {
   try {
-    const result = await clienteApi.post('/api/v1/services/setuseservice', {
-      patient_id: patientId,
-      protocol_id: protocolId,
-      observations
+    logger.info('Guardando observaciones en HOMA Center:', {
+      patientId,
+      protocolId,
+      observationsCount: observations.length
     })
-    return result as Record<string, unknown>
-  } catch (error) {
-    logger.error('Error en endpoint setuseservice', error)
 
-    // Si falla, simular éxito para no bloquear al usuario
-    // TODO: Implementar endpoint correcto cuando se tenga la documentación
-    logger.warn('No se pudo guardar en la API, simulando éxito')
-    return {
-      success: true,
-      message: 'Datos guardados localmente (modo offline)',
-      patient_id: patientId,
-      protocol_id: protocolId,
-      observations_count: observations.length
-    }
+    // Usar el nuevo servicio HOMA Center
+    const result = await guardarBatchObservaciones({
+      patientId: parseInt(patientId),
+      patientName: patientName || '',
+      patientSurname: patientSurname || '',
+      protocolId: parseInt(protocolId),
+      protocolName: protocolName || '',
+      observaciones: observations
+    })
+
+    logger.info('Observaciones guardadas exitosamente:', {
+      batchId: result.id,
+      patientId: result.patientId,
+      observationsCount: result.observations.length
+    })
+
+    return result
+  } catch (error) {
+    logger.error('Error guardando observaciones:', error)
+    throw new Error(`Error al guardar el control: ${(error as Error).message}`)
   }
 }
 
