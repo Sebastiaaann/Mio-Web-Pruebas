@@ -13,6 +13,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
+import { useHealthStore } from '@/stores/tiendaSalud'
 import { getProtocol, saveProtocolObservations } from '@/services/protocolService'
 
 // Componentes de pasos
@@ -44,6 +45,7 @@ const emit = defineEmits(['close', 'complete'])
 const route = useRoute()
 const router = useRouter()
 const userStore = useTiendaUsuario()
+const healthStore = useHealthStore()
 
 // Estado
 const isLoading = ref(true)
@@ -481,6 +483,14 @@ async function submitWizard() {
         observationsCount: result.observations.length
       })
       
+      try {
+        await healthStore.fetchAllHealthData()
+      } catch (fetchError) {
+        if (import.meta.env.DEV) {
+          console.error('Error al refrescar datos de salud:', fetchError)
+        }
+      }
+
       // Éxito - mostrar resumen
       observacionesGuardadas.value = observations
       fechaGuardado.value = new Date()

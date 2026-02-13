@@ -312,6 +312,15 @@ function extraerValorNumerico(valor: string | number): number | null {
   return isNaN(numero) ? null : numero
 }
 
+function obtenerTimestampSeguro(fecha: string): number {
+  const timestamp = new Date(fecha).getTime()
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
+function ordenarMedicionesPorFecha(mediciones: Medicion[]): Medicion[] {
+  return [...mediciones].sort((a, b) => obtenerTimestampSeguro(a.fecha) - obtenerTimestampSeguro(b.fecha))
+}
+
 /**
  * Genera etiquetas formateadas para el eje X (C1, C2, C3...)
  */
@@ -551,9 +560,10 @@ function procesarDatos(mediciones: Medicion[], tipo: TipoMedicion): DatosGrafico
  * Usa los valores sistólicos para el cálculo
  */
 function calcularEstadisticasPresion(mediciones: Medicion[]): EstadisticasChart {
+  const medicionesOrdenadas = ordenarMedicionesPorFecha(mediciones)
   const valoresSistolica: number[] = []
 
-  mediciones.forEach((m) => {
+  medicionesOrdenadas.forEach((m) => {
     const valores = extraerValoresPresion(m.valor)
     if (valores) {
       valoresSistolica.push(valores[0])
@@ -589,9 +599,10 @@ function calcularEstadisticasPresion(mediciones: Medicion[]): EstadisticasChart 
  * Calcula estadísticas para datos de glicemia
  */
 function calcularEstadisticasGlicemia(mediciones: Medicion[]): EstadisticasChart {
+  const medicionesOrdenadas = ordenarMedicionesPorFecha(mediciones)
   const valores: number[] = []
 
-  mediciones.forEach((m) => {
+  medicionesOrdenadas.forEach((m) => {
     const valorStr = String(m.valor)
     if (valorStr.includes('/')) return
 
@@ -630,9 +641,10 @@ function calcularEstadisticasGlicemia(mediciones: Medicion[]): EstadisticasChart
  * Calcula estadísticas para datos de peso
  */
 function calcularEstadisticasPeso(mediciones: Medicion[]): EstadisticasChart {
+  const medicionesOrdenadas = ordenarMedicionesPorFecha(mediciones)
   const valores: number[] = []
 
-  mediciones.forEach((m) => {
+  medicionesOrdenadas.forEach((m) => {
     const valorNumerico = extraerValorNumerico(m.valor)
     if (valorNumerico !== null && valorNumerico > PESO_MINIMO && valorNumerico <= PESO_MAXIMO) {
       valores.push(valorNumerico)
