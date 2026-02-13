@@ -62,24 +62,14 @@ const menuSections = [
     list: [
       { name: 'Inicio', ruta: '/home', icono: Home },
       { 
-        name: 'Preventivo', 
-        ruta: '/dashboard-preventive', 
-        icono: Activity,
-        hasSubmenu: true,
-        subItems: [
-          { name: 'Mi Salud', ruta: '/dashboard-preventive', icono: Activity },
-          { name: 'Historial', ruta: '/historial-controles', icono: BookOpen },
-        ]
-      },
-      { 
         name: 'Controles', 
         ruta: '/controles', 
         icono: BookOpen,
         hasSubmenu: true,
         subItems: [
-          { name: 'Presión Arterial', ruta: '/nueva-medicion/tipo?tipo=presion', icono: Heart },
-          { name: 'Control de Peso', ruta: '/nueva-medicion/tipo?tipo=peso', icono: Scale },
-          { name: 'Glicemia', ruta: '/nueva-medicion/tipo?tipo=glicemia', icono: Droplet },
+          { name: 'Mis Controles', ruta: '/controles', icono: Activity },
+          { name: 'Mi Salud', ruta: '/dashboard-preventive', icono: Heart },
+          { name: 'Historial', ruta: '/historial-controles', icono: BookOpen },
         ]
       },
       { name: 'Citas', ruta: '/citas', icono: Calendar },
