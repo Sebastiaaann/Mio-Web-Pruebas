@@ -1,5 +1,5 @@
 <script setup>
-import { inject, onMounted } from 'vue'
+import { inject, onMounted, onUnmounted } from 'vue'
 import { cn } from "@/lib/utils";
 
 const props = defineProps({
@@ -7,9 +7,12 @@ const props = defineProps({
 })
 
 const carousel = inject('carousel')
-
 onMounted(() => {
   carousel.registerItem()
+})
+
+onUnmounted(() => {
+  carousel.unregisterItem()
 })
 </script>
 

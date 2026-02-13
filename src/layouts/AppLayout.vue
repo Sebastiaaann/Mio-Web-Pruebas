@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import NavbarLateral from '@/components/layout/NavbarLateral.vue';
 import BottomNavigation from '@/components/layout/BottomNavigation.vue';
-import { unirClases } from '@/utils/UnirClases';
+import { unirClases } from '@/utils/UnirClases'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue';
 import { useDark, useToggle, useThrottleFn } from '@vueuse/core';
 

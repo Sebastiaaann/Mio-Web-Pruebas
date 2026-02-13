@@ -9,7 +9,6 @@ import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { getAvailableProtocols } from '@/services/healthPlanService'
 import {
   HelpCircle,
-  Bell,
   Check,
   Heart,
   Scale,
@@ -19,6 +18,15 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-vue-next'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/bearnie/carousel"
+import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
+import SkeletonCard from '@/components/ui/SkeletonCard.vue'
 
 // Router y Store
 const router = useRouter()
@@ -117,42 +125,49 @@ function getProtocolColor(name) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col font-sans">
+  <div class="min-h-screen bg-gray-50 flex flex-col font-sans" style="font-family: 'Cabinet Grotesk', sans-serif;">
 
-    <!-- Header Personalizado -->
-    <header class="bg-white border-b border-gray-200 px-8 py-5 flex-shrink-0">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="font-display font-bold text-2xl text-gray-900">Nueva Medición</h1>
-          <p class="text-gray-500 text-sm mt-1">Selecciona un control para registrar tus valores</p>
-        </div>
-        <div class="flex items-center gap-4">
-          <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-            <HelpCircle class="w-6 h-6" />
-          </button>
-          <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative">
-            <Bell class="w-6 h-6" />
-            <span class="absolute top-2 right-2 w-2 h-2 bg-[#DC2626] rounded-full"></span>
-          </button>
-        </div>
-      </div>
-    </header>
+    <!-- Header Completo -->
+    <HeaderCompleto
+      titulo="Nueva Medición"
+      subtitulo="Selecciona un control para registrar tus valores"
+      :mostrar-saludo="false"
+      :show-notification-badge="true"
+      notification-badge-color="#10B981"
+      @click-notification="console.log('Notificaciones clicked')"
+      @click-profile="console.log('Perfil clicked')"
+    />
 
     <!-- Content Area -->
     <div class="flex-1 overflow-y-auto p-8">
-      <div class="max-w-5xl mx-auto">
+      <div class="max-w-7xl mx-auto">
         <!-- Greeting Section -->
         <div class="mb-10">
-          <h2 class="font-display font-bold text-4xl text-gray-900 mb-2">
+          <h2 class="text-h1 text-slate-900 mb-2">
             Hola, {{ userStore.nombreCompleto?.split(' ')[0] || 'Usuario' }} 👋
           </h2>
-          <p class="text-gray-500 text-lg">Selecciona el control que deseas realizar hoy</p>
+          <p class="text-body text-lg text-slate-600">Selecciona el control que deseas realizar hoy</p>
         </div>
 
         <!-- Loading State -->
-        <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
-          <Loader2 class="w-12 h-12 text-[#FF9500] animate-spin mb-4" />
-          <p class="text-gray-500">Cargando controles disponibles...</p>
+        <div v-if="isLoading" class="flex flex-col py-20 max-w-7xl mx-auto px-8">
+          <!-- Greeting skeleton -->
+          <div class="mb-10 space-y-4 animate-pulse">
+            <div class="h-12 w-96 bg-slate-200 rounded max-w-full"></div>
+            <div class="h-6 w-64 bg-slate-200 rounded max-w-full"></div>
+          </div>
+
+          <!-- Protocols section skeleton -->
+          <div class="mb-8">
+            <div class="h-8 w-64 bg-slate-200 rounded mb-6 animate-pulse"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <SkeletonCard 
+                v-for="i in 6" 
+                :key="`protocol-skeleton-${i}`" 
+                :show-chart="false"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- Error State -->
@@ -161,7 +176,8 @@ function getProtocolColor(name) {
           <p class="text-red-600 text-lg font-medium mb-2">{{ error }}</p>
           <button
             @click="loadProtocols"
-            class="mt-4 px-6 py-2 bg-[#FF9500] text-white rounded-lg hover:bg-orange-600 transition-colors"
+            class="mt-4 px-6 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+            :style="{ backgroundColor: 'var(--theme-primary)' }"
           >
             Reintentar
           </button>
@@ -170,8 +186,8 @@ function getProtocolColor(name) {
         <!-- Empty State -->
         <div v-else-if="protocols.length === 0" class="flex flex-col items-center justify-center py-20">
           <Activity class="w-12 h-12 text-gray-400 mb-4" />
-          <p class="text-gray-600 text-lg font-medium mb-2">No hay controles disponibles</p>
-          <p class="text-gray-500 text-center max-w-md">
+          <p class="text-slate-900 text-lg font-medium mb-2">No hay controles disponibles</p>
+          <p class="text-slate-600 text-center max-w-md">
             No tienes protocolos de control asignados en tu plan actual.
             Contacta a tu equipo de salud para más información.
           </p>
@@ -180,65 +196,79 @@ function getProtocolColor(name) {
         <!-- Protocols Grid -->
         <template v-else>
           <div class="mb-8">
-            <h3 class="font-display font-bold text-xl text-gray-900 mb-6">
+            <h3 class="text-h2 text-slate-900 mb-6">
               Controles disponibles ({{ protocols.length }})
             </h3>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div
-                v-for="protocol in protocols"
-                :key="protocol.id"
-                @click="selectProtocol(protocol)"
-                class="protocol-card bg-white rounded-2xl border-2 p-6 cursor-pointer relative transition-all duration-200"
-                :class="selectedProtocol?.id === protocol.id
-                  ? 'border-[#FF9500] ring-4 ring-[#FF9500]/10 selected-shadow'
-                  : 'border-transparent hover:shadow-xl'"
-              >
-                <!-- Checkmark -->
-                <div
-                  class="absolute top-4 right-4 w-8 h-8 bg-[#10B981] rounded-full flex items-center justify-center transition-all duration-200"
-                  :class="selectedProtocol?.id === protocol.id ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
-                >
-                  <Check class="text-white w-5 h-5" />
-                </div>
+            <div class="px-12">
+              <Carousel :spacing="24" class="w-full">
+                <CarouselContent>
+                  <CarouselItem
+                    v-for="protocol in protocols"
+                    :key="protocol.id"
+                    class="basis-full md:basis-1/2 lg:basis-1/3"
+                  >
+                    <div
+                      @click="selectProtocol(protocol)"
+                      class="protocol-card bg-white rounded-2xl border-2 p-6 cursor-pointer relative transition-all duration-200 h-full"
+                      :class="selectedProtocol?.id === protocol.id
+                        ? 'ring-4 selected-shadow'
+                        : 'border-transparent hover:shadow-xl'"
+                      :style="selectedProtocol?.id === protocol.id ? { borderColor: 'var(--theme-primary)', '--tw-ring-color': 'var(--theme-primary)', '--tw-ring-opacity': '0.1' } : {}"
+                    >
+                      <!-- Checkmark -->
+                      <div
+                        class="absolute top-4 right-4 w-8 h-8 bg-[#10B981] rounded-full flex items-center justify-center transition-all duration-200"
+                        :class="selectedProtocol?.id === protocol.id ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
+                      >
+                        <Check class="text-white w-5 h-5" />
+                      </div>
 
-                <!-- Icon -->
-                <div
-                  class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-                  :class="getProtocolColor(protocol.name).bg"
-                >
-                  <component
-                    :is="getProtocolIcon(protocol.name)"
-                    class="w-8 h-8"
-                    :class="getProtocolColor(protocol.name).icon"
-                  />
-                </div>
+                      <!-- Icon -->
+                      <div
+                        class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                        :class="getProtocolColor(protocol.name).bg"
+                      >
+                        <component
+                          :is="getProtocolIcon(protocol.name)"
+                          class="w-8 h-8"
+                          :class="getProtocolColor(protocol.name).icon"
+                        />
+                      </div>
 
-                <!-- Content -->
-                <h4 class="font-display font-bold text-xl text-gray-900 mb-2">
-                  {{ protocol.name }}
-                </h4>
-                <p class="text-gray-500 mb-4 text-sm">
-                  {{ protocol.description || 'Control de salud programado' }}
-                </p>
+                      <!-- Content -->
+                      <h4 class="text-h3 text-slate-900 mb-2">
+                        {{ protocol.name }}
+                      </h4>
+                      <p class="text-body text-slate-600 mb-4 text-sm">
+                        {{ protocol.description || 'Control de salud programado' }}
+                      </p>
 
-                <!-- Health Plan Badge -->
-                <div class="flex items-center gap-2">
-                  <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    {{ protocol.healthPlanName || 'Plan de Salud' }}
-                  </span>
-                </div>
+                      <!-- Health Plan Badge -->
+                      <div class="flex items-center gap-2">
+                        <span class="px-3 py-1 bg-gray-100 text-slate-600 text-xs rounded-full">
+                          {{ protocol.healthPlanName || 'Plan de Salud' }}
+                        </span>
+                      </div>
 
-                <!-- Button -->
-                <button
-                  class="w-full mt-6 py-3 px-4 border-2 rounded-xl font-medium transition-colors"
-                  :class="selectedProtocol?.id === protocol.id
-                    ? 'bg-[#FF9500] text-white border-[#FF9500]'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#FF9500] hover:text-[#FF9500]'"
-                >
-                  {{ selectedProtocol?.id === protocol.id ? 'Seleccionado' : 'Seleccionar' }}
-                </button>
-              </div>
+                      <!-- Button -->
+                      <button
+                        class="w-full mt-6 py-3 px-4 border-2 rounded-xl font-medium transition-colors"
+                        :class="selectedProtocol?.id === protocol.id
+                          ? 'text-white'
+                          : 'bg-white text-gray-700 border-gray-200'"
+                        :style="selectedProtocol?.id === protocol.id ? { backgroundColor: 'var(--theme-primary)', borderColor: 'var(--theme-primary)' } : {}"
+                        @mouseenter="selectedProtocol?.id !== protocol.id && $event.target.style.setProperty('border-color', 'var(--theme-primary)')"
+                        @mouseleave="selectedProtocol?.id !== protocol.id && $event.target.style.removeProperty('border-color')"
+                      >
+                        {{ selectedProtocol?.id === protocol.id ? 'Seleccionado' : 'Seleccionar' }}
+                      </button>
+                    </div>
+                  </CarouselItem>
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
             </div>
           </div>
 
@@ -247,10 +277,11 @@ function getProtocolColor(name) {
             <button
               @click="continueMeasurement"
               :disabled="!selectedProtocol"
-              class="px-8 py-4 font-bold rounded-xl transition-all flex items-center gap-2"
+              class="px-8 py-4 font-bold rounded-xl transition-all flex items-center gap-2 hover:opacity-90"
               :class="selectedProtocol
-                ? 'bg-[#FF9500] text-white hover:bg-orange-600 cursor-pointer shadow-lg hover:shadow-orange-500/20'
+                ? 'text-white cursor-pointer shadow-lg'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+              :style="selectedProtocol ? { backgroundColor: 'var(--theme-primary)' } : {}"
             >
               <span>Continuar</span>
               <ArrowRight class="w-5 h-5" />

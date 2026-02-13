@@ -3,7 +3,7 @@
 import { ref } from 'vue';
 import NavbarLateral from '@/components/layout/NavbarLateral.vue';
 import NavegacionInferior from '@/components/layout/NavegacionInferior.vue';
-import { unirClases } from '@/utils/UnirClases';
+import { unirClases } from '@/utils/UnirClases'
 
 const sidebarVisible = ref(true);
 
@@ -31,18 +31,19 @@ const toggleSidebar = () => {
     <main 
       :class="unirClases(
         'flex-1 flex flex-col min-h-screen transition-all duration-300 relative',
-        // Ajuste de márgenes según el estado del sidebar (72 = 18rem = 288px, 20 = 5rem = 80px)
-        sidebarVisible ? 'md:ml-72' : 'md:ml-20'
+        // Ajuste de márgenes según el estado del sidebar (sidebar ahora tiene 280px + 16px de margen = 296px)
+        sidebarVisible ? 'md:ml-[296px]' : 'md:ml-[92px]'
       )"
     >
-
-      
-      <!-- Área de contenido con scroll -->
-      <div 
-        id="contenido-principal"
-        tabindex="-1"
-        class="flex-1 overflow-y-auto outline-none">
-        <slot />
+      <!-- Container con fondo gris y bordes redondeados -->
+      <div class="flex-1 flex flex-col bg-gray-bg m-2 md:m-4 md:mt-2 rounded-2xl overflow-hidden shadow-sm">
+        <!-- Área de contenido con scroll -->
+        <div 
+          id="contenido-principal"
+          tabindex="-1"
+          class="flex-1 overflow-y-auto outline-none">
+          <slot />
+        </div>
       </div>
     </main>
     
