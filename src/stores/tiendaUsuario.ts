@@ -66,12 +66,16 @@ function getFirstName(usuario: UsuarioBasico | null): string {
 function getNombreCompleto(usuario: UsuarioBasico | null): string {
   if (!usuario) return ''
 
-  if (usuario.fullName) return String(usuario.fullName)
-
   const nombre = usuario.name || usuario.nombre || usuario.firstName || ''
   const apellido = usuario.lastname || usuario.apellido || usuario.lastName || ''
 
-  return `${nombre} ${apellido}`.trim()
+  if (nombre || apellido) {
+    return `${nombre} ${apellido}`.trim()
+  }
+
+  if (usuario.fullName) return String(usuario.fullName)
+
+  return ''
 }
 
 /**
@@ -174,8 +178,16 @@ export const useTiendaUsuario = defineStore('usuario', () => {
       const configStore = useConfigStore()
       const resp = await pacienteService.obtenerPerfil(patientId)
       if (resp?.success && resp.paciente) {
+        const nombrePerfil = resp.paciente.name || resp.paciente.nombre || resp.paciente.firstName || ''
+        const apellidoPerfil = resp.paciente.lastname || resp.paciente.apellido || resp.paciente.lastName || ''
+        const fullNamePerfil = `${nombrePerfil} ${apellidoPerfil}`.trim()
+
         // Mezclamos lo que ya tenemos (token, uid) con los datos frescos del perfil
-        usuario.value = { ...usuario.value, ...resp.paciente }
+        usuario.value = {
+          ...usuario.value,
+          ...resp.paciente,
+          ...(fullNamePerfil ? { fullName: fullNamePerfil } : {})
+        }
 
         const planNombre = resp.paciente.plan_name
           || resp.paciente.plan_subtitle

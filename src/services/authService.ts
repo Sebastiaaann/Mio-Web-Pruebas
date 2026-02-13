@@ -135,7 +135,7 @@ export const authService = {
       patient_id: datosHoma.patient_id,
       health_plan_id: healthPlanId || null,
       email: firebaseUser.email || '',
-      fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuario'
+      fullName: firebaseUser.displayName || 'Usuario'
     }
   },
 
