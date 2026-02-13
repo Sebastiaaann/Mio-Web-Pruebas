@@ -40,8 +40,12 @@ export async function getProtocolsByHealthPlan(healthplanId: number): Promise<Pr
  * Obtener todos los protocolos disponibles para un paciente
  * Consulta todos sus health plans y acumula los protocolos
  */
-export async function getAvailableProtocols(patientId: string): Promise<{ success: boolean; data: ProtocoloAPI[]; error?: string }> {
+export async function getAvailableProtocols(
+  patientId: string,
+  opciones: { incluirDuplicados?: boolean } = {}
+): Promise<{ success: boolean; data: ProtocoloAPI[]; error?: string }> {
   try {
+    const incluirDuplicados = Boolean(opciones.incluirDuplicados)
     // 1. Obtener health plans del paciente
     const healthPlansResponse = await getHealthPlans(patientId)
 
@@ -61,12 +65,19 @@ export async function getAvailableProtocols(patientId: string): Promise<{ succes
 
     // 2. Para cada health plan, obtener sus protocolos
     const allProtocols: ProtocoloAPI[] = []
-    const protocolIds = new Set<string | number>()
+    const protocolIds = new Set<string>()
+    const protocolosPorPlan = new Set<string>()
 
     for (const healthPlan of healthPlans) {
       try {
         const planId = healthPlan.id || healthPlan.id_plan
         if (!planId) continue
+
+        const planNombre = healthPlan.name
+          || healthPlan.name_plan
+          || healthPlan.subtitle
+          || healthPlan.description
+          || 'Plan de Salud'
 
         const protocolsResponse = await getProtocolsByHealthPlan(Number(planId))
 
@@ -79,13 +90,27 @@ export async function getAvailableProtocols(patientId: string): Promise<{ succes
           // Agregar protocolos que no estén ya en la lista
           for (const protocol of protocols) {
             const protocolId = protocol.id || protocol.protocol_id
-            if (protocolId && !protocolIds.has(protocolId)) {
-              protocolIds.add(protocolId)
-              allProtocols.push({
-                ...protocol,
-                // Enriquecer con información del plan
-              })
+            if (!protocolId) continue
+
+            const protocolIdKey = String(protocolId)
+            const planIdKey = String(planId)
+            const uid = `${protocolIdKey}-${planIdKey}`
+
+            if (incluirDuplicados) {
+              if (protocolosPorPlan.has(uid)) continue
+              protocolosPorPlan.add(uid)
+            } else {
+              if (protocolIds.has(protocolIdKey)) continue
+              protocolIds.add(protocolIdKey)
             }
+
+            allProtocols.push({
+              ...protocol,
+              id: protocolId,
+              healthPlanId: Number(planId),
+              healthPlanName: planNombre,
+              uid
+            })
           }
         }
       } catch (err) {
