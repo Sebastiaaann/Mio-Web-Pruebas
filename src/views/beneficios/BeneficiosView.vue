@@ -163,7 +163,7 @@ watch(() => configStore.planActivo, async (nuevoPlan, planAnterior) => {
 
                   <div class="flex flex-wrap items-center gap-3">
                     <a
-                      :href="banner.url || '#"
+                      :href="banner.url || '#'"
                       target="_blank"
                       rel="noopener noreferrer"
                       class="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 bg-white text-slate-900 hover:bg-slate-100"
