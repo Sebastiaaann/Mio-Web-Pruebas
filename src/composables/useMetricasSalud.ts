@@ -416,6 +416,11 @@ function determinarEstadoGeneral(
   }
 }
 
+function obtenerTimestampSeguro(fecha: string): number {
+  const timestamp = new Date(fecha).getTime()
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
 // ============================================================================
 // COMPOSABLE PRINCIPAL
 // ============================================================================
@@ -445,8 +450,8 @@ export function useMetricasSalud(
       })
     })
 
-    // Ordenar por fecha (más reciente primero)
-    return todasLasMediciones.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+    // Ordenar por fecha (más antigua primero) para calcular última medición correctamente
+    return todasLasMediciones.sort((a, b) => obtenerTimestampSeguro(a.fecha) - obtenerTimestampSeguro(b.fecha))
   }
 
   /**
