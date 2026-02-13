@@ -58,50 +58,11 @@ function obtenerDescripcionBanner(banner: BannerItem): string {
   ]
 
   const valor = opciones.find(item => typeof item === 'string' && item.trim().length > 0)
-  return String(valor || 'Descubre los beneficios disponibles para tu plan.')
+  return String(valor || '')
 }
 
 function obtenerTituloBanner(banner: BannerItem): string {
   return String(banner.title || banner.titulo || banner.nombre || 'Beneficio destacado')
-}
-
-function esBannerBerni(banner: BannerItem): boolean {
-  const titulo = String(banner.title || banner.titulo || banner.nombre || '').toLowerCase()
-  return titulo.includes('berni')
-}
-
-function obtenerClaseAltura(banner: BannerItem): string {
-  return esBannerBerni(banner) ? 'h-64 sm:h-72 md:h-96' : 'h-56 sm:h-64 md:h-80'
-}
-
-function obtenerEstiloFondo(banner: BannerItem): Record<string, string> {
-  if (esBannerBerni(banner) && isMutual.value) {
-    return {
-      background: `linear-gradient(to bottom right, ${colors.value.primary}, ${colors.value.primaryHover})`
-    }
-  }
-
-  return {
-    background: 'linear-gradient(135deg, #0F172A, #1F2937)'
-  }
-}
-
-function obtenerClaseImagen(banner: BannerItem): string {
-  return esBannerBerni(banner)
-    ? 'object-contain object-center w-full h-full'
-    : 'object-cover w-full h-full transition-transform duration-500 group-hover:scale-105'
-}
-
-function obtenerClaseBoton(banner: BannerItem): string {
-  return esBannerBerni(banner)
-    ? 'bg-lime-500 text-white hover:bg-lime-600'
-    : 'bg-white text-slate-900 hover:bg-slate-100'
-}
-
-function obtenerClaseEtiqueta(banner: BannerItem): string {
-  return esBannerBerni(banner)
-    ? 'bg-white/80 text-slate-900 border border-white/70'
-    : 'bg-white/15 text-white border border-white/30'
 }
 
 onMounted(async () => {
@@ -170,61 +131,42 @@ watch(() => configStore.planActivo, async (nuevoPlan, planAnterior) => {
             :key="banner.id || banner.title"
             class="beneficios-card group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-[0_20px_50px_-35px_rgba(15,23,42,0.45)]"
           >
-            <div class="relative w-full" :class="obtenerClaseAltura(banner)" :style="obtenerEstiloFondo(banner)">
+            <div class="relative w-full h-56 sm:h-64 md:h-80" style="background: linear-gradient(135deg, #0F172A, #1F2937)">
               <img
                 v-if="banner.image"
                 :src="banner.image"
                 :alt="obtenerTituloBanner(banner)"
                 loading="eager"
                 decoding="async"
-                :class="obtenerClaseImagen(banner)"
+                class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
               />
               <div v-else class="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900" />
 
-              <div
-                v-if="!esBannerBerni(banner)"
-                class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent"
-              />
+              <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
 
               <div class="absolute inset-0 flex flex-col justify-between p-6 sm:p-8">
                 <div class="flex items-center justify-between">
                   <span class="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">Beneficio</span>
-                  <span class="beneficios-tag" :class="obtenerClaseEtiqueta(banner)">Exclusivo</span>
+                  <span class="beneficios-tag bg-white/15 text-white border border-white/30">Exclusivo</span>
                 </div>
 
                 <div class="max-w-xl space-y-4">
-                  <div
-                    :class="[
-                      'inline-flex rounded-xl px-4 py-2 backdrop-blur-md',
-                      esBannerBerni(banner) ? 'bg-white/70' : 'bg-black/55'
-                    ]"
-                  >
-                    <h3
-                      :class="[
-                        'font-bold text-xl sm:text-3xl tracking-tight',
-                        esBannerBerni(banner) ? 'text-slate-900' : 'text-white'
-                      ]"
-                    >
+                  <div class="inline-flex rounded-xl px-4 py-2 backdrop-blur-md bg-black/55">
+                    <h3 class="font-bold text-xl sm:text-3xl tracking-tight text-white">
                       {{ obtenerTituloBanner(banner) }}
                     </h3>
                   </div>
 
-                  <p
-                    :class="[
-                      'text-sm sm:text-base leading-relaxed',
-                      esBannerBerni(banner) ? 'text-slate-700' : 'text-white/85'
-                    ]"
-                  >
+                  <p v-if="obtenerDescripcionBanner(banner)" class="text-sm sm:text-base leading-relaxed text-white/85">
                     {{ obtenerDescripcionBanner(banner) }}
                   </p>
 
                   <div class="flex flex-wrap items-center gap-3">
                     <a
-                      :href="banner.url || '#'"
+                      :href="banner.url || '#"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300"
-                      :class="obtenerClaseBoton(banner)"
+                      class="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 bg-white text-slate-900 hover:bg-slate-100"
                     >
                       <span>Ver más información</span>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
