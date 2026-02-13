@@ -14,6 +14,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { useHealthStore } from '@/stores/tiendaSalud'
+import { useAlturaPaciente } from '@/composables/useAlturaPaciente'
 import { getProtocol, saveProtocolObservations } from '@/services/protocolService'
 
 // Componentes de pasos
@@ -36,6 +37,14 @@ const props = defineProps({
   patientId: {
     type: String,
     default: null
+  },
+  planId: {
+    type: [String, Number],
+    default: null
+  },
+  planName: {
+    type: String,
+    default: null
   }
 })
 
@@ -46,6 +55,7 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useTiendaUsuario()
 const healthStore = useHealthStore()
+const { alturaCm, alturaMetros, setAlturaCm } = useAlturaPaciente()
 
 // Estado
 const isLoading = ref(true)
@@ -111,6 +121,12 @@ const resumenItems = computed(() => {
       valor
     }
   }).filter(item => item.valor)
+})
+
+const requiereAltura = computed(() => {
+  const planId = Number(props.planId)
+  const esPlanTestHoma = planId === 1
+  return esPlanTestHoma || !alturaCm.value
 })
 
 // Cargar protocolo desde API
@@ -319,6 +335,13 @@ function goToPreviousStep() {
 function handleStepUpdate(value) {
   if (currentStep.value) {
     responses.value[currentStep.value.id] = value
+
+    if (currentStep.value.type === 'weight' && value && typeof value === 'object') {
+      const alturaValor = Number(value.height)
+      if (Number.isFinite(alturaValor) && alturaValor > 0) {
+        setAlturaCm(alturaValor)
+      }
+    }
   }
 }
 
@@ -635,14 +658,17 @@ watch(() => props.protocolId, () => {
             <!-- Step Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12">
               <!-- Dynamic Step Component -->
-              <component
-                :is="currentStepComponent"
-                v-if="currentStep"
-                :step="currentStep"
-                :model-value="currentStepValue"
-                @update:model-value="handleStepUpdate"
-                @valid="handleStepValid"
-              />
+            <component
+              :is="currentStepComponent"
+              v-if="currentStep"
+              :step="currentStep"
+              :model-value="currentStepValue"
+              :patient-height="alturaMetros || undefined"
+              :patient-height-cm="alturaCm || undefined"
+              :mostrar-altura="requiereAltura"
+              @update:model-value="handleStepUpdate"
+              @valid="handleStepValid"
+            />
 
               <!-- Navigation -->
               <WizardNavigation

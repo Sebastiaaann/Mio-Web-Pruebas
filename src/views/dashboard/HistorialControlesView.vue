@@ -95,29 +95,31 @@ async function cargarDatosReales() {
 function transformarObservacionesAControles() {
   const controles = [];
   
-  Object.entries(historialMediciones.value).forEach(([protocolId, mediciones]) => {
+    Object.entries(historialMediciones.value).forEach(([protocolId, mediciones]) => {
     const protocolo = protocolos.value.find(p => p.id === protocolId);
     if (!protocolo) return;
     
-    // Agrupar mediciones por fecha (cada grupo de observaciones es un control)
+    // Agrupar mediciones por fecha (local)
     const gruposPorFecha = {};
     
     mediciones.forEach(medicion => {
-      const fecha = new Date(medicion.fecha).toISOString().split('T')[0];
-      if (!gruposPorFecha[fecha]) {
-        gruposPorFecha[fecha] = [];
+      const fechaObj = new Date(medicion.fecha);
+      const fechaKey = `${fechaObj.getFullYear()}-${String(fechaObj.getMonth() + 1).padStart(2, '0')}-${String(fechaObj.getDate()).padStart(2, '0')}`;
+      if (!gruposPorFecha[fechaKey]) {
+        gruposPorFecha[fechaKey] = [];
       }
-      gruposPorFecha[fecha].push(medicion);
+      gruposPorFecha[fechaKey].push(medicion);
     });
     
     // Crear un control por cada fecha
-    Object.entries(gruposPorFecha).forEach(([fecha, meds]) => {
-      const medicionPrincipal = meds.find(m => m.valor !== 'N/A') || meds[0];
-      const fechaObj = new Date(meds[0].fecha);
+    Object.entries(gruposPorFecha).forEach(([fechaKey, meds]) => {
+      const ordenadas = [...meds].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+      const medicionPrincipal = ordenadas.find(m => m.valor !== 'N/A') || ordenadas[0];
+      const fechaObj = new Date(medicionPrincipal.fecha);
       
       controles.push({
-        id: `${protocolId}-${fecha}`,
-        fecha: formatearFecha(fecha),
+        id: `${protocolId}-${fechaKey}`,
+        fecha: formatearFecha(fechaKey),
         hora: fechaObj.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
         timestamp: fechaObj.getTime(), // Timestamp real para ordenamiento
         tipo: protocolo.nombre,

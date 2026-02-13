@@ -12,6 +12,8 @@ const router = useRouter()
 
 // Obtener protocol_id desde query params
 const protocolId = computed(() => route.query.protocol)
+const planId = computed(() => route.query.planId)
+const planName = computed(() => route.query.planName)
 
 // Redirigir si no hay protocol_id
 if (!protocolId.value) {
@@ -34,6 +36,8 @@ function handleComplete(data) {
   <DynamicWizard
     v-if="protocolId"
     :protocol-id="protocolId"
+    :plan-id="planId"
+    :plan-name="planName"
     @close="handleClose"
     @complete="handleComplete"
   />

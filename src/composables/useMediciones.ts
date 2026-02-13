@@ -438,7 +438,7 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
    */
   const datosResumenPeso = computed<DatosResumen>(() => {
     const historial = toValue(historialMediciones)
-    const medicionesPeso: MedicionResumen[] = []
+    const medicionesPorFecha = new Map<string, MedicionResumen & { timestamp: number }>()
 
     // Recolectar todas las mediciones de peso
     Object.values(historial).forEach((historialProtocolo) => {
@@ -450,16 +450,26 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
         const valorNumerico = extraerValorNumerico(m.valor, 'peso')
         if (valorNumerico === null) return
 
-        medicionesPeso.push({
-          valor: valorNumerico,
-          fecha: m.fecha,
-          fechaStr: new Date(m.fecha).toLocaleDateString('es-CL', {
-            day: 'numeric',
-            month: 'short'
+        const fechaObj = new Date(m.fecha)
+        const fechaKey = fechaObj.toISOString().split('T')[0]
+        const timestamp = fechaObj.getTime()
+        const existente = medicionesPorFecha.get(fechaKey)
+
+        if (!existente || timestamp > existente.timestamp) {
+          medicionesPorFecha.set(fechaKey, {
+            valor: valorNumerico,
+            fecha: m.fecha,
+            fechaStr: fechaObj.toLocaleDateString('es-CL', {
+              day: 'numeric',
+              month: 'short'
+            }),
+            timestamp
           })
-        })
+        }
       })
     })
+
+    const medicionesPeso: MedicionResumen[] = Array.from(medicionesPorFecha.values()).map(({ timestamp, ...rest }) => rest)
 
     // Ordenar por fecha y tomar las últimas
     medicionesPeso.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
@@ -512,9 +522,9 @@ export function useMediciones(opciones: OpcionesUseMediciones): RetornoUseMedici
       })
     })
 
-    // Ordenar por fecha y tomar las últimas
+    // Ordenar por fecha y usar todas las mediciones disponibles
     medicionesPresion.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-    const ultimasMediciones = medicionesPresion.slice(-MAX_MEDICIONES_GRAFICO)
+    const ultimasMediciones = medicionesPresion
 
     if (ultimasMediciones.length === 0) {
       return {
