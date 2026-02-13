@@ -1,5 +1,5 @@
 <script setup>
-import { computed, inject } from 'vue'
+import { computed, inject, ref, onMounted } from 'vue'
 import { cn } from "@/lib/utils";
 
 const props = defineProps({
@@ -7,6 +7,7 @@ const props = defineProps({
 })
 
 const carousel = inject('carousel')
+const containerRef = ref(null)
 
 const transformStyle = computed(() => {
   return {
@@ -17,6 +18,7 @@ const transformStyle = computed(() => {
 
 <template>
   <div 
+    ref="containerRef"
     :class="cn('flex transition-transform duration-500 ease-out', props.class)"
     :style="transformStyle"
   >

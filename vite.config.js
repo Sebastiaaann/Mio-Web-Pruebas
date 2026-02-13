@@ -28,7 +28,10 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['./src/tests/setup.js'],
-    include: ['src/**/*.{test,spec}.{js,ts}']
+    include: ['src/**/*.{test,spec}.{js,ts}'],
+    pool: 'forks',
+    minWorkers: 1,
+    maxWorkers: 1
   }
 })
 

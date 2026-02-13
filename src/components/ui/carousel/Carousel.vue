@@ -60,6 +60,10 @@ function registerItem() {
   totalItems.value++
 }
 
+function unregisterItem() {
+  totalItems.value = Math.max(0, totalItems.value - 1)
+}
+
 onMounted(() => {
   startAutoplay()
 })
@@ -72,14 +76,25 @@ watch(() => totalItems.value, (newVal) => {
   if (newVal > 0 && props.autoplay) {
     startAutoplay()
   }
+
+  if (newVal === 0) {
+    currentIndex.value = 0
+    return
+  }
+
+  if (currentIndex.value > newVal - 1) {
+    currentIndex.value = newVal - 1
+  }
 })
 
 provide('carousel', {
   currentIndex,
   totalItems,
   registerItem,
+  unregisterItem,
   next,
-  prev
+  prev,
+  goTo
 })
 </script>
 

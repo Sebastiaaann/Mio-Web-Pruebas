@@ -57,23 +57,23 @@ function handleSelect() {
       </div>
       
       <!-- Plan Name -->
-      <h3 :style="{ color: accentColor }" class="text-4xl font-black tracking-tight uppercase mb-2">
+      <h3 :style="{ color: accentColor }" class="h2-premium uppercase mb-2">
         {{ plan.subtitle }}
       </h3>
       
       <!-- Price -->
-      <p :style="{ color: accentColor }" class="text-2xl font-bold">
+      <p :style="{ color: accentColor }" class="text-display text-[1.75rem]">
         {{ plan.price }}
       </p>
     </div>
 
     <!-- Divider -->
-    <hr :style="{ borderColor: accentColor }" class="border-t-2 opacity-50 mb-6" />
+    <hr class="border-t border-gray-100 mb-6" />
 
     <!-- Details Section -->
     <div class="flex-grow">
-      <h4 class="text-lg font-medium text-gray-700 mb-3">Información del plan</h4>
-      <p class="text-gray-500 text-sm leading-relaxed whitespace-pre-line">
+      <h4 class="h4-premium text-gray-700 mb-3">Información del plan</h4>
+      <p class="text-body text-sm leading-relaxed whitespace-pre-line text-gray-500">
         {{ plan.description }}
       </p>
     </div>
@@ -83,7 +83,7 @@ function handleSelect() {
       <button 
         @click="handleSelect"
         :style="{ backgroundColor: accentColor }"
-        class="w-full rounded-full py-3 px-6 text-white font-bold tracking-wide uppercase shadow-lg hover:opacity-90 active:scale-95 transition-colors transition-transform"
+        class="w-full rounded-xl py-3.5 px-6 text-white font-bold tracking-wide shadow-md hover:shadow-lg hover:opacity-90 active:scale-[0.98] transition-all duration-200"
       >
         OBTENER
       </button>

@@ -3,6 +3,35 @@
 
 import { vi } from 'vitest'
 
+// Mock del logger para evitar ruido en tests
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    security: vi.fn()
+  }
+}))
+
+// Mock de fetch para evitar llamadas reales a HOMA
+const URL_HOMA = 'https://apihoma.homa.cl:7200'
+const originalFetch = globalThis.fetch ? globalThis.fetch.bind(globalThis) : null
+
+if (originalFetch) {
+  globalThis.fetch = (input, init) => {
+    const url = typeof input === 'string' ? input : input?.url
+    if (typeof url === 'string' && url.startsWith(URL_HOMA)) {
+      const body = JSON.stringify({})
+      return Promise.resolve(new Response(body, {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }))
+    }
+
+    return originalFetch(input, init)
+  }
+}
+
 // Mock de servicios de autenticación
 vi.mock('@/services/authService', () => ({
   authService: {

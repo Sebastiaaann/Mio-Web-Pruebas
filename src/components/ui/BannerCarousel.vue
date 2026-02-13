@@ -4,6 +4,7 @@
  * Adaptado con indicador inferior, navegación con íconos y transiciones suaves
  */
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useTheme } from '@/composables/useTheme'
 
 const props = defineProps({
   banners: {
@@ -27,6 +28,28 @@ const props = defineProps({
 const currentIndex = ref(0)
 const isPaused = ref(false)
 let autoplayTimer = null
+
+// Obtener colores del tema
+const { colors, isMutual } = useTheme()
+
+// Color de fondo dinámico según el tema
+const bgGradientClass = computed(() => {
+  if (isBerniBanner.value && isMutual.value) {
+    // Usar verde lima del tema cuando es plan Mutual
+    return ''
+  }
+  return 'bg-gradient-to-br from-purple-500 to-purple-600'
+})
+
+// Estilo inline para el fondo del banner Berni
+const bannerBgStyle = computed(() => {
+  if (isBerniBanner.value && isMutual.value) {
+    return {
+      background: `linear-gradient(to bottom right, ${colors.value.primary}, ${colors.value.primaryHover})`
+    }
+  }
+  return {}
+})
 
 const totalSlides = computed(() => props.banners.length)
 
@@ -97,7 +120,10 @@ onUnmounted(() => {
     @mouseleave="resumeAutoplay"
   >
     <!-- Carrusel principal estilo Stripe -->
-    <div class="relative w-full overflow-hidden rounded-xl shadow-md group" :class="height">
+    <div 
+      class="relative w-full overflow-hidden rounded-xl shadow-md group"
+      :class="(currentBanner?.title || '').toString().toLowerCase().includes('berni') ? 'h-80 md:h-96' : height"
+    >
       <!-- Slides Container -->
       <div class="relative w-full h-full">
         <!-- Banner Slides -->
@@ -109,20 +135,22 @@ onUnmounted(() => {
             class="absolute inset-0"
           >
             <!-- Imagen de fondo -->
-            <div class="absolute inset-0">
+            <div 
+              class="absolute inset-0 flex items-center justify-center"
+              :class="(banner.title || '').toString().toLowerCase().includes('berni') ? bgGradientClass : ''"
+              :style="(banner.title || '').toString().toLowerCase().includes('berni') ? bannerBgStyle : {}"
+            >
               <img
                 v-if="banner.image"
                 :src="banner.image"
                 :alt="banner.title"
                 loading="eager"
                 decoding="async"
-                width="1200"
-                height="400"
                 :class="[
-                  'w-full h-full transition-transform duration-500',
+                  'transition-transform duration-500',
                   (banner.title || '').toString().toLowerCase().includes('berni')
-                    ? 'object-contain object-center'
-                    : 'object-cover group-hover:scale-105'
+                    ? 'object-contain object-center w-full h-full max-h-full'
+                    : 'object-cover group-hover:scale-105 w-full h-full'
                 ]"
               />
               <div v-else class="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900" />

@@ -9,58 +9,215 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Mio Medical Palette - Original Teal */
-  --color-homa-primary: #0f766e;
-  /* teal-700 */
-  --color-homa-primary-light: #14b8a6;
-  /* teal-500 */
-  --color-homa-primary-soft: #ccfbf1;
-  /* teal-100 */
-
-  --color-homa-secondary: #0ea5e9;
-  /* sky-500 */
-  --color-homa-secondary-soft: #e0f2fe;
-  /* sky-100 */
-
-  /* Mio+ Purple Theme */
-  --color-mio-purple: #7b61ff;
-  --color-mio-purple-dark: #6b51ef;
-  --color-mio-purple-light: #a78bfa;
-  --color-mio-purple-soft: #ede9fe;
-  /* violet-100 */
-
-  --color-mio-indigo: #6366f1;
-  --color-mio-indigo-soft: #e0e7ff;
-
-  --color-homa-surface: #ffffff;
-  --color-homa-background: #f8fafc;
-  /* slate-50 */
-
-  --color-homa-text-primary: #1e293b;
-  /* slate-800 */
-  --color-homa-text-secondary: #64748b;
-  /* slate-500 */
-
-  --color-homa-border: #e2e8f0;
-  /* slate-200 */
-
-  /* Cabinet Grotesk Font Family */
+  /* ============================================
+     PALETA PREMIUM - SaaS Financiero (Stripe Style)
+     ============================================ */
+  
+  /* Grises Sofisticados (Slate) */
+  --color-slate-50: #F8FAFC;
+  --color-slate-100: #F1F5F9;
+  --color-slate-200: #E2E8F0;
+  --color-slate-300: #CBD5E1;
+  --color-slate-400: #94A3B8;
+  --color-slate-500: #64748B;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1E293B;
+  --color-slate-900: #0F172A;
+  
+  /* Fondos */
+  --color-bg-app: #F8FAFC;
+  --color-bg-card: #FFFFFF;
+  --color-bg-hover: #F1F5F9;
+  
+  /* ============================================
+     COLORES DE PLAN - TEMAS DINÁMICOS
+     ============================================ */
+  
+  /* Plan Mutual: Verde Lima #C4D600 */
+  --color-mutual-primary: #C4D600;
+  --color-mutual-primary-hover: #A8B500;
+  --color-mutual-primary-light: #F0F5C8;
+  --color-mutual-accent: #D4E000;
+  --color-mutual-text: #0F172A;
+  --color-mutual-text-secondary: #64748B;
+  
+  /* Plan Esencial: Índigo/Violeta Moderno (Tecnológico) */
+  --color-esencial-primary: #6366F1;
+  --color-esencial-primary-hover: #4F46E5;
+  --color-esencial-primary-light: #E0E7FF;
+  --color-esencial-accent: #8B5CF6;
+  --color-esencial-text: #0F172A;
+  --color-esencial-text-secondary: #64748B;
+  
+  /* ============================================
+     COLORES SEMÁNTICOS
+     ============================================ */
+  --color-health-green: #10B981;
+  --color-health-green-light: #D1FAE5;
+  --color-alert-red: #DC2626;
+  --color-alert-red-light: #FEE2E2;
+  --color-warning-amber: #F59E0B;
+  --color-warning-amber-light: #FEF3C7;
+  
+  /* ============================================
+     TIPOGRAFÍA
+     ============================================ */
   --font-family-cabinet: "CabinetGrotesk-Variable", sans-serif;
-
-  /* Redesign Colors */
-  --color-primary: #ff9500;
-  --color-health-green: #10b981;
-  --color-alert-red: #dc2626;
-  --color-gray-bg: #f3f4f6;
-  --color-gray-border: #e5e7eb;
-  --color-gray-text: #374151;
-  --color-gray-text-light: #6b7280;
-
-  /* Redesign Fonts */
   --font-display: "Cabinet Grotesk", sans-serif;
   --font-body: "Satoshi", sans-serif;
   --font-label: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+}
+
+/* ============================================
+   VARIABLES CSS DINÁMICAS - TEMAS
+   ============================================ */
+
+:root {
+  font-family: "Inter", "Outfit", sans-serif;
+  --radius: 0.75rem;
+  
+  /* Fondos base */
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  
+  /* Tarjetas y superficies */
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  
+  /* Colores semánticos */
+  --secondary: #F1F5F9;
+  --secondary-foreground: #334155;
+  
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  
+  --destructive: #DC2626;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0F172A;
+  --sidebar-border: #E2E8F0;
+  
+  /* Gráficos */
+  --chart-1: #6366F1;
+  --chart-2: #0EA5E9;
+  --chart-3: #8B5CF6;
+  --chart-4: #06B6D4;
+  --chart-5: #10B981;
+  
+  /* ============================================
+     VARIABLES DE TEMA DINÁMICO
+     Por defecto: Plan Esencial (Índigo)
+     ============================================ */
+  --theme-primary: #6366F1;
+  --theme-primary-hover: #4F46E5;
+  --theme-primary-light: #E0E7FF;
+  --theme-accent: #8B5CF6;
+  --theme-text: #0F172A;
+  --theme-text-secondary: #64748B;
+  --theme-ring: #A5B4FC;
+}
+
+/* ============================================
+   TEMA: PLAN MUTUAL (Verde Teal Corporativo)
+   ============================================ */
+body.theme-mutual,
+.theme-mutual {
+  --theme-primary: #C4D600;
+  --theme-primary-hover: #A8B500;
+  --theme-primary-light: #F0F5C8;
+  --theme-accent: #D4E000;
+  --theme-text: #0F172A;
+  --theme-text-secondary: #64748B;
+  --theme-ring: #E8F0A8;
+  
+  /* Actualizar colores de gráficos para Mutual */
+  --chart-1: #C4D600;
+  --chart-2: #D4E000;
+  --chart-3: #E0E800;
+  --chart-4: #E8F0A8;
+  --chart-5: #6366F1;
+}
+
+/* ============================================
+   TEMA: PLAN ESENCIAL (Índigo/Violeta Tecnológico)
+   ============================================ */
+body.theme-esencial,
+.theme-esencial {
+  --theme-primary: #6366F1;
+  --theme-primary-hover: #4F46E5;
+  --theme-primary-light: #E0E7FF;
+  --theme-accent: #8B5CF6;
+  --theme-text: #0F172A;
+  --theme-text-secondary: #64748B;
+  --theme-ring: #A5B4FC;
+  
+  /* Actualizar colores de gráficos para Esencial */
+  --chart-1: #6366F1;
+  --chart-2: #8B5CF6;
+  --chart-3: #A78BFA;
+  --chart-4: #C4B5FD;
+  --chart-5: #0D9488;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+.dark {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
+  
+  --secondary: #334155;
+  --secondary-foreground: #F1F5F9;
+  
+  --muted: #334155;
+  --muted-foreground: #94A3B8;
+  
+  --border: #334155;
+  --input: #334155;
+  
+  --sidebar: #1E293B;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-border: #334155;
+}
+
+.dark.theme-mutual {
+  --theme-primary: #D4E000;
+  --theme-primary-hover: #C4D600;
+  --theme-primary-light: #3D4500;
+  --theme-accent: #E0E800;
+}
+
+.dark.theme-esencial {
+  --theme-primary: #818CF8;
+  --theme-primary-hover: #0EA5E9;
+  --theme-primary-light: #0C4A6E;
+  --theme-accent: #22D3EE;
+}
+
+/* ============================================
+   ESTILOS BASE
+   ============================================ */
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 /* Custom Base Styles for Fonts */
@@ -77,219 +234,588 @@
   font-family: "Satoshi", sans-serif;
 }
 
-:root {
-  font-family: "Inter", "Outfit", sans-serif;
-  --radius: 1rem;
-
-  /* Modern Palette - Light Mode (#FDFBFF) */
-  --background: #fdfbff;
-  --foreground: #1f2937;
-  /* slate-800 */
-
-  --card: #ffffff;
-  --card-foreground: #1f2937;
-
-  --popover: #ffffff;
-  --popover-foreground: #1f2937;
-
-  /* Primary Purple #8B5CF6 */
-  --primary: #8b5cf6;
-  --primary-foreground: #ffffff;
-
-  --secondary: #ede9fe;
-  /* violet-100 */
-  --secondary-foreground: #4c1d95;
-  /* violet-900 */
-
-  --muted: #f3f4f6;
-  /* gray-100 */
-  --muted-foreground: #6b7280;
-  /* gray-500 */
-
-  --accent: #f5f3ff;
-  /* violet-50 */
-  --accent-foreground: #8b5cf6;
-
-  --destructive: #ef4444;
-  /* red-500 */
-  --border: #e5e7eb;
-  /* gray-200 */
-  --input: #e5e7eb;
-  --ring: #8b5cf6;
-
-  --chart-1: #8b5cf6;
-  --chart-2: #a78bfa;
-  --chart-3: #c4b5fd;
-  --chart-4: #ddd6fe;
-  --chart-5: #ede9fe;
-
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1f2937;
-  --sidebar-primary: #8b5cf6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f3f4f6;
-  --sidebar-accent-foreground: #8b5cf6;
-  --sidebar-border: #e5e7eb;
-  --sidebar-ring: #8b5cf6;
-}
-
-.dark {
-  /* Modern Palette - Dark Mode (#1A1033) */
-  --background: #1a1033;
-  --foreground: #f3f4f6;
-  /* gray-100 */
-
-  --card: #2d1b4e;
-  /* Darker purple for cards */
-  --card-foreground: #f3f4f6;
-
-  --popover: #2d1b4e;
-  --popover-foreground: #f3f4f6;
-
-  --primary: #8b5cf6;
-  --primary-foreground: #ffffff;
-
-  --secondary: #4c1d95;
-  --secondary-foreground: #f3f4f6;
-
-  --muted: #2d1b4e;
-  --muted-foreground: #9ca3af;
-
-  --accent: #2d1b4e;
-  --accent-foreground: #f3f4f6;
-
-  --destructive: #ef4444;
-  --border: #374151;
-  /* gray-700 */
-  --input: #374151;
-  --ring: #8b5cf6;
-
-  --chart-1: #8b5cf6;
-  --chart-2: #7c3aed;
-  --chart-3: #6d28d9;
-  --chart-4: #5b21b6;
-  --chart-5: #4c1d95;
-
-  --sidebar: #0b1121;
-  /* Keep sidebar dark or match theme #1A1033 if preferred. Keeping deep dark for contrast. */
-  --sidebar-foreground: #f3f4f6;
-  --sidebar-primary: #8b5cf6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2d1b4e;
-  --sidebar-accent-foreground: #f3f4f6;
-  --sidebar-border: #1f2937;
-  --sidebar-ring: #8b5cf6;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  background-color: var(--background);
-  color: var(--foreground);
-}
+/* ============================================
+   UTILITIES - COMPONENTES PREMIUM
+   ============================================ */
 
 @layer utilities {
-  .glass-panel {
-    @apply bg-white/60 backdrop-blur-2xl border border-white/60 shadow-xl shadow-purple-500/5 dark:bg-black/30 dark:border-white/10 dark:shadow-purple-900/20;
-  }
-
-  .glass-sidebar {
-    @apply bg-white/70 backdrop-blur-xl border-r border-white/50;
-  }
-
-  /* Neumorphism - Soft UI (Purple Theme) */
-  .neu-card {
+  /* ============================================
+     TARJETAS PREMIUM
+     ============================================ */
+  
+  /* Tarjeta base - Estilo SaaS Financiero */
+  .card-premium {
     background: var(--card);
-    border-radius: 1.25rem;
-    box-shadow:
-      8px 8px 20px rgba(139, 92, 246, 0.08),
-      -8px -8px 20px rgba(255, 255, 255, 0.9);
-    transition:
-      box-shadow 0.3s ease-out,
-      transform 0.2s ease-out;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.025);
+    transition: all 0.2s ease-out;
+  }
+  
+  .card-premium:hover {
+    box-shadow: 
+      0 4px 6px rgba(0, 0, 0, 0.05),
+      0 2px 4px rgba(0, 0, 0, 0.025);
+    border-color: #CBD5E1;
+    transform: translateY(-1px);
+  }
+  
+  /* Tarjeta con acento sutil (línea superior) */
+  .card-accent {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--theme-primary);
+    opacity: 0.8;
+  }
+  
+  /* Tarjeta métrica (para dashboards) */
+  .card-metric {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-out;
+  }
+  
+  .card-metric:hover {
+    box-shadow: 
+      0 4px 6px rgba(0, 0, 0, 0.05),
+      0 2px 4px rgba(0, 0, 0, 0.025);
+    border-color: #CBD5E1;
+  }
+  
+  /* ============================================
+     SISTEMA TIPOGRÁFICO CABINET GROTESK
+     ============================================ */
+  
+  /* H1 - Títulos de página (32px, ExtraBold, tracking tight) */
+  .text-h1 {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: #0F172A;
+  }
+  
+  /* H2 - Títulos de sección (24px, Bold, tracking tight) */
+  .text-h2 {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: #1E293B;
+  }
+  
+  /* H3 - Títulos de tarjetas (18px, Bold, tracking tight) */
+  .text-h3 {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.125rem;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: #334155;
+  }
+  
+  /* Display - Datos numéricos grandes (36px, Black/ExtraBold, tracking very tight) */
+  .text-display {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 2.25rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    color: #0F172A;
+  }
+  
+  /* Body - Texto de cuerpo (14px, Regular) */
+  .text-body {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 400;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #475569;
+  }
+  
+  /* Label - Etiquetas (12px, Medium, tracking 0.02em) */
+  .text-label {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    color: #64748B;
+    text-transform: uppercase;
+  }
+  
+  /* Button - Botones (14px, Semibold) */
+  .text-button {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1;
+  }
+  
+  /* Subtitle - Subtítulos (14px, Medium) */
+  .text-subtitle {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #64748B;
+  }
+  
+  /* Caption - Texto pequeño (12px, Regular) */
+  .text-caption {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #94A3B8;
+  }
+  
+  /* ============================================
+     BOTONES PREMIUM
+     ============================================ */
+  
+  /* Botón primario - Solo CTAs */
+  .btn-primary {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    background: var(--theme-primary);
+    color: white;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-primary:hover {
+    background: var(--theme-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  }
+  
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* Botón secundario */
+  .btn-secondary {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    background: #F1F5F9;
+    color: #334155;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid #E2E8F0;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-secondary:hover {
+    background: #E2E8F0;
+    border-color: #CBD5E1;
+  }
+  
+  .btn-secondary:active {
+    background: #CBD5E1;
+  }
+  
+  /* Botón ghost (solo texto) */
+  .btn-ghost {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #64748B;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-ghost:hover {
+    color: #334155;
+    background: #F1F5F9;
+  }
+  
+  /* Botón outline con color de tema */
+  .btn-outline-theme {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    background: transparent;
+    color: var(--theme-primary);
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--theme-primary);
+    cursor: pointer;
+    transition: all 0.15s ease-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-outline-theme:hover {
+    background: var(--theme-primary-light);
+  }
+  
+  /* ============================================
+     TIPOGRAFÍA PREMIUM - JERARQUÍA VISUAL
+     ============================================ */
+  
+  /* H1 - Títulos de página */
+  .h1-premium {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
   }
 
-  .neu-card:hover {
-    box-shadow:
-      12px 12px 24px rgba(139, 92, 246, 0.12),
-      -12px -12px 24px rgba(255, 255, 255, 1);
+  /* H2 - Secciones */
+  .h2-premium {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1E293B;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
   }
 
-  .dark .neu-card {
-    box-shadow:
-      8px 8px 20px rgba(0, 0, 0, 0.3),
-      -8px -8px 20px rgba(75, 50, 120, 0.15);
+  /* H3 - Subsecciones/Tarjetas */
+  .h3-premium {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
   }
 
-  .dark .neu-card:hover {
-    box-shadow:
-      12px 12px 24px rgba(0, 0, 0, 0.4),
-      -12px -12px 24px rgba(75, 50, 120, 0.2);
+  /* H4 - Labels/Categorías */
+  .h4-premium {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+    line-height: 1.5;
   }
 
-  .neu-button {
-    background: linear-gradient(145deg, #9b6cf7, #7b4fe6);
-    border-radius: 0.875rem;
-    box-shadow:
-      4px 4px 10px rgba(139, 92, 246, 0.3),
-      -4px -4px 10px rgba(255, 255, 255, 0.1);
-    transition:
-      box-shadow 0.2s ease-out,
-      transform 0.2s ease-out,
-      background-color 0.2s ease-out;
+  /* Subtítulos/Labels uppercase */
+  .subtitle-premium {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
   }
 
-  .neu-button:hover {
-    box-shadow:
-      6px 6px 14px rgba(139, 92, 246, 0.4),
-      -6px -6px 14px rgba(255, 255, 255, 0.15);
+  /* Texto body */
+  .text-body {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #475569;
+    line-height: 1.6;
   }
 
-  .neu-button:active {
-    box-shadow:
-      inset 2px 2px 6px rgba(0, 0, 0, 0.15),
-      inset -2px -2px 6px rgba(255, 255, 255, 0.1);
+  /* Texto secundario */
+  .text-secondary {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    color: #64748B;
   }
 
-  .neu-inset {
-    box-shadow:
-      inset 4px 4px 10px rgba(139, 92, 246, 0.08),
-      inset -4px -4px 10px rgba(255, 255, 255, 0.9);
+  /* Texto terciario/muted */
+  .text-muted {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    color: #94A3B8;
+  }
+  
+  /* ============================================
+     BADGES Y ETIQUETAS
+     ============================================ */
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  .badge-primary {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    background: var(--theme-primary-light);
+    color: var(--theme-primary);
   }
 
-  /* Respect reduced motion preference */
-  @media (prefers-reduced-motion: reduce) {
-    .neu-card,
-    .neu-button {
-      transition: none;
-    }
+  .badge-secondary {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    background: #F1F5F9;
+    color: #64748B;
+  }
+
+  .badge-success {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    background: #D1FAE5;
+    color: #059669;
+  }
+
+  .badge-warning {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    background: #FEF3C7;
+    color: #D97706;
+  }
+
+  .badge-error {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    background: #FEE2E2;
+    color: #DC2626;
+  }
+  
+  /* ============================================
+     ICONOS Y ELEMENTOS VISUALES
+     ============================================ */
+  
+  /* Contenedor de icono con fondo de tema */
+  .icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.625rem;
+    background: var(--theme-primary-light);
+    color: var(--theme-primary);
+  }
+  
+  .icon-container-sm {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+  }
+  
+  .icon-container-lg {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+  }
+  
+  /* ============================================
+     INPUTS Y FORMULARIOS
+     ============================================ */
+  
+  .input-premium {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-weight: 400;
+    font-size: 0.875rem;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #E2E8F0;
+    border-radius: 0.5rem;
+    color: #0F172A;
+    background: white;
+    transition: all 0.15s ease-out;
+  }
+  
+  .input-premium:focus {
+    outline: none;
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  }
+  
+  .input-premium::placeholder {
+    color: #94A3B8;
+  }
+  
+  /* ============================================
+     LAYOUTS Y CONTENEDORES
+     ============================================ */
+  
+  .container-dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      #E2E8F0 20%,
+      #E2E8F0 80%,
+      transparent
+    );
+    margin: 2rem 0;
+  }
+  
+  /* ============================================
+     EFECTOS Y ANIMACIONES
+     ============================================ */
+  
+  .hover-lift {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Glass effect (para overlays/modales) */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  
+  .dark .glass-panel {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 }
 
+/* ============================================
+   COMPONENTES LEGACY (mantener compatibilidad)
+   ============================================ */
+
 @layer components {
-  .homa-card {
-    @apply bg-white/80 backdrop-blur-sm rounded-[1.25rem] shadow-sm border border-white/60 p-6;
-    @apply transition-transform transition-shadow transition-colors duration-300;
+  /* Colores dinámicos según plan - LEGACY */
+  .text-plan {
+    color: var(--theme-text);
   }
-
-  /* Primary Button */
+  
+  .text-plan-alt {
+    color: var(--theme-text-secondary);
+  }
+  
+  .text-plan-muted {
+    color: var(--theme-text-secondary);
+    opacity: 0.7;
+  }
+  
+  .text-plan-primary {
+    color: var(--theme-primary);
+  }
+  
+  .text-plan-accent {
+    color: var(--theme-accent);
+  }
+  
+  .bg-plan-primary {
+    background-color: var(--theme-primary);
+  }
+  
+  .bg-plan-accent {
+    background-color: var(--theme-accent);
+  }
+  
+  /* Botones legacy */
   .homa-button {
-    @apply bg-homa-primary text-white font-medium px-5 py-2.5 rounded-xl;
-    @apply transition-colors transition-transform transition-shadow duration-200 hover:bg-homa-primary-light hover:shadow-lg hover:shadow-teal-500/30 active:scale-95;
+    background: var(--theme-primary);
+    color: white;
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease-out;
   }
-
-  /* Outline Button */
+  
+  .homa-button:hover {
+    background: var(--theme-primary-hover);
+  }
+  
   .homa-button-outline {
-    @apply bg-transparent text-homa-primary font-medium px-5 py-2.5 rounded-xl border border-homa-primary/30;
-    @apply transition-colors transition-transform duration-200 hover:bg-homa-primary-soft hover:border-homa-primary active:scale-95;
+    background: transparent;
+    color: var(--theme-primary);
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--theme-primary);
+    cursor: pointer;
+    transition: all 0.15s ease-out;
   }
-
+  
+  .homa-button-outline:hover {
+    background: var(--theme-primary-light);
+  }
+  
   .homa-layout {
-    @apply min-h-screen bg-background text-foreground flex font-sans;
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--foreground);
+    display: flex;
+    font-family: sans-serif;
   }
-
-  /* Screen Reader Only - Solo visible para lectores de pantalla */
+  
+  .homa-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+  }
+  
+  /* Screen Reader Only */
   .sr-only {
     position: absolute;
     width: 1px;
@@ -301,8 +827,7 @@ body {
     white-space: nowrap;
     border: 0;
   }
-
-  /* Visible cuando tiene foco (para skip links) */
+  
   .sr-only-focusable:focus,
   .sr-only-focusable:focus-within {
     position: static;
@@ -316,9 +841,13 @@ body {
   }
 }
 
-/* Custom Scrollbar */
+/* ============================================
+   SCROLLBAR PERSONALIZADA
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -326,37 +855,42 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #CBD5E1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #94A3B8;
 }
+
+/* ============================================
+   THEME INLINE (Tailwind v4)
+   ============================================ */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--theme-primary);
+  --color-primary-foreground: #FFFFFF;
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--theme-accent);
+  --color-accent-foreground: var(--foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-ring: var(--theme-ring);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -364,32 +898,40 @@ body {
   --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Variables de tema dinámico */
+  --color-theme-primary: var(--theme-primary);
+  --color-theme-primary-hover: var(--theme-primary-hover);
+  --color-theme-primary-light: var(--theme-primary-light);
+  --color-theme-accent: var(--theme-accent);
+  --color-theme-text: var(--theme-text);
+  --color-theme-text-secondary: var(--theme-text-secondary);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-
+  
   body {
     @apply bg-background text-foreground;
   }
 }
 
-/* Respect user's reduced motion preference for floating animations and smooth scroll */
-@media (prefers-reduced-motion: reduce) {
-  .animate-float,
-  .animate-float-slow,
-  .animate-pulse {
-    animation: none !important;
-  }
+/* ============================================
+   RESPETO A PREFERENCIAS DE ACCESIBILIDAD
+   ============================================ */
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
   html {
     scroll-behavior: auto !important;
   }

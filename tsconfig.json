@@ -13,13 +13,12 @@
     "allowJs": true,
     "checkJs": false,
     "types": ["vite/client"],
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.js", "src/**/*.vue", "src/**/*.d.ts"],
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"],
   "vueCompilerOptions": {
     "strictTemplates": true,
