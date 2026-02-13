@@ -53,6 +53,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, title: 'Controles' }
   },
   {
+    path: '/beneficios',
+    name: 'beneficios',
+    component: lazyLoad(() => import('@/views/beneficios/BeneficiosView.vue'), 'Beneficios'),
+    meta: { requiresAuth: true, title: 'Beneficios' }
+  },
+  {
     path: '/nueva-medicion/tipo',
     name: 'nueva-medicion-tipo',
     component: lazyLoad(() => import('@/views/controles/ControlesView.vue'), 'Nueva Medición'),
@@ -123,6 +129,12 @@ const routes: RouteRecordRaw[] = [
     name: 'citas',
     component: lazyLoad(() => import('@/views/citas/CitasView.vue'), 'Citas'),
     meta: { requiresAuth: true, requiresLayout: false, title: 'Mis Citas' }
+  },
+  {
+    path: '/citas/teleconsulta',
+    name: 'teleconsulta',
+    component: lazyLoad(() => import('@/views/citas/TeleconsultaView.vue'), 'Teleconsulta'),
+    meta: { requiresAuth: true, requiresLayout: false, title: 'Teleconsulta' }
   },
   {
     path: '/chat',
