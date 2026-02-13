@@ -3,12 +3,12 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Motion, AnimatePresence } from 'motion-v';
-import { 
-  Home, 
-  Activity, 
-  BookOpen, 
-  Inbox, 
-  HelpCircle, 
+import {
+  Home,
+  Activity,
+  BookOpen,
+  Inbox,
+  HelpCircle,
   User,
   Search,
   ChevronRight,
@@ -24,7 +24,8 @@ import {
   Command,
   Heart,
   Scale,
-  Droplet
+  Droplet,
+  Gift
 } from 'lucide-vue-next';
 
 import { useUserStore } from '@/stores/tiendaUsuario';
@@ -72,7 +73,17 @@ const menuSections = [
           { name: 'Historial', ruta: '/historial-controles', icono: BookOpen },
         ]
       },
-      { name: 'Citas', ruta: '/citas', icono: Calendar },
+      { name: 'Beneficios', ruta: '/beneficios', icono: Gift },
+      {
+        name: 'Citas',
+        ruta: '/citas',
+        icono: Calendar,
+        hasSubmenu: true,
+        subItems: [
+          { name: 'Mis Citas', ruta: '/citas', icono: Calendar },
+          { name: 'Teleconsulta', ruta: '/citas/teleconsulta', icono: Activity }
+        ]
+      },
       { 
         name: 'Mensajes', 
         ruta: '/mensajes', 
