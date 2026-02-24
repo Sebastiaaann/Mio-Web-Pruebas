@@ -81,21 +81,13 @@ export async function saveProtocolObservations(
   }
 }
 
-/**
- * Obtener protocolos por health plan
- */
-export async function getProtocolsByHealthPlan(healthplanId: string): Promise<unknown> {
-  try {
-    return await clienteApi.get(`/api/v1/protocols/${healthplanId}`)
-  } catch (error) {
-    throw new Error(`Error al obtener protocolos: ${(error as Error).message}`)
-  }
-}
+// NOTA: getProtocolsByHealthPlan() fue eliminado - usar healthPlanService.getProtocolsByHealthPlan() como fuente única
 
 /**
  * Obtener observaciones de un paciente en un protocolo
+ * Fuente única para este endpoint - usado por tiendaMediciones
  */
-export async function getProtocolObservations(patientId: string, protocolId: string): Promise<unknown> {
+export async function getProtocolObservations(patientId: string | number, protocolId: string | number): Promise<unknown> {
   try {
     return await clienteApi.get(`/api/v1/protocol/observations/${patientId}/${protocolId}`)
   } catch (error) {

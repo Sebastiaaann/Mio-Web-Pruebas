@@ -30,7 +30,7 @@ import {
 
 import { useUserStore } from '@/stores/tiendaUsuario';
 import { useConfigStore } from '@/stores/tiendaConfig';
-import ProfileOverlay from '@/components/profile/ProfileOverlay.vue';
+import ProfileOverlay from '@/components/perfil/ProfileOverlay.vue';
 
 // Props handling
 const props = defineProps({

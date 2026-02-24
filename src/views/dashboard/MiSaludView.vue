@@ -5,6 +5,8 @@ import { useUserStore } from "@/stores/tiendaUsuario";
 import { useHealthStore } from "@/stores/tiendaSalud";
 import { useRouter, useRoute } from "vue-router";
 import { useConfigStore } from '@/stores/tiendaConfig'
+import { logger } from '@/utils/logger';
+import { useErrorHandler } from '@/composables/useErrorHandler';
 import { 
     Heart, 
     Droplet, 
@@ -26,7 +28,6 @@ import NormalRangesCard from "@/components/mi-salud/NormalRangesCard.vue";
 import SkeletonCard from "@/components/ui/SkeletonCard.vue";
 import SkeletonTable from "@/components/ui/SkeletonTable.vue";
 import EmptyState from "@/components/ui/EmptyState.vue";
-import { useErrorHandler } from "@/composables/useErrorHandler";
 
 // Composables
 import { useChartData } from '@/composables/useChartData'
@@ -69,24 +70,24 @@ const rangoSeleccionado = ref<RangoFechas>('mes')
 const cargarDatos = async () => {
     await execute(async () => {
         estaCargando.value = true;
-        console.log('🔄 MiSaludView: Iniciando carga de datos...');
+        logger.info('MiSaludView: Iniciando carga de datos...');
         
         // Asegurar que el usuario esté autenticado
         if (!userStore.estaAutenticado) {
-            console.warn('⚠️ MiSaludView: Usuario no autenticado, redirigiendo...');
+            logger.warn('MiSaludView: Usuario no autenticado, redirigiendo...');
             router.push('/');
             return;
         }
         
-        console.log('✅ MiSaludView: Usuario autenticado, cargando datos de salud...');
+        logger.info('MiSaludView: Usuario autenticado, cargando datos de salud...');
         
         // Cargar datos reales desde la API
         await healthStore.fetchAllHealthData();
         
-        console.log('✅ MiSaludView: Datos cargados exitosamente');
-        console.log('📊 Controles próximos:', controlesProximos.value.length);
-        console.log('📈 Historial mediciones:', Object.keys(historialMediciones.value).length);
-        console.log('🩺 Última medición:', ultimaMedicion.value);
+        logger.info('MiSaludView: Datos cargados exitosamente');
+        logger.info('Controles próximos:', controlesProximos.value.length);
+        logger.info('Historial mediciones:', Object.keys(historialMediciones.value).length);
+        logger.info('Última medición:', ultimaMedicion.value);
         
         // Esperar a que Vue actualice el DOM
         await nextTick();
@@ -102,7 +103,7 @@ const cargarDatos = async () => {
 // Watcher para detectar cuando se navega a esta ruta
 watch(() => route.name, (newName) => {
     if (newName === 'dashboard-preventive') {
-        console.log('Navegación detectada a dashboard-preventive, cargando datos...');
+        logger.info('Navegación detectada a dashboard-preventive, cargando datos...');
         cargarDatos();
     }
 }, { immediate: false });
@@ -223,12 +224,12 @@ function getIconColorPorTipo(nombre: string): string {
 }
 
 onMounted(async () => {
-    console.log('MiSaludView montado - iniciando carga de datos');
+    logger.info('MiSaludView montado - iniciando carga de datos');
     await cargarDatos();
 });
 
 onBeforeUnmount(() => {
-    console.log('MiSaludView desmontado');
+    logger.info('MiSaludView desmontado');
 });
 </script>
 
@@ -295,8 +296,8 @@ onBeforeUnmount(() => {
         :mostrar-saludo="false"
         :show-notification-badge="true"
         notification-badge-color="#10B981"
-        @click-notification="console.log('Notificaciones clicked')"
-        @click-profile="console.log('Perfil clicked')"
+        @click-notification="logger.info('Notificaciones clicked')"
+        @click-profile="logger.info('Perfil clicked')"
     />
 
     <!-- Content Area -->

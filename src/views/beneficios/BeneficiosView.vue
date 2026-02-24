@@ -65,6 +65,16 @@ function obtenerTituloBanner(banner: BannerItem): string {
   return String(banner.title || banner.titulo || banner.nombre || 'Beneficio destacado')
 }
 
+/**
+ * Registrar uso del servicio/banner al hacer click
+ * Fire-and-forget: no bloquea la navegación del usuario
+ */
+function registrarClickBanner(banner: BannerItem): void {
+  const id = banner.id ?? 0
+  const nombre = obtenerTituloBanner(banner)
+  serviciosStore.registrarUso(id, nombre)
+}
+
 onMounted(async () => {
   if (!serviciosStore.hayServicios && !serviciosStore.cargando) {
     await serviciosStore.cargarServicios()
@@ -167,6 +177,7 @@ watch(() => configStore.planActivo, async (nuevoPlan, planAnterior) => {
                       target="_blank"
                       rel="noopener noreferrer"
                       class="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 bg-white text-slate-900 hover:bg-slate-100"
+                      @click="registrarClickBanner(banner)"
                     >
                       <span>Ver más información</span>
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

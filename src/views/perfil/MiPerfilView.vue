@@ -8,7 +8,7 @@ import { useTiendaServicios } from '@/stores/tiendaServicios'
 import { useHealthStore } from '@/stores/tiendaSalud'
 import { pacienteService } from '@/services/pacienteService'
 import { logger } from '@/utils/logger'
-import { ArrowLeft, Sun, Moon, Bell, LogOut, CheckCircle, Heart, User } from 'lucide-vue-next'
+import { ArrowLeft, Sun, Moon, Bell, LogOut, CheckCircle, Heart, User, Loader2, AlertTriangle } from 'lucide-vue-next'
 import { useDark, useToggle } from '@vueuse/core'
 import { useUserInitials } from '@/composables/useUserInitials'
 import { useTheme } from '@/composables/useTheme'
@@ -27,6 +27,8 @@ import LoadingState from '@/components/ui/base/LoadingState.vue'
 import EmptyState from '@/components/ui/base/EmptyState.vue'
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
 import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -88,33 +90,36 @@ const planThemes = {
   mutual: { primary: '#C4D600', text_alt: '#FFFFFF', logo: '/assets/logo_mutual.png' }
 }
 
-watch(selectedPlanType, async (newPlanType, oldPlanType) => {
-  if (!newPlanType) return
+// --- ESTADO DEL MODAL DE CONFIRMACIÓN DE CAMBIO DE PLAN ---
+const mostrarModalCambio = ref(false)
+const planPendiente = ref('')
+const planAnterior = ref('')
+const cambiandoPlan = ref(false)
+const errorCambioPlan = ref('')
+
+/**
+ * Aplica la configuración visual del plan (tema, colores, logo)
+ * Se usa tanto al confirmar el cambio como al cargar el plan inicial
+ */
+function aplicarConfiguracionPlan(planType) {
+  const theme = planThemes[planType] || planThemes.esencial
   
-  if (oldPlanType && newPlanType !== oldPlanType) {
-    planCambiadoManualmente.value = true
-    configStore.setPlanActivo(newPlanType)
-    await serviciosStore.cargarServicios()
-  }
-  
-  // Buscar el plan en availablePlans o en el plan activo de la API
-  let foundPlan = availablePlans.value.find(p => (p.nombre || p.subtitle || '').toLowerCase().includes(newPlanType.toLowerCase()))
-  if (!foundPlan && planActivoAPI.value && (planActivoAPI.value.name_plan || '').toLowerCase().includes(newPlanType.toLowerCase())) {
+  // Buscar el plan en planesPaciente o en el plan activo de la API
+  let foundPlan = planesPaciente.value.find(p => (p.name_plan || '').toLowerCase().includes(planType.toLowerCase()))
+  if (!foundPlan && planActivoAPI.value && (planActivoAPI.value.name_plan || '').toLowerCase().includes(planType.toLowerCase())) {
     foundPlan = planActivoAPI.value
   }
   
-  const theme = planThemes[newPlanType] || planThemes.esencial
-  
   if (foundPlan) {
     let mergedLogo = foundPlan.logo || theme.logo
-    if (newPlanType.toLowerCase() === 'mutual' && theme?.logo) mergedLogo = theme.logo
+    if (planType.toLowerCase() === 'mutual' && theme?.logo) mergedLogo = theme.logo
     
     currentPlanMeta.value = { 
-        ...foundPlan,
-        nombre: foundPlan.nombre || foundPlan.name_plan || (newPlanType.charAt(0).toUpperCase() + newPlanType.slice(1)),
-        logo: mergedLogo,
-        colorPrimario: foundPlan.colorPrimario || theme.primary,
-        colors: theme
+      ...foundPlan,
+      nombre: foundPlan.nombre || foundPlan.name_plan || (planType.charAt(0).toUpperCase() + planType.slice(1)),
+      logo: mergedLogo,
+      colorPrimario: foundPlan.colorPrimario || theme.primary,
+      colors: theme
     }
     
     // Aplicar configuración de colores desde el plan encontrado
@@ -125,26 +130,113 @@ watch(selectedPlanType, async (newPlanType, oldPlanType) => {
         config: foundPlan.config
       })
     } else {
-      // Si no hay config, aplicar el preset correspondiente
-      configStore.loadPreset(newPlanType)
+      configStore.loadPreset(planType)
     }
 
-    if (newPlanType.toLowerCase() === 'mutual') {
+    if (planType.toLowerCase() === 'mutual') {
       configStore.setLogoMutual(foundPlan.config?.logo || null)
     } else {
       configStore.setLogoMutual(null)
     }
   } else {
-     currentPlanMeta.value = {
-        nombre: newPlanType.charAt(0).toUpperCase() + newPlanType.slice(1),
-        logo: theme?.logo,
-        colorPrimario: theme?.primary,
-        colors: theme
-     }
-     // Aplicar preset si no se encontró el plan
-     configStore.loadPreset(newPlanType)
-     configStore.setLogoMutual(null)
+    currentPlanMeta.value = {
+      nombre: planType.charAt(0).toUpperCase() + planType.slice(1),
+      logo: theme?.logo,
+      colorPrimario: theme?.primary,
+      colors: theme
+    }
+    configStore.loadPreset(planType)
+    configStore.setLogoMutual(null)
   }
+}
+
+/**
+ * Inicia el flujo de cambio de plan mostrando el modal de confirmación
+ */
+function iniciarCambioPlan(nuevoPlan) {
+  if (nuevoPlan === selectedPlanType.value) return
+  
+  planAnterior.value = selectedPlanType.value
+  planPendiente.value = nuevoPlan
+  errorCambioPlan.value = ''
+  mostrarModalCambio.value = true
+}
+
+/**
+ * Confirma el cambio de plan: llama a la API y actualiza servicios
+ */
+async function confirmarCambioPlan() {
+  cambiandoPlan.value = true
+  errorCambioPlan.value = ''
+  
+  try {
+    const patientId = userStore.usuario?.id || userStore.usuario?.patient_id
+    if (!patientId) {
+      errorCambioPlan.value = 'No se encontró el ID del paciente.'
+      return
+    }
+
+    // Buscar el id_plan real del plan destino en planesPaciente
+    const planDestino = planesPaciente.value.find(p => 
+      (p.name_plan || '').toLowerCase().includes(planPendiente.value.toLowerCase())
+    )
+    
+    if (!planDestino?.id_plan) {
+      errorCambioPlan.value = 'No se encontró el plan seleccionado en tu cuenta.'
+      return
+    }
+
+    // Llamar a la API para actualizar el plan
+    const resultado = await pacienteService.actualizarPlan(patientId, planDestino.id_plan)
+    
+    if (!resultado.success) {
+      errorCambioPlan.value = resultado.error || 'Error al cambiar el plan.'
+      return
+    }
+
+    // Éxito: aplicar cambios locales
+    selectedPlanType.value = planPendiente.value
+    planCambiadoManualmente.value = true
+    configStore.setPlanActivo(planPendiente.value)
+    
+    // Aplicar configuración visual del nuevo plan
+    aplicarConfiguracionPlan(planPendiente.value)
+    
+    // Actualizar el plan activo en la lista local
+    planesPaciente.value.forEach(p => {
+      p.active_plan = p.id_plan === planDestino.id_plan ? "1" : "0"
+    })
+    planActivoAPI.value = planDestino
+
+    // Recargar servicios desde la API (ahora reflejarán el nuevo plan)
+    await serviciosStore.cargarServicios()
+    
+    // Cerrar modal
+    mostrarModalCambio.value = false
+    
+    logger.info('Plan cambiado exitosamente a:', planPendiente.value)
+  } catch (error) {
+    logger.error('Error al cambiar plan:', error)
+    errorCambioPlan.value = 'Ocurrió un error inesperado. Intente nuevamente.'
+  } finally {
+    cambiandoPlan.value = false
+  }
+}
+
+/**
+ * Cancela el cambio de plan y cierra el modal
+ */
+function cancelarCambioPlan() {
+  mostrarModalCambio.value = false
+  planPendiente.value = ''
+  errorCambioPlan.value = ''
+}
+
+// Watch para aplicar configuración visual cuando cambia el plan seleccionado
+// (solo aplica colores/tema, NO llama a la API - eso se hace en confirmarCambioPlan)
+watch(selectedPlanType, (newPlanType) => {
+  if (!newPlanType) return
+  aplicarConfiguracionPlan(newPlanType)
 })
 
 function handlePlanSelection(plan) {
@@ -174,8 +266,10 @@ onMounted(async () => {
     isLoadingPlans.value = true
     const patientId = userStore.usuario?.id || userStore.usuario?.patient_id
     
-    // Cargar datos básicos
-    await serviciosStore.cargarServicios()
+    // Cargar datos básicos solo si aún no están en memoria
+    if (!serviciosStore.hayServicios && !serviciosStore.cargando) {
+      await serviciosStore.cargarServicios()
+    }
     await healthStore.initMockData()
 
     if (patientId) {
@@ -239,7 +333,7 @@ onMounted(async () => {
 
 <template>
   <div class="bg-gray-50 min-h-screen">
-    <HeaderCompleto titulo="Perfil" :mostrar-saludo="false" :show-notification-badge="false" @click-profile="console.log('Perfil clicked')" />
+    <HeaderCompleto titulo="Perfil" :mostrar-saludo="false" :show-notification-badge="false" @click-profile="logger.info('Perfil clicked')" />
 
     <!-- Content -->
     <div class="p-8 max-w-7xl mx-auto">
@@ -280,8 +374,9 @@ onMounted(async () => {
               <div class="flex gap-1">
                 <!-- Botón Esencial -->
                 <button
-                  @click="selectedPlanType = 'esencial'"
-                  class="flex items-center gap-2 px-6 py-2 rounded-full text-base font-bold transition-all duration-200 focus-visible:outline-none"
+                  @click="iniciarCambioPlan('esencial')"
+                  :disabled="cambiandoPlan"
+                  class="flex items-center gap-2 px-6 py-2 rounded-full text-base font-bold transition-all duration-200 focus-visible:outline-none disabled:opacity-50"
                   :style="selectedPlanType === 'esencial' ? {
                     backgroundColor: 'white',
                     borderColor: colors.primary,
@@ -301,8 +396,9 @@ onMounted(async () => {
 
                 <!-- Botón Mutual -->
                 <button
-                  @click="selectedPlanType = 'mutual'"
-                  class="flex items-center gap-2 px-6 py-2 rounded-full text-base font-bold transition-all duration-200 focus-visible:outline-none"
+                  @click="iniciarCambioPlan('mutual')"
+                  :disabled="cambiandoPlan"
+                  class="flex items-center gap-2 px-6 py-2 rounded-full text-base font-bold transition-all duration-200 focus-visible:outline-none disabled:opacity-50"
                   :style="selectedPlanType === 'mutual' ? {
                     backgroundColor: colors.primary,
                     color: 'white',
@@ -359,6 +455,46 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <!-- Modal de confirmación de cambio de plan -->
+    <Dialog v-model:open="mostrarModalCambio">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-lg font-semibold">
+            ¿Cambiar al plan {{ planPendiente.charAt(0).toUpperCase() + planPendiente.slice(1) }}?
+          </DialogTitle>
+          <DialogDescription class="text-sm text-gray-500 mt-2">
+            Se actualizarán tus servicios disponibles según el nuevo plan.
+            Este cambio se aplicará de inmediato en tu cuenta.
+          </DialogDescription>
+        </DialogHeader>
+
+        <!-- Mensaje de error -->
+        <div v-if="errorCambioPlan" class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg mt-2">
+          <AlertTriangle class="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <p class="text-sm text-red-700">{{ errorCambioPlan }}</p>
+        </div>
+
+        <DialogFooter class="flex gap-3 mt-4">
+          <Button 
+            variant="outline" 
+            @click="cancelarCambioPlan" 
+            :disabled="cambiandoPlan"
+            class="flex-1"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            @click="confirmarCambioPlan" 
+            :disabled="cambiandoPlan"
+            class="flex-1"
+          >
+            <Loader2 v-if="cambiandoPlan" class="w-4 h-4 mr-2 animate-spin" />
+            {{ cambiandoPlan ? 'Cambiando...' : 'Confirmar cambio' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 

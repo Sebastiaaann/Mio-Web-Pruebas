@@ -50,7 +50,7 @@ export const useTiendaServicios = defineStore('servicios', () => {
         // Manejar diferentes formatos de respuesta
         let listaServicios: ServicioNormalizado[] | Record<string, unknown> | null | undefined = resultado.servicios
         if (import.meta.env.DEV) {
-          console.log('🔍 RAW Servicios response:', typeof listaServicios, Array.isArray(listaServicios))
+          logger.info('RAW Servicios response:', typeof listaServicios, Array.isArray(listaServicios))
         }
 
         // Si es un objeto, intentar extraer el array
@@ -58,13 +58,13 @@ export const useTiendaServicios = defineStore('servicios', () => {
           const raw = listaServicios as Record<string, unknown>
           listaServicios = (raw.data || raw.items || raw.services || []) as ServicioNormalizado[]
           if (import.meta.env.DEV) {
-            console.log('📦 Formato de respuesta diferente, extrayendo:', listaServicios)
+            logger.info('Formato de respuesta diferente, extrayendo:', listaServicios)
           }
         }
 
         // Asegurar que es un array
         if (!Array.isArray(listaServicios)) {
-          console.warn('⚠️ La respuesta de servicios no es un array, usando fallback')
+          logger.warn('La respuesta de servicios no es un array, usando fallback')
           listaServicios = []
         }
 
@@ -74,7 +74,7 @@ export const useTiendaServicios = defineStore('servicios', () => {
         )
 
         if (import.meta.env.DEV) {
-          console.log('✅ Servicios cargados:', servicios.value.length)
+          logger.info('Servicios cargados:', servicios.value.length)
         }
       } else {
         error.value = resultado.error || null
@@ -129,6 +129,24 @@ export const useTiendaServicios = defineStore('servicios', () => {
   }
 
   /**
+   * Registrar uso de un servicio (tracking fire-and-forget)
+   * No bloquea la navegación del usuario
+   */
+  async function registrarUso(
+    servicioId: number | string,
+    nombreServicio?: string
+  ): Promise<void> {
+    try {
+      await serviciosService.registrarUsoServicio(servicioId, nombreServicio)
+    } catch (e) {
+      // Silenciar errores de tracking para no afectar UX
+      if (import.meta.env.DEV) {
+        logger.error('Error en registrarUso (store)', e)
+      }
+    }
+  }
+
+  /**
    * Recargar servicios
    */
   async function recargarServicios(): Promise<void> {
@@ -159,6 +177,7 @@ export const useTiendaServicios = defineStore('servicios', () => {
     // Actions
     cargarServicios,
     obtenerServicio,
+    registrarUso,
     establecerFiltro,
     limpiarFiltro,
     limpiarError,

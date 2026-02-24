@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { pacienteService } from '@/services/pacienteService'
 import NavbarLateral from '@/components/layout/NavbarLateral.vue'
+import { logger } from '@/utils/logger';
 
 const SNABB_SCRIPT_SRC = 'https://cdn.snabb.cl/widget/v1.0/snabb-widget.js'
 const SNABB_ELEMENT_ID = 'SnabbWidget'
@@ -105,7 +106,7 @@ function registrarListenerWidget(datosInit: Record<string, unknown>): void {
         ;(source as Window).postMessage({ type: 'init', data: datosInit }, SNABB_WIDGET_ORIGIN)
       } catch (error) {
         if (import.meta.env.DEV) {
-          console.warn('No se pudo enviar la configuración al widget:', error)
+          logger.warn('No se pudo enviar la configuración al widget:', error)
         }
       }
     }

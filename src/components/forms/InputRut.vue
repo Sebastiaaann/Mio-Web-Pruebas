@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import InputText from 'primevue/inputtext';
+import { Input } from '@/components/ui/input';
 import { validarRut } from '@/utils/validadores';
 import { formatearRut, limpiarRut } from '@/utils/formateadores'
 
@@ -103,7 +103,7 @@ function manejarBlur() {
 
 // Función para enfocar el input (útil para navegación)
 function enfocar() {
-  inputRef.value?.$el.focus();
+  inputRef.value?.focus();
 }
 
 // Exponer métodos públicos
@@ -127,13 +127,13 @@ defineExpose({
     </label>
 
     <!-- Input -->
-    <InputText
+    <Input
       ref="inputRef"
       :id="idCampo"
       :model-value="valorInterno"
       :placeholder="props.placeholder"
-      :class="clasesInput"
       class="w-full"
+      :class="{ 'border-red-500 focus-visible:ring-red-500': hayError }"
       :aria-invalid="hayError ? 'true' : 'false'"
       :aria-describedby="ariaDescribedby"
       @input="manejarInput"
@@ -168,11 +168,6 @@ defineExpose({
 <style scoped>
 .campo-rut {
   @apply w-full;
-}
-
-/* Estilos adicionales para el estado de error */
-.p-invalid {
-  border-color: #6B6B6B !important;
 }
 
 /* Animación suave para transiciones */

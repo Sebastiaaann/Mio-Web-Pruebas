@@ -2,6 +2,7 @@
  * chatService.ts - Servicio para comunicación con Groq AI
  * Integración con Llama 3.3 70B via Groq API
  */
+import { logger } from '@/utils/logger'
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
@@ -106,7 +107,7 @@ export async function enviarMensaje(mensaje: string): Promise<Record<string, unk
       tokens: data.usage
     }
   } catch (error) {
-    console.error('Error en chatService (Groq):', error)
+    logger.error('Error en chatService (Groq):', error)
     return {
       exito: false,
       mensaje: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.',

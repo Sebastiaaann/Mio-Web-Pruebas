@@ -230,6 +230,53 @@ export const authService = {
   },
 
   /**
+   * Refrescar token JWT expirado
+   * Llama a POST /api/v1/auth/refresh con el token actual
+   * Si éxito: actualiza localStorage con el nuevo token
+   * Si falla: retorna false (el caller debe forzar logout)
+   */
+  async refrescarToken(): Promise<{ success: boolean; token?: string }> {
+    try {
+      const tokenActual = this.obtenerToken()
+      if (!tokenActual) {
+        return { success: false }
+      }
+
+      // Llamar al endpoint de refresh con fetch directo
+      // (no usar clienteApi para evitar loop infinito de retry)
+      const response = await fetch(
+        `${import.meta.env.VITE_API_HOMA_URL || 'https://apihoma.homa.cl:7200'}/api/v1/auth/refresh`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-KEY': tokenActual
+          }
+        }
+      )
+
+      if (!response.ok) {
+        logger.warn('Token refresh falló:', response.status)
+        return { success: false }
+      }
+
+      const datos = await response.json() as { success?: boolean; token?: string }
+
+      if (datos.token) {
+        // Actualizar token en localStorage (todas las lecturas posteriores lo usarán)
+        localStorage.setItem('mio-token', datos.token)
+        logger.info('Token refrescado exitosamente')
+        return { success: true, token: datos.token }
+      }
+
+      return { success: false }
+    } catch (error) {
+      logger.error('Error refrescando token:', error)
+      return { success: false }
+    }
+  },
+
+  /**
    * Obtener usuario actual
    */
   obtenerUsuario(): SessionMetaAuth | null {

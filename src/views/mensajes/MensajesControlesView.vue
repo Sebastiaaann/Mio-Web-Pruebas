@@ -10,6 +10,7 @@ import { useControlesStore } from '@/stores/salud/tiendaControles'
 import { enviarMensaje } from '@/services/chatService'
 import { storeToRefs } from 'pinia'
 import { Motion, AnimatePresence } from 'motion-v'
+import { logger } from '@/utils/logger';
 import { 
   Search, 
   Filter, 
@@ -247,7 +248,7 @@ onMounted(async () => {
       selectedControlId.value = controlesRealizados.value[0].id
     }
   } catch (e) {
-    console.error(e)
+    logger.error('Error loading controls:', e)
   } finally {
     cargando.value = false
   }

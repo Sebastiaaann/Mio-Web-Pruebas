@@ -3,6 +3,7 @@ import { ref, onMounted, onBeforeUnmount, watch, toRaw, computed } from 'vue';
 import Chart from 'chart.js/auto';
 import { useLazyLoad } from '@/composables/useLazyLoad';
 import { useTheme } from '@/composables/useTheme';
+import { logger } from '@/utils/logger';
 
 interface ChartData {
   labels?: string[];
@@ -154,7 +155,7 @@ const renderChart = () => {
       });
     }
   } catch (err) {
-    console.error("Error creating chart:", err);
+    logger.error("Error creating chart:", err);
   }
 };
 
@@ -184,7 +185,7 @@ onBeforeUnmount(() => {
     try {
       chartInstance.destroy();
     } catch (e) {
-      console.warn('Error destroying chart:', e);
+      logger.warn('Error destroying chart:', e);
     }
     chartInstance = null;
   }

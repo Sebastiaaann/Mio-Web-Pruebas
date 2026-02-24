@@ -9,6 +9,7 @@ import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/tiendaUsuario'
 import { useHealthStore } from '@/stores/tiendaSalud'
+import { logger } from '@/utils/logger';
 
 // Shadcn components
 import { Button } from '@/components/ui/button'
@@ -83,20 +84,20 @@ function handleControlClick(control) {
 
 function handleControlSubmit(data) {
   if (import.meta.env.DEV) {
-    console.log('Control registrado desde Dashboard:', data)
+    logger.info('Control registrado desde Dashboard:', data)
   }
 }
 
 function playVideo(video) {
   if (import.meta.env.DEV) {
-    console.log('Reproducir video:', video.titulo)
+    logger.info('Reproducir video:', video.titulo)
   }
   // TODO: Implementar reproductor de video
 }
 
 function handleEncuestaComplete(data) {
   if (import.meta.env.DEV) {
-    console.log('Encuesta completada:', data)
+    logger.info('Encuesta completada:', data)
   }
   // TODO: Procesar resultados de encuesta
 }

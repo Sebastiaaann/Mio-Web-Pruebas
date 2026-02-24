@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
+import { useTiendaServicios } from '@/stores/tiendaServicios'
 import {
   Carousel,
   CarouselContent,
@@ -25,8 +26,11 @@ const props = withDefaults(defineProps<{
 
 const router = useRouter()
 const { isMutual } = useTheme()
+const serviciosStore = useTiendaServicios()
 
-function irADetalle(): void {
+function irADetalle(item: MaterialAudiovisualItem): void {
+  // Registrar uso del material audiovisual (fire-and-forget)
+  serviciosStore.registrarUso(item.id, item.titulo)
   router.push(props.rutaDetalle)
 }
 </script>
@@ -44,7 +48,7 @@ function irADetalle(): void {
         v-for="item in items"
         :key="item.id"
         class="cursor-pointer"
-        @click="irADetalle"
+        @click="irADetalle(item)"
       >
         <div class="group">
           <div v-if="item.imagen" class="relative w-full aspect-video rounded-xl overflow-hidden mb-3">

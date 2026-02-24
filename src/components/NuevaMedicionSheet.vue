@@ -18,6 +18,7 @@ import {
   ArrowLeft
 } from 'lucide-vue-next'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
+import { logger } from '@/utils/logger';
 import { useHealthStore } from '@/stores/tiendaSalud'
 import { getAvailableProtocols } from '@/services/healthPlanService'
 import type { Control } from '@/types/salud'
@@ -83,7 +84,7 @@ async function cargarProtocolos() {
       throw new Error(result.error as string || 'No se pudieron cargar los protocolos')
     }
   } catch (err) {
-    console.error('Error cargando protocolos:', err)
+    logger.error('Error cargando protocolos:', err)
     error.value = (err as Error).message || 'Error al cargar los protocolos disponibles'
   } finally {
     isLoading.value = false
@@ -184,7 +185,7 @@ async function guardarMedicion(protocol: any) {
     setTimeout(() => { exito.value[protocolId] = false }, 3000)
 
   } catch (err) {
-    console.error('Error guardando medicion:', err)
+    logger.error('Error guardando medicion:', err)
     alert((err as Error).message || 'Error al guardar la medicion')
   } finally {
     guardando.value[protocolId] = false

@@ -5,6 +5,7 @@
  */
 
 import type { PiniaPluginContext, Store, StateTree } from 'pinia'
+import { logger } from '@/utils/logger'
 
 interface PersistConfig {
   full: string[]
@@ -70,11 +71,11 @@ export function piniaPersistPlugin({ store }: PiniaPluginContext): void {
       }
 
       if (import.meta.env.DEV) {
-        console.log(`📦 Store '${storeId}' restaurado desde localStorage`)
+        logger.info(`Store '${storeId}' restaurado desde localStorage`)
       }
     }
   } catch (error) {
-    console.error(`Error al restaurar store '${storeId}':`, error)
+    logger.error(`Error al restaurar store '${storeId}':`, error)
   }
 
   // Suscribirse a cambios y persistir
@@ -89,7 +90,7 @@ export function piniaPersistPlugin({ store }: PiniaPluginContext): void {
 
       localStorage.setItem(storageKey, JSON.stringify(dataToPersist))
     } catch (error) {
-      console.error(`Error al persistir store '${storeId}':`, error)
+      logger.error(`Error al persistir store '${storeId}':`, error)
     }
   }, { detached: true })
 }
@@ -106,7 +107,7 @@ export function clearPersistedStores(): void {
   })
 
   if (import.meta.env.DEV) {
-    console.log('🧹 Stores persistidos limpiados')
+    logger.info('Stores persistidos limpiados')
   }
 }
 
@@ -128,7 +129,7 @@ export function resetAllStores(pinia: { _s: Map<string, Store> }): void {
   clearPersistedStores()
 
   if (import.meta.env.DEV) {
-    console.log('🔄 Todos los stores han sido reseteados')
+    logger.info('Todos los stores han sido reseteados')
   }
 }
 

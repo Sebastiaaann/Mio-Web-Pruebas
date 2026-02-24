@@ -6,6 +6,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import DynamicWizard from '@/components/wizard/DynamicWizard.vue'
+import { logger } from '@/utils/logger'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,7 +28,7 @@ function handleClose() {
 
 // Manejar completado
 function handleComplete(data) {
-  console.log('Wizard completado:', data)
+  logger.info('Wizard completado:', data)
   // Opcional: Mostrar mensaje de éxito o redirigir
 }
 </script>

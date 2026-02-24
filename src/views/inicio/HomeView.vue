@@ -8,6 +8,7 @@ import { useConfigStore } from '@/stores/tiendaConfig';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { Bot, Check } from 'lucide-vue-next';
+import { logger } from '@/utils/logger';
 import { pacienteService } from '@/services/pacienteService';
 import type { Control, Medicion, Campana, EstadoControl, EstadoMedicion, TipoMedicion } from '@/types/salud';
 import { useSaludo } from '@/composables/useSaludo';
@@ -201,7 +202,7 @@ const materialAudiovisualItems = computed<MaterialAudiovisualItem[]>(() => {
         });
       } catch (e) {
         if (import.meta.env.DEV) {
-          console.error('Error parseando type_message:', e);
+          logger.error('Error parseando type_message:', e);
         }
         return true;
       }
@@ -240,7 +241,7 @@ async function cargarLogoPlanMutual(): Promise<void> {
     configStore.setLogoMutual(planMutual?.config?.logo || null)
   } catch (error) {
     if (import.meta.env.DEV) {
-      console.error('Error al cargar logo Mutual:', error)
+      logger.error('Error al cargar logo Mutual:', error)
     }
   }
 }
@@ -265,7 +266,7 @@ onMounted(async () => {
 watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
     if (!newPlan || newPlan === oldPlan) return;
 
-    console.log('Plan cambiado a:', newPlan, '- Recargando servicios...');
+    logger.info('Plan cambiado a:', newPlan, '- Recargando servicios...');
     await serviciosStore.cargarServicios();
 }, { immediate: false });
 </script>

@@ -1,17 +1,16 @@
 <script setup>
 import { onMounted } from 'vue';
-import Card from 'primevue/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
-// Opcional: efectos de entrada o configuraciones
 onMounted(() => {
-  // console.log('🏠 Paso de bienvenida cargado');
+  // Paso de bienvenida cargado
 });
 </script>
 
 <template>
   <div class="paso-bienvenida">
     <Card class="welcome-card border-none shadow-none">
-      <template #header>
+      <CardHeader>
         <div class="text-center py-8">
           <div class="welcome-icon mb-6">
             <!-- Icono minimalista de corazón/salud -->
@@ -27,9 +26,9 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </template>
+      </CardHeader>
 
-      <template #content>
+      <CardContent>
         <div class="text-center space-y-6">
           <!-- Mensaje principal -->
           <div>
@@ -126,7 +125,7 @@ onMounted(() => {
             </p>
           </div>
         </div>
-      </template>
+      </CardContent>
     </Card>
   </div>
 </template>

@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { clienteApi } from '@/utils/clienteApi'
+import { getProtocolObservations } from '@/services/protocolService'
+import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import type {
   Medicion,
   EstadoMedicion,
@@ -23,13 +25,8 @@ export const useMedicionesStore = defineStore('mediciones', () => {
     error.value = null
 
     try {
-      const sessionMeta = localStorage.getItem('mio-session-meta')
-      if (!sessionMeta) {
-        error.value = 'Sesión no disponible'
-        return
-      }
-
-      const { patient_id } = JSON.parse(sessionMeta) as { patient_id?: string | number }
+      const usuarioStore = useTiendaUsuario()
+      const patient_id = usuarioStore.usuario?.patient_id
       if (!patient_id) {
         error.value = 'Paciente no disponible'
         return
@@ -66,15 +63,12 @@ export const useMedicionesStore = defineStore('mediciones', () => {
 
   async function fetchHistorial(protocolId: string): Promise<void> {
     try {
-      const sessionMeta = localStorage.getItem('mio-session-meta')
-      if (!sessionMeta) {
-        return
-      }
-
-      const { patient_id } = JSON.parse(sessionMeta) as { patient_id?: string | number }
+      const usuarioStore = useTiendaUsuario()
+      const patient_id = usuarioStore.usuario?.patient_id
       if (!patient_id) return
 
-      const response = await clienteApi.get<Record<string, any>>(`/api/v1/protocol/observations/${patient_id}/${protocolId}`)
+      // Usar servicio centralizado (protocolService) en vez de clienteApi directo
+      const response = await getProtocolObservations(String(patient_id), protocolId) as Record<string, any>
       const observations = response?.data?.observations || []
 
       historialMediciones.value[protocolId] = observations

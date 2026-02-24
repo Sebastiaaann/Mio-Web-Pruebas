@@ -7,6 +7,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { getAvailableProtocols } from '@/services/healthPlanService'
+import { logger } from '@/utils/logger';
 import {
   HelpCircle,
   Check,
@@ -24,7 +25,7 @@ import {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
-} from "@/components/bearnie/carousel"
+} from "@/components/medicion-carousel/carousel"
 import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
 
@@ -56,18 +57,18 @@ async function loadProtocols() {
       throw new Error('No se encontró ID del paciente. Asegúrate de haber iniciado sesión correctamente.')
     }
 
-    console.log('Cargando protocolos para paciente ID:', patientId)
+    logger.info('Cargando protocolos para paciente ID:', patientId)
 
     const result = await getAvailableProtocols(patientId, { incluirDuplicados: true })
 
     if (result.success) {
       protocols.value = result.data
-      console.log('Protocolos cargados:', protocols.value)
+      logger.info('Protocolos cargados:', protocols.value)
     } else {
       throw new Error(result.error || 'No se pudieron cargar los protocolos')
     }
   } catch (err) {
-    console.error('Error cargando protocolos:', err)
+    logger.error('Error cargando protocolos:', err)
     error.value = err.message || 'Error al cargar los protocolos disponibles'
   } finally {
     isLoading.value = false
@@ -139,8 +140,8 @@ function getProtocolColor(name) {
       :mostrar-saludo="false"
       :show-notification-badge="true"
       notification-badge-color="#10B981"
-      @click-notification="console.log('Notificaciones clicked')"
-      @click-profile="console.log('Perfil clicked')"
+      @click-notification="logger.info('Notificaciones clicked')"
+      @click-profile="logger.info('Perfil clicked')"
     />
 
     <!-- Content Area -->

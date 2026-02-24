@@ -7,6 +7,7 @@ import { storeToRefs } from 'pinia'
 import { Motion, AnimatePresence } from 'motion-v'
 import { useMensajesStore } from '@/stores/tiendaMensajes'
 import { useRouter } from 'vue-router'
+import { logger } from '@/utils/logger';
 import { 
   ChevronRight, 
   Inbox, 
@@ -32,7 +33,7 @@ onMounted(async () => {
   try {
     await mensajesStore.refreshMessages()
   } catch (e) {
-    console.error(e)
+    logger.error('Error refreshing messages:', e)
   } finally {
     isLoading.value = false
   }

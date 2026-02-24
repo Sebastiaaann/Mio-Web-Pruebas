@@ -1,6 +1,7 @@
 // src/router/index.ts
 import { createRouter, createWebHistory, type RouteRecordRaw, type RouteLocationNormalized } from 'vue-router'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
+import { logger } from '@/utils/logger'
 
 /**
  * Helper para lazy loading con manejo de errores
@@ -11,12 +12,12 @@ function lazyLoad(importFn: LazyComponent, nombreComponente = 'Componente'): Laz
   return () => importFn()
     .then(module => {
       if (import.meta.env.DEV) {
-        console.log(`✅ ${nombreComponente} cargado`)
+        logger.info(`${nombreComponente} cargado`)
       }
       return module
     })
     .catch(error => {
-      console.error(`❌ Error cargando ${nombreComponente}:`, error)
+      logger.error(`Error cargando ${nombreComponente}:`, error)
       throw error
     })
 }
@@ -166,7 +167,9 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/onboarding',
-    redirect: '/en-construccion'
+    name: 'onboarding',
+    component: lazyLoad(() => import('@/views/onboarding/OnboardingView.vue'), 'Onboarding'),
+    meta: { requiresAuth: true, immersive: true, title: 'Incorporación' }
   },
   {
     path: '/encuesta',
@@ -200,12 +203,12 @@ router.beforeEach((to: RouteLocationNormalized) => {
 
 // Manejo global de errores de navegación
 router.onError((error, to) => {
-  console.error('❌ Error de navegación:', error)
+  logger.error('Error de navegación:', error)
 
   if (error.message?.includes('Failed to fetch dynamically imported module')
     || error.message?.includes('Importing a module script failed')
     || error.message?.includes('error loading dynamically imported module')) {
-    console.warn('🔄 Recargando página por error de carga de módulo...')
+    logger.warn('Recargando página por error de carga de módulo...')
     window.location.reload()
     return
   }

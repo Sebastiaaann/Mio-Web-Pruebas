@@ -208,13 +208,17 @@ export const useTiendaUsuario = defineStore('usuario', () => {
   /**
    * Cerrar sesión
    */
-  function cerrarSesion(): void {
+  async function cerrarSesion(): Promise<void> {
     usuario.value = null
     token.value = null
     error.value = null
 
-    authService.cerrarSesion()
-    logger.info('👋 Sesión cerrada')
+    try {
+      await authService.cerrarSesion()
+    } catch (e) {
+      logger.warn('Error al cerrar sesión en servicio, limpieza local completada', e)
+    }
+    logger.info('Sesión cerrada')
   }
 
   /**

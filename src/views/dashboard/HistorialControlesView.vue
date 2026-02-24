@@ -6,6 +6,7 @@ import { useHealthStore } from '@/stores/tiendaSalud';
 import { storeToRefs } from 'pinia';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
+import { logger } from '@/utils/logger';
 import { 
   Bell, 
   ClipboardList, 
@@ -85,7 +86,7 @@ async function cargarDatosReales() {
     controlesAPI.value = transformarObservacionesAControles();
     
   } catch (error) {
-    console.error('Error al cargar datos:', error);
+    logger.error('Error al cargar datos:', error);
   } finally {
     estaCargando.value = false;
   }
@@ -307,15 +308,15 @@ const cambiarPagina = (pagina) => {
 };
 
 const verDetalle = (control) => {
-  console.log('Ver detalle:', control);
+  logger.info('Ver detalle:', control);
 };
 
 const descargarDocumento = (control) => {
-  console.log('Descargar:', control);
+  logger.info('Descargar:', control);
 };
 
 const compartirControl = (control) => {
-  console.log('Compartir:', control);
+  logger.info('Compartir:', control);
 };
 
 // PDF State
@@ -564,14 +565,14 @@ onMounted(() => {
     <template v-else>
       <!-- Header -->
        <HeaderCompleto
-         titulo="Historial de Controles"
-         :subtitulo="`Revisa tu historial médico completo • ${controlesAPI.length} controles registrados`"
-         :mostrar-saludo="false"
-         :show-notification-badge="true"
-         notification-badge-color="#10B981"
-         @click-notification="console.log('Notificaciones clicked')"
-         @click-profile="console.log('Perfil clicked')"
-       />
+          titulo="Historial de Controles"
+          :subtitulo="`Revisa tu historial médico completo • ${controlesAPI.length} controles registrados`"
+          :mostrar-saludo="false"
+          :show-notification-badge="true"
+          notification-badge-color="#10B981"
+          @click-notification="logger.info('Notificaciones clicked')"
+          @click-profile="logger.info('Perfil clicked')"
+        />
 
       <!-- Content -->
       <div class="p-4 sm:p-8 space-y-6 flex-1 flex flex-col min-h-0">

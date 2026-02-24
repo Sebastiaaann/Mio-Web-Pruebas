@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import ClipButton from '@/components/ui/ClipButton.vue'
 import { Bell } from 'lucide-vue-next'
 import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
+import { logger } from '@/utils/logger';
 
 const props = defineProps({
   titulo: { type: String, required: true },
@@ -57,7 +58,7 @@ const motionTransition = computed(() =>
                 bg-class="bg-orange-100"
                 color-class="bg-orange-500"
                 text-class="text-orange-500"
-                @success="() => console.log('Acción completada:', titulo)"
+                @success="() => logger.info('Acción completada:', titulo)"
               >
                 <template #baseIcon><Bell :size="18" :stroke-width="2.2" /></template>
                 <template #filledIcon><Bell :size="18" :stroke-width="2.2" fill="currentColor" /></template>

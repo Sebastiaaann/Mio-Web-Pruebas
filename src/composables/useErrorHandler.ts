@@ -22,6 +22,7 @@
  */
 
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
+import { logger } from '@/utils/logger'
 
 /** Opciones para la ejecución con manejo de errores */
 export interface ErrorHandlerOptions {
@@ -150,7 +151,7 @@ export function useErrorHandler(): ErrorHandlerReturn {
         retryCount.value = attempt
 
         if (logError) {
-          console.error(`Error en intento ${attempt + 1}/${retry + 1}:`, e)
+          logger.error(`Error en intento ${attempt + 1}/${retry + 1}:`, e)
         }
 
         // Si no es el último intento, esperar antes de reintentar

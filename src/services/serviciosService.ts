@@ -105,6 +105,44 @@ export const serviciosService = {
   },
 
   /**
+   * Registrar uso de un servicio (tracking)
+   * Llama a POST /api/v1/services/setuseservice
+   * Fire-and-forget: no bloquea al usuario si falla
+   */
+  async registrarUsoServicio(
+    servicioId: number | string,
+    nombreServicio?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const user = authService.obtenerUsuario()
+      if (!user || !user.patient_id) {
+        throw new Error('No hay información de paciente disponible')
+      }
+
+      await clienteApi.post('/api/v1/services/setuseservice', {
+        patient_id: user.patient_id,
+        service_id: servicioId,
+        service_name: nombreServicio || '',
+      })
+
+      if (import.meta.env.DEV) {
+        logger.info('Uso de servicio registrado:', {
+          servicioId,
+          nombreServicio: nombreServicio || '(sin nombre)',
+        })
+      }
+
+      return { success: true }
+    } catch (error) {
+      // No bloquear flujo del usuario por errores de tracking
+      if (import.meta.env.DEV) {
+        logger.error('Error al registrar uso de servicio:', error)
+      }
+      return { success: false, error: (error as Error).message }
+    }
+  },
+
+  /**
    * Obtener un servicio específico por ID
    * TODO: Revisar si la API tiene endpoint individual o filtramos de la lista
    */

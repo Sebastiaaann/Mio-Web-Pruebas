@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Motion } from 'motion-v';
-import InputText from 'primevue/inputtext';
-import Checkbox from 'primevue/checkbox';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const props = defineProps({
   isOpen: Boolean
@@ -107,18 +107,18 @@ const switchToLogin = () => {
             <form class="w-full space-y-5" @submit.prevent="handleLogin">
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Ingresa tu correo electrónico</label>
-                    <InputText v-model="email" placeholder="micorreo@mail.com" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
+                    <Input v-model="email" placeholder="micorreo@mail.com" class="w-full rounded-xl border-slate-200 focus:border-[#8B5CF6] bg-slate-50 py-3 text-lg text-slate-600 placeholder:text-slate-300" />
                 </div>
 
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Ingresa tu contraseña</label>
                     <div class="relative">
-                        <InputText v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••••••" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
+                        <Input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••••••" class="w-full rounded-xl border-slate-200 focus:border-[#8B5CF6] bg-slate-50 py-3 text-lg text-slate-600 placeholder:text-slate-300" />
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 ml-1">
-                    <Checkbox v-model="showPassword" :binary="true" inputId="showPass" class="border-slate-300!" />
+                    <Checkbox v-model="showPassword" id="showPass" />
                     <label for="showPass" class="text-slate-600 cursor-pointer select-none">Ver contraseña</label>
                 </div>
 
@@ -140,22 +140,22 @@ const switchToLogin = () => {
             </div>
 
             <form class="w-full space-y-5" @submit.prevent="handleRegister">
-                 <!-- RUT -->
+             <!-- RUT -->
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">RUT</label>
-                    <InputText v-model="rut" placeholder="Ingresa tu RUT" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
+                    <Input v-model="rut" placeholder="Ingresa tu RUT" class="w-full rounded-xl border-slate-200 focus:border-[#8B5CF6] bg-slate-50 py-3 text-lg text-slate-600 placeholder:text-slate-300" />
                 </div>
 
                  <!-- Email -->
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Correo electrónico</label>
-                    <InputText v-model="registerEmail" placeholder="micorreo@mail.com" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
+                    <Input v-model="registerEmail" placeholder="micorreo@mail.com" class="w-full rounded-xl border-slate-200 focus:border-[#8B5CF6] bg-slate-50 py-3 text-lg text-slate-600 placeholder:text-slate-300" />
                 </div>
 
                  <!-- Confirmar email -->
                 <div class="space-y-2">
                     <label class="block text-sm font-bold text-slate-700 ml-1">Reingresa tu Correo electrónico</label>
-                    <InputText v-model="confirmEmail" placeholder="Vuelve a ingresar tu email" class="w-full rounded-xl! border-slate-200! focus:border-[#8B5CF6]! bg-slate-50! py-3! text-lg! text-slate-600! placeholder:text-slate-300! shadow-none ring-0!" />
+                    <Input v-model="confirmEmail" placeholder="Vuelve a ingresar tu email" class="w-full rounded-xl border-slate-200 focus:border-[#8B5CF6] bg-slate-50 py-3 text-lg text-slate-600 placeholder:text-slate-300" />
                 </div>
 
                 <!-- Actions -->
@@ -172,16 +172,8 @@ const switchToLogin = () => {
 </template>
 
 <style scoped>
-/* PrimeVue Overrides for exact match */
-:deep(.p-inputtext:enabled:focus) {
-    box-shadow: none;
-    border-color: #8B5CF6;
-}
-:deep(.p-checkbox-box) {
-    border-radius: 4px;
-    border-color: #cbd5e1;
-}
-:deep(.p-checkbox.p-highlight .p-checkbox-box) {
+/* Custom checkbox styling */
+:deep([data-state="checked"]) {
     background: #8B5CF6;
     border-color: #8B5CF6;
 }

@@ -7,6 +7,7 @@ import Card from 'primevue/card';
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { useOnboardingStore } from '@/stores/tiendaIncorporacion';
+import { logger } from '@/utils/logger';
 
 // Componentes de los pasos
 import PasoBienvenida from '@/components/onboarding/PasoBienvenida.vue';
@@ -107,7 +108,7 @@ async function enviarFormulario() {
     }
     
   } catch (error) {
-    console.error('Error al enviar onboarding:', error);
+    logger.error('Error al enviar onboarding:', error);
     toast.add({
       severity: 'error',
       summary: 'Error',

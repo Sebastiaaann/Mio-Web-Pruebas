@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { pacienteService } from '@/services/pacienteService'
+import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { logger } from '@/utils/logger'
 
 interface CampanaNormalizada {
@@ -27,32 +28,18 @@ export const useTiendaCampanas = defineStore('tiendaCampanas', () => {
   const campanas = ref<CampanaNormalizada[]>([])
   const cargando = ref(false)
   const error = ref<string | null>(null)
+  const campanasInicializadas = ref(false)
   const todasLasCampanas = ref<CampanaNormalizada[]>([])
   const cargandoTodas = ref(false)
   const errorTodas = ref<string | null>(null)
 
   // Actions
   async function cargarCampanas(): Promise<void> {
-    // Obtener patient_id de localStorage (mismo metodo que tiendaSalud.js)
-    const sessionMeta = localStorage.getItem('mio-session-meta')
-    const token = localStorage.getItem('mio-token')
+    const usuarioStore = useTiendaUsuario()
+    const patientId = usuarioStore.usuario?.patient_id
 
-    if (!sessionMeta || !token) {
+    if (!usuarioStore.estaAutenticado || !patientId) {
       logger.warn('No hay sesión activa, no se pueden cargar campañas')
-      return
-    }
-
-    let patientId: string | number | undefined
-    try {
-      const { patient_id } = JSON.parse(sessionMeta) as { patient_id?: string | number }
-      patientId = patient_id
-    } catch (e) {
-      logger.error('Error al parsear session-meta:', e)
-      return
-    }
-
-    if (!patientId) {
-      logger.warn('No hay patient_id en session-meta')
       return
     }
 
@@ -86,6 +73,7 @@ export const useTiendaCampanas = defineStore('tiendaCampanas', () => {
         error.value = res.error || 'No hay campañas disponibles'
         campanas.value = []
       }
+      campanasInicializadas.value = true
     } catch (err) {
       logger.error('Error en cargarCampanas store:', err)
       error.value = 'Error al cargar campañas'
@@ -139,6 +127,7 @@ export const useTiendaCampanas = defineStore('tiendaCampanas', () => {
     campanas.value = []
     cargando.value = false
     error.value = null
+    campanasInicializadas.value = false
     todasLasCampanas.value = []
     cargandoTodas.value = false
     errorTodas.value = null
@@ -148,6 +137,7 @@ export const useTiendaCampanas = defineStore('tiendaCampanas', () => {
     campanas,
     cargando,
     error,
+    campanasInicializadas,
     todasLasCampanas,
     cargandoTodas,
     errorTodas,

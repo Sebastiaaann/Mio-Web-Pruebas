@@ -6,9 +6,12 @@ const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 10000
 
 /**
  * Cliente API Centralizado
- * Maneja la inyección de tokens y control de errores para servicios HOMA.
+ * Maneja la inyección de tokens, control de errores y refresh automático de token.
  */
 class ClienteApi {
+  // Mutex para evitar múltiples refresh simultáneos
+  private refreshEnProgreso: Promise<boolean> | null = null
+
   /**
    * Obtiene el token de almacenamiento local sin dependencias circulares
    */
@@ -17,9 +20,77 @@ class ClienteApi {
   }
 
   /**
+   * Intenta refrescar el token JWT una sola vez
+   * Usa un mutex para evitar race conditions cuando múltiples requests
+   * reciben 401 simultáneamente
+   */
+  private async intentarRefreshToken(): Promise<boolean> {
+    // Si ya hay un refresh en curso, esperar su resultado
+    if (this.refreshEnProgreso) {
+      return this.refreshEnProgreso
+    }
+
+    // Crear promise de refresh con mutex
+    this.refreshEnProgreso = (async () => {
+      try {
+        // Import dinámico para evitar dependencias circulares
+        const { authService } = await import('@/services/authService')
+        const resultado = await authService.refrescarToken()
+        return resultado.success
+      } catch (error) {
+        logger.error('Error en refresh de token:', error)
+        return false
+      } finally {
+        // Liberar mutex
+        this.refreshEnProgreso = null
+      }
+    })()
+
+    return this.refreshEnProgreso
+  }
+
+  /**
    * Realiza una petición fetch inyectando el token de autenticación
+   * En caso de 401, intenta refresh del token y reintenta UNA vez
    */
   async request<T = unknown>(endpoint: string, opciones: RequestConfig = {}): Promise<T> {
+    const resultado = await this._ejecutarRequest<T>(endpoint, opciones)
+
+    // Si recibimos 401, intentar refresh y reintentar
+    if (resultado.status401) {
+      const refreshExitoso = await this.intentarRefreshToken()
+
+      if (refreshExitoso) {
+        logger.info(`Token refrescado, reintentando: ${endpoint}`)
+        const retry = await this._ejecutarRequest<T>(endpoint, opciones)
+
+        if (retry.status401) {
+          // El refresh no solucionó el problema, forzar logout
+          window.dispatchEvent(new CustomEvent('auth:session-expired'))
+          throw new Error('Sesión expirada')
+        }
+
+        if (retry.error) throw retry.error
+        return retry.data as T
+      }
+
+      // Refresh falló, forzar logout
+      window.dispatchEvent(new CustomEvent('auth:session-expired'))
+      throw new Error('Sesión expirada')
+    }
+
+    if (resultado.error) throw resultado.error
+    return resultado.data as T
+  }
+
+  /**
+   * Ejecuta la petición HTTP real
+   * Retorna un objeto con el resultado para que el caller pueda decidir qué hacer
+   */
+  private async _ejecutarRequest<T>(
+    endpoint: string,
+    opciones: RequestConfig
+  ): Promise<{ data?: T; error?: Error; status401?: boolean }> {
     const controller = new AbortController()
     const timeout = opciones.timeout ?? API_TIMEOUT
     const timeoutId = setTimeout(() => controller.abort(), timeout)
@@ -48,32 +119,30 @@ class ClienteApi {
 
       clearTimeout(timeoutId)
 
-      // Manejo centralizado de errores 401 (Token Expirado)
+      // Señalizar 401 para que el caller intente refresh
       if (response.status === 401) {
-        // Opcional: Disparar evento de logout global si se desea
-        window.dispatchEvent(new CustomEvent('auth:session-expired'))
-        throw new Error('Sesión expirada')
+        return { status401: true }
       }
 
       if (!response.ok) {
         const errorBody = (await response.json().catch(() => ({}))) as { error?: string }
-        throw new Error(errorBody.error || `Error ${response.status}: ${response.statusText}`)
+        return { error: new Error(errorBody.error || `Error ${response.status}: ${response.statusText}`) }
       }
 
       // Si no hay contenido (204 No Content), devolver null
-      if (response.status === 204) return null as T
+      if (response.status === 204) return { data: null as T }
 
-      return (await response.json()) as T
+      return { data: (await response.json()) as T }
     } catch (error) {
       clearTimeout(timeoutId)
 
       if (error instanceof Error && error.name === 'AbortError') {
         logger.error(`Timeout en peticion a ${endpoint}`)
-        throw new Error('La solicitud tardó demasiado. Verifique su conexión.')
+        return { error: new Error('La solicitud tardó demasiado. Verifique su conexión.') }
       }
 
       logger.error(`Error API en ${endpoint}:`, error)
-      throw error
+      return { error: error as Error }
     }
   }
 

@@ -2,6 +2,8 @@
 import { defineStore } from 'pinia'
 import { ref, reactive, computed } from 'vue'
 import { validarRut, validarLongitud, validarRango, validarTextoLibre } from '@/utils/validadores'
+import { logger } from '@/utils/logger'
+import { pacienteService } from '@/services/pacienteService'
 
 interface DatosPersonales {
   rut: string
@@ -187,6 +189,53 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     }
   }
 
+  /**
+   * Mapear género del formato store (español) al formato API
+   */
+  function _mapearGenero(genero: string): string {
+    const mapa: Record<string, string> = {
+      masculino: 'M',
+      femenino: 'F',
+      otro: 'O',
+      no_decir: 'N',
+    }
+    return mapa[genero] || genero
+  }
+
+  /**
+   * Mapear datos del store al formato esperado por POST /api/v1/patients
+   * Store format → API format:
+   *   rut → document (rut)
+   *   nombre → name
+   *   apellido → lastname
+   *   genero ('masculino') → gender ('M')
+   *   datosHabitos → metadata (JSON extra para contexto de salud)
+   */
+  function _mapearDatosParaApi(): Record<string, unknown> {
+    return {
+      // Datos principales del paciente
+      name: datosPersonales.nombre.trim(),
+      lastname: datosPersonales.apellido.trim(),
+      rut: datosPersonales.rut.trim(),
+      gender: _mapearGenero(datosPersonales.genero),
+
+      // Datos de hábitos como metadata adicional
+      metadata: {
+        cardiovascular: { ...datosHabitos.cardiovascular },
+        estilo_vida: {
+          tabaquismo: datosHabitos.estiloVida.tabaquismo,
+          consumo_agua: datosHabitos.estiloVida.consumoAgua,
+        },
+        nutricion: {
+          preferencias: datosHabitos.nutricion.preferencias,
+          alergias: datosHabitos.nutricion.alergias,
+        },
+        onboarding_version: '1.0',
+        onboarding_fecha: new Date().toISOString(),
+      },
+    }
+  }
+
   async function enviarFormularioCompleto(): Promise<{ success: boolean; data?: unknown; error?: string }> {
     try {
       if (!esPasoCompleto.value(1) || !esPasoCompleto.value(2)) {
@@ -198,23 +247,27 @@ export const useOnboardingStore = defineStore('onboarding', () => {
         throw new Error(resultadoValidacion.errores[0] || 'Datos inválidos')
       }
 
-      const datos = datosCompletos.value
-
       if (import.meta.env.DEV) {
-        console.log('📊 Datos Personales:', datos.datosPersonales)
-        console.log('🫀 Datos de Salud:', datos.datosHabitos)
+        logger.info('Datos Personales:', datosPersonales)
+        logger.info('Datos de Salud:', datosHabitos)
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Mapear datos del store al formato API y enviar
+      const datosApi = _mapearDatosParaApi()
+      const resultado = await pacienteService.crearPaciente(datosApi)
+
+      if (!resultado.success) {
+        throw new Error(resultado.error || 'Error al crear paciente en la API')
+      }
 
       formularioEnviado.value = true
 
       if (import.meta.env.DEV) {
-        console.log('✅ Onboarding enviado exitosamente')
+        logger.info('Onboarding enviado exitosamente a la API')
       }
-      return { success: true, data: datos }
+      return { success: true, data: resultado.data }
     } catch (error) {
-      console.error('❌ Error al enviar onboarding:', error)
+      logger.error('Error al enviar onboarding:', error)
       return { success: false, error: (error as Error).message }
     }
   }

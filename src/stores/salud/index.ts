@@ -158,7 +158,7 @@ export const useHealthStore = defineStore('health', () => {
       
       return { success: false, error: 'Error al guardar la medición' }
     } catch (error) {
-      console.error('Error agregando control:', error)
+      logger.error('Error agregando control:', error)
       return { 
         success: false, 
         error: (error as Error).message || 'Error al guardar la medición' 

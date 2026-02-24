@@ -164,41 +164,29 @@ export const pacienteService = {
     }
   },
 
+  // NOTA: obtenerServicios() fue eliminado - usar serviciosService.obtenerServicios() como fuente única
+
   /**
-   * Obtener servicios del paciente
+   * Crear un nuevo paciente en la API
+   * Llama a POST /api/v1/patients
+   * Usado por el onboarding para registrar pacientes nuevos
    */
-  async obtenerServicios(patientId: number | string): Promise<ResultadoGenerico> {
-    if (!patientId) {
-      return { success: false, error: 'ID de paciente no proporcionado' }
-    }
-
+  async crearPaciente(datos: Record<string, unknown>): Promise<ResultadoGenerico> {
     try {
-      const datos = await clienteApi.get<Record<string, unknown>>(`/api/v1/patients/${patientId}/services`)
+      const respuesta = await clienteApi.post('/api/v1/patients', datos)
 
-      // Manejar múltiples estructuras de respuesta
-      if ((datos as any)?.success && (datos as any)?.data?.services) {
-        return {
-          success: true,
-          data: (datos as any).data
-        }
-      } else if ((datos as any)?.services) {
-        return {
-          success: true,
-          servicios: (datos as any).services
-        } as ResultadoGenerico
-      } else if (Array.isArray(datos)) {
-        return {
-          success: true,
-          servicios: datos
-        } as ResultadoGenerico
+      if (import.meta.env.DEV) {
+        logger.info('[crearPaciente] Paciente creado:', {
+          camposEnviados: Object.keys(datos).length,
+        })
       }
 
-      return { success: true, data: datos }
+      return { success: true, data: respuesta }
     } catch (error) {
-      logger.error('Error obteniendo servicios:', error)
+      logger.error('Error creando paciente:', error)
       return {
         success: false,
-        error: 'No se pudieron cargar los servicios. Por favor intente más tarde.'
+        error: 'No se pudo crear el paciente. Por favor intente más tarde.',
       }
     }
   },
@@ -244,6 +232,35 @@ export const pacienteService = {
       return {
         success: false,
         error: 'No se pudo cargar el material audiovisual. Por favor intente más tarde.'
+      }
+    }
+  },
+
+  /**
+   * Actualizar plan activo del paciente en la API
+   * Llama a PUT /api/v1/patients/plans/{patient_id}/{plan_id}
+   * para cambiar el plan activo y actualizar los servicios asociados
+   */
+  async actualizarPlan(patientId: number | string, planId: number | string): Promise<ResultadoGenerico> {
+    if (!patientId) {
+      return { success: false, error: 'ID de paciente no proporcionado' }
+    }
+    if (!planId) {
+      return { success: false, error: 'ID de plan no proporcionado' }
+    }
+
+    try {
+      const respuesta = await clienteApi.put(`/api/v1/patients/plans/${patientId}/${planId}`, {})
+      logger.info('[actualizarPlan] Plan actualizado correctamente:', {
+        patientId: `[ID:${patientId.toString().slice(0, 3)}...]`,
+        planId
+      })
+      return { success: true, data: respuesta }
+    } catch (error) {
+      logger.error('Error actualizando plan:', error)
+      return {
+        success: false,
+        error: 'No se pudo cambiar el plan. Por favor intente más tarde.'
       }
     }
   },

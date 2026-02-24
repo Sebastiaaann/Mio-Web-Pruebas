@@ -8,14 +8,14 @@
  */
 
 import { logger } from '@/utils/logger'
+import { clienteApi } from '@/utils/clienteApi'
 
-// URLs de APIs
-const API_HOMA_URL = 'https://apihoma.homa.cl:7200'
+// URL del proxy para HOMA Center (diferente base URL que clienteApi)
 const HOMA_CENTER_PROXY_URL = '/api/homa-center/batch'
 
 /**
  * Obtener token de autenticación del almacenamiento local
- * NOTA: Este token se obtiene de la API HOMA normal durante el login
+ * NOTA: Solo se usa para el proxy de HOMA Center (que no pasa por clienteApi)
  */
 function obtenerTokenAuth(): string | null {
   if (typeof window !== 'undefined') {
@@ -143,16 +143,10 @@ async function obtenerTiposObservacion(): Promise<Map<string, ObservationType>> 
     return observationTypesPromise
   }
 
-  // Crear la promesa de llamada
+  // Crear la promesa de llamada - usando clienteApi centralizado
   observationTypesPromise = (async () => {
     try {
-      const response = await fetch(`${API_HOMA_URL}/api/v1/batch/observation_types`)
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`)
-      }
-      
-      const data = await response.json() as { success: boolean; data: { result: ObservationType[] } }
+      const data = await clienteApi.get<{ success: boolean; data: { result: ObservationType[] } }>('/api/v1/batch/observation_types')
 
       if (!data.success || !data.data?.result) {
         throw new Error('No se pudieron obtener los tipos de observación')

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 /**
  * DynamicWizard - Wizard genérico que carga pasos dinámicamente desde protocolos API
  * 
@@ -16,6 +16,7 @@ import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { useHealthStore } from '@/stores/tiendaSalud'
 import { useAlturaPaciente } from '@/composables/useAlturaPaciente'
 import { getProtocol, saveProtocolObservations } from '@/services/protocolService'
+import { logger } from '@/utils/logger'
 
 // Componentes de pasos
 import QuestionStep from './step-types/QuestionStep.vue'
@@ -139,12 +140,12 @@ async function loadProtocol() {
   stepValid.value = false
 
   try {
-    console.log('Cargando protocolo:', props.protocolId)
+    logger.info('Cargando protocolo:', { protocolId: props.protocolId })
 
     // Usar el servicio REST directamente
     const result = await getProtocol(props.protocolId)
 
-    console.log('Resultado de la API:', result)
+    logger.info('Resultado de la API recibido', { protocolId: props.protocolId })
 
     if (!result) {
       throw new Error('No se pudo cargar el protocolo')
@@ -155,8 +156,8 @@ async function loadProtocol() {
     protocolData.value = protocol
     parseProtocolSteps(protocol)
   } catch (err) {
-    console.error('Error cargando protocolo:', err)
-    error.value = err.message || 'No se pudo cargar el protocolo. Por favor intenta nuevamente.'
+    logger.error('Error cargando protocolo:', err)
+    error.value = (err as Error).message || 'No se pudo cargar el protocolo. Por favor intenta nuevamente.'
   } finally {
     isLoading.value = false
   }
@@ -174,7 +175,7 @@ function parseProtocolSteps(protocol) {
       ? JSON.parse(protocol.diagram)
       : protocol.diagram
 
-    console.log('Diagrama parseado:', diagram)
+    logger.info('Diagrama parseado', { componentesCount: (diagram.components || []).length })
 
     // La API retorna { components: [...], links: [...] }
     const components = diagram.components || []
@@ -186,8 +187,10 @@ function parseProtocolSteps(protocol) {
       return
     }
 
-    console.log('Componentes encontrados:', components.length)
-    console.log('Links encontrados:', links.length)
+    logger.info('Protocolo procesado', {
+      componentesCount: components.length,
+      linksCount: links.length
+    })
 
     // Crear mapa de condiciones por componente destino
     const conditionsByTarget = {}
@@ -204,7 +207,7 @@ function parseProtocolSteps(protocol) {
       }
     })
 
-    console.log('Condiciones por target:', conditionsByTarget)
+    logger.info('Condiciones por target procesadas', { count: Object.keys(conditionsByTarget).length })
 
     // Ordenar por z_order
     components.sort((a, b) => (a.z_order || 0) - (b.z_order || 0))
@@ -213,7 +216,6 @@ function parseProtocolSteps(protocol) {
     steps.value = components.filter(comp => {
       const validTypes = ['question', 'tensiometer', 'weight', 'glucometer', 'text']
       const type = comp.dynamic_data?.observation_type?.type
-      console.log('Componente:', comp.id, 'Tipo:', type)
       return validTypes.includes(type)
     }).map(comp => ({
       id: comp.id,
@@ -225,10 +227,10 @@ function parseProtocolSteps(protocol) {
       conditions: conditionsByTarget[comp.id] || null
     }))
 
-    console.log('Pasos procesados:', steps.value)
+    logger.info('Pasos procesados', { count: steps.value.length })
 
   } catch (err) {
-    console.error('Error parseando diagrama:', err)
+    logger.error('Error parseando diagrama:', err)
     error.value = 'Error al procesar el protocolo'
   }
 }
@@ -482,8 +484,7 @@ async function submitWizard() {
       throw new Error('No hay observaciones para guardar')
     }
     
-    console.log('Enviando observaciones a HOMA Center:', {
-      patientId,
+    logger.info('Enviando observaciones', {
       protocolId: props.protocolId,
       observationsCount: observations.length
     })
@@ -500,18 +501,15 @@ async function submitWizard() {
     
     // Verificar que se guardó correctamente (la API retorna el batch con ID)
     if (result && result.id) {
-      console.log('Control guardado exitosamente:', {
+      logger.info('Control guardado exitosamente', {
         batchId: result.id,
-        patientId: result.patientId,
         observationsCount: result.observations.length
       })
       
       try {
         await healthStore.fetchAllHealthData()
       } catch (fetchError) {
-        if (import.meta.env.DEV) {
-          console.error('Error al refrescar datos de salud:', fetchError)
-        }
+        logger.warn('Error al refrescar datos de salud:', fetchError)
       }
 
       // Éxito - mostrar resumen
@@ -523,9 +521,9 @@ async function submitWizard() {
       throw new Error('La API no retornó un ID de batch válido')
     }
   } catch (err) {
-    console.error('Error enviando datos:', err)
+    logger.error('Error enviando datos:', err)
     // Mostrar error más específico si está disponible
-    error.value = err.message || 'No se pudo guardar la medición. Intenta nuevamente.'
+    error.value = (err as Error).message || 'No se pudo guardar la medición. Intenta nuevamente.'
   } finally {
     isSubmitting.value = false
   }
