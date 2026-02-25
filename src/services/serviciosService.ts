@@ -20,11 +20,11 @@ const USE_MOCK = false
 const MOCK_SERVICIOS: ServicioNormalizado[] = [
   {
     id: 1,
-    nombre: 'Dashboard',
+    nombre: 'Inicio',
     descripcion: 'Panel principal de salud',
     icono: 'pi pi-chart-line',
     color: '#8B5CF6',
-    ruta: '/dashboard',
+    ruta: '/home',
     activo: true,
     orden: 1,
     items: []

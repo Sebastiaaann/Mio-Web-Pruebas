@@ -23,7 +23,7 @@ if (!protocolId.value) {
 
 // Manejar cierre del wizard
 function handleClose() {
-  router.push('/dashboard')
+  router.push('/home')
 }
 
 // Manejar completado

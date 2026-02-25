@@ -18,10 +18,10 @@ const router = useRouter()
 
 const navItems = [
   { 
-    name: 'dashboard', 
+    name: 'home', 
     label: 'Inicio', 
     icon: Home,
-    path: '/dashboard'
+    path: '/home'
   },
   { 
     name: 'mensajes', 

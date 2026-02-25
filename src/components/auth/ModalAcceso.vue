@@ -32,12 +32,12 @@ const handleClose = () => {
 
 const handleLogin = () => {
     // Mock functionality
-    router.push('/dashboard');
+    router.push('/home');
 };
 
 const handleRegister = () => {
     // Mock registration functionality
-    router.push('/dashboard');
+    router.push('/home');
 };
 
 const switchToRegister = () => {

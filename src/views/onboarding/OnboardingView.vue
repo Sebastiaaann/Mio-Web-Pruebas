@@ -98,9 +98,9 @@ async function enviarFormulario() {
         life: 4000
       });
 
-      // Redirigir al dashboard después del éxito
+      // Redirigir al inicio después del éxito
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/home');
       }, 2000);
       
     } else {

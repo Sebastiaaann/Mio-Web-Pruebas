@@ -26,20 +26,18 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'inicio',
-    component: lazyLoad(() => import('@/views/inicio/InicioViewModern.vue'), 'Inicio'),
-    meta: { requiresAuth: false, title: 'Inicio' }
+    component: lazyLoad(() => import('@/views/inicio/AccesoView.vue'), 'Acceso'),
+    meta: { requiresAuth: false, title: 'Acceso' }
   },
   {
     path: '/home',
     name: 'home',
-    component: lazyLoad(() => import('@/views/inicio/HomeView.vue'), 'Home'),
-    meta: { requiresAuth: true, title: 'Mi Home' }
+    component: lazyLoad(() => import('@/views/inicio/HomeView.vue'), 'Inicio'),
+    meta: { requiresAuth: true, title: 'Mi Inicio' }
   },
   {
     path: '/dashboard',
-    name: 'dashboard',
-    component: lazyLoad(() => import('@/views/dashboard/DashboardView.vue'), 'Dashboard'),
-    meta: { requiresAuth: true, title: 'Dashboard' }
+    redirect: '/home'
   },
   {
     path: '/dashboard-preventive',
