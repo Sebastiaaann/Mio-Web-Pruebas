@@ -170,8 +170,9 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   // Actualizar plan activo
-  function setPlanActivo(plan: string): void {
+  function setPlanActivo(plan: string): string | null {
     const planLower = plan.toLowerCase()
+    const oldPlan = planActivo.value  // Guardar anterior
     planActivo.value = planLower
     localStorage.setItem('mio-plan-activo', planLower)
     
@@ -184,6 +185,8 @@ export const useConfigStore = defineStore('config', () => {
     if (planLower !== 'mutual') {
       logoMutual.value = null
     }
+    
+    return oldPlan  // Retornar para que el caller detecte cambio
   }
 
   /**
