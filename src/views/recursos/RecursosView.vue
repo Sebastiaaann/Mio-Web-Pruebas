@@ -2,10 +2,13 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useConfigStore } from '@/stores/tiendaConfig'
+import { logger } from '@/utils/logger'
 import { pacienteService } from '@/services/pacienteService'
 import TarjetaMaterialAudiovisual from '@/components/ui/home-ios/TarjetaMaterialAudiovisual.vue'
 
 const route = useRoute()
+const configStore = useConfigStore()
 
 const materialAudiovisual = ref([])
 const cargando = ref(false)
@@ -138,6 +141,13 @@ onMounted(async () => {
 
 watch(() => [route.query.incluye, route.query.excluye, route.query.titulo], async () => {
   if (materialAudiovisual.value.length === 0) {
+    await cargarMaterial()
+  }
+})
+
+watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
+  if (newPlan && newPlan !== oldPlan) {
+    logger.info('Plan cambió a', newPlan, '- Recargando material audiovisual')
     await cargarMaterial()
   }
 })
