@@ -24,9 +24,21 @@ function lazyLoad(importFn: LazyComponent, nombreComponente = 'Componente'): Laz
 
 const routes: RouteRecordRaw[] = [
   {
+    path: '/login',
+    name: 'login',
+    component: lazyLoad(() => import('@/views/inicio/AccesoView.vue'), 'Acceso'),
+    meta: { requiresAuth: false, title: 'Iniciar Sesión' }
+  },
+  {
+    path: '/auth',
+    name: 'auth',
+    component: lazyLoad(() => import('@/views/inicio/AuthView.vue'), 'Autenticación'),
+    meta: { requiresAuth: false, title: 'Acceder' }
+  },
+  {
     path: '/',
     name: 'inicio',
-    component: lazyLoad(() => import('@/views/inicio/AccesoView.vue'), 'Acceso'),
+    component: lazyLoad(() => import('@/views/inicio/LandingMio.vue'), 'Inicio'),
     meta: { requiresAuth: false, title: 'Acceso' }
   },
   {
