@@ -510,6 +510,9 @@ export function obtenerTipoPlan(nombrePlan: string | undefined): PlanType {
   if (nombre.includes('esencial') || nombre.includes('vital')) {
     return 'esencial'
   }
+  if (nombre.includes('mutual')) {
+    return 'mutual'
+  }
   return 'esencial'
 }
 
