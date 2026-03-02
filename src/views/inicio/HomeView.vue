@@ -76,6 +76,10 @@ const { nombreCompleto, firstName, usuario } = storeToRefs(userStore);
 const { campanas } = storeToRefs(campanasStore) as { campanas: Ref<Campana[]> };
 const { controlesProximos, historialMediciones, ultimaMedicion } = storeToRefs(healthStore);
 
+// Material audiovisual desde API (fuente primaria)
+const materialAudiovisualApi = ref<MaterialAudiovisualItem[]>([])
+const cargandoMaterial = ref(false)
+
 // Notifications
 const hasNotifications = ref<boolean>(true);
 
@@ -148,9 +152,21 @@ const proximosEventos = computed<EventoProximo[]>(() => {
     });
 });
 
-// Material Audiovisual desde servicios
+// Material Audiovisual - fuente primaria desde API
 const materialAudiovisualItems = computed<MaterialAudiovisualItem[]>(() => {
-  // Buscar el servicio de MATERIAL AUDIOVISUAL
+  // Si tenemos material desde la API, usarlo directamente
+  if (materialAudiovisualApi.value.length > 0) {
+    return materialAudiovisualApi.value.map((item, index) => ({
+      id: item.id || `video-${index}`,
+      titulo: item.titulo,
+      descripcion: item.descripcion,
+      imagen: item.imagen,
+      url: item.url || '/recursos',
+      categoria: item.categoria
+    }))
+  }
+
+  // Fallback: buscar en servicios (método anterior)
   const materialService = servicios.value.find(
     (s: any) => s.name?.toUpperCase().includes('MATERIAL AUDIOVISUAL') ||
       s.nombre?.toUpperCase().includes('MATERIAL AUDIOVISUAL') ||
@@ -252,13 +268,46 @@ function abrirCampana(url: string | undefined) {
   }
 }
 
+async function cargarMaterialAudiovisual(): Promise<void> {
+  const patientId = userStore.usuario?.patient_id
+  if (!patientId) {
+    logger.warn('No hay patient_id para cargar material audiovisual')
+    return
+  }
+
+  cargandoMaterial.value = true
+  try {
+    const resultado = await pacienteService.obtenerMaterialAudiovisual(patientId)
+    if (resultado.success && resultado.items) {
+      materialAudiovisualApi.value = resultado.items.map((item: any, index: number) => ({
+        id: String(item.id || `video-${index}`),
+        titulo: item.titulo || item.title || 'Material audiovisual',
+        descripcion: item.descripcion || item.description || '',
+        imagen: item.thumbnailUrl || item.thumbnail || item.image || '',
+        url: item.url || '/recursos',
+        categoria: item.categoria || item.category || ''
+      }))
+      logger.info('Material audiovisual cargado desde API:', materialAudiovisualApi.value.length)
+    } else {
+      logger.warn('No se pudo obtener material audiovisual:', resultado.error)
+      materialAudiovisualApi.value = []
+    }
+  } catch (e) {
+    logger.error('Error cargando material audiovisual:', e)
+    materialAudiovisualApi.value = []
+  } finally {
+    cargandoMaterial.value = false
+  }
+}
+
 onMounted(async () => {
     // Cargar datos reales de la API de HOMA
     await Promise.all([
         healthStore.fetchAllHealthData(),
         campanasStore.cargarCampanas(),
         serviciosStore.cargarServicios(),
-        cargarLogoPlanMutual()
+        cargarLogoPlanMutual(),
+        cargarMaterialAudiovisual()
     ]);
 });
 
@@ -267,7 +316,10 @@ watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
     if (!newPlan || newPlan === oldPlan) return;
 
     logger.info('Plan cambiado a:', newPlan, '- Recargando servicios...');
-    await serviciosStore.cargarServicios();
+    await Promise.all([
+      serviciosStore.cargarServicios(),
+      cargarMaterialAudiovisual()
+    ]);
 }, { immediate: false });
 </script>
 
