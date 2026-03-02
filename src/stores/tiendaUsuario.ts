@@ -4,6 +4,8 @@ import { computed, ref } from 'vue'
 import { authService } from '@/services/authService'
 import { pacienteService } from '@/services/pacienteService'
 import { useConfigStore } from '@/stores/tiendaConfig'
+import { useTiendaServicios } from '@/stores/tiendaServicios'
+import { useContenidoStore } from '@/stores/salud/tiendaContenido'
 import { obtenerTipoPlan } from '@/composables/usePerfilHelpers'
 import { logger } from '@/utils/logger'
 import type { AuthUser } from '@/types'
@@ -176,6 +178,11 @@ export const useTiendaUsuario = defineStore('usuario', () => {
   async function hidratarPerfil(patientId: string | number): Promise<void> {
     try {
       const configStore = useConfigStore()
+      const serviciosStore = useTiendaServicios()
+      const contenidoStore = useContenidoStore()
+      
+      const oldPlan = configStore.planActivo  // Guardar antes de cambiar
+      
       const resp = await pacienteService.obtenerPerfil(patientId)
       if (resp?.success && resp.paciente) {
         const nombrePerfil = resp.paciente.name || resp.paciente.nombre || resp.paciente.firstName || ''
@@ -195,7 +202,16 @@ export const useTiendaUsuario = defineStore('usuario', () => {
 
         if (planNombre) {
           const tipoPlan = obtenerTipoPlan(String(planNombre))
-          configStore.setPlanActivo(tipoPlan)
+          const previousPlan = configStore.setPlanActivo(tipoPlan)
+          
+          // Detectar cambio de plan y refetch
+          if (previousPlan !== tipoPlan) {
+            logger.info('Plan cambió de', previousPlan, 'a', tipoPlan, '- Refrescando contenido...')
+            await Promise.all([
+              serviciosStore.cargarServicios(),
+              contenidoStore.fetchVideos()
+            ])
+          }
         }
 
         logger.info('✅ Perfil hidratado con datos médicos')
@@ -254,9 +270,60 @@ export const useTiendaUsuario = defineStore('usuario', () => {
 
   /**
    * Registrar nuevo usuario
+   * Flujo: Firebase Auth → HOMA API (asociar paciente)
+   * @param datos - { email, password, rut, nombre, apellido }
    */
-  async function registrarUsuario(): Promise<ResultadoBasico> {
-    return { success: false, error: 'Registro no implementado en backend actual' }
+  async function registrarUsuario(datos: { 
+    email: string
+    password: string
+    rut: string
+    nombre: string
+    apellido: string
+  }): Promise<ResultadoBasico> {
+    if (!datos.email || !datos.password || !datos.rut) {
+      return { success: false, error: 'Faltan datos requeridos para el registro.' }
+    }
+
+    cargando.value = true
+    error.value = null
+
+    try {
+      logger.info('Iniciando registro de usuario:', { email: datos.email, rut: datos.rut })
+
+      const resultado = await authService.registrar(
+        datos.email,
+        datos.password,
+        datos.rut,
+        datos.nombre,
+        datos.apellido
+      )
+
+      if (resultado.success && resultado.token && resultado.user) {
+        // Guardar sesión
+        token.value = resultado.token
+        usuario.value = resultado.user as unknown as UsuarioBasico
+        authService.guardarSesion(resultado.token, normalizarUsuarioAuth(resultado.user as UsuarioBasico))
+
+        // Si tenemos patient_id, hidratar perfil
+        if (resultado.user.patient_id) {
+          void hidratarPerfil(resultado.user.patient_id)
+        }
+
+        logger.info('✅ Usuario registrado:', { patient_id: resultado.user.patient_id })
+        return { success: true }
+      }
+
+      const mensajeError = resultado.error || 'Error al registrar usuario'
+      error.value = mensajeError
+      return { success: false, error: mensajeError }
+    } catch (e) {
+      const mensajeError = e instanceof Error ? e.message : 'Error al registrar usuario'
+      error.value = mensajeError
+      logger.error('❌ Error en registro:', e)
+      return { success: false, error: mensajeError }
+    } finally {
+      cargando.value = false
+    }
   }
 
   /**
