@@ -1,6 +1,6 @@
-<script setup>
+<script setup lang="ts">
 /**
- * BottomNavigation - Barra de navegación inferior para móvil
+ * NavegacionInferior - Barra de navegación inferior para móvil
  * Similar a la navegación de la app móvil Mio+
  * Migrado a Lucide icons
  */
@@ -13,10 +13,17 @@ import {
   User 
 } from 'lucide-vue-next'
 
+interface ItemNav {
+  name: string
+  label: string
+  icon: object
+  path: string
+}
+
 const route = useRoute()
 const router = useRouter()
 
-const navItems = [
+const navItems: ItemNav[] = [
   { 
     name: 'home', 
     label: 'Inicio', 
@@ -49,11 +56,11 @@ const navItems = [
   }
 ]
 
-function isActive(item) {
+function isActive(item: ItemNav) {
   return route.path === item.path || route.name === item.name
 }
 
-function navigateTo(item) {
+function navigateTo(item: ItemNav) {
   router.push(item.path)
 }
 </script>

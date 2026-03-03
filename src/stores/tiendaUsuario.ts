@@ -154,7 +154,7 @@ export const useTiendaUsuario = defineStore('usuario', () => {
           void hidratarPerfil(resultado.user.patient_id)
         }
 
-        logger.info('✅ Sesión iniciada para usuario:', { patient_id: resultado.user.patient_id })
+        logger.info('✅ Sesión iniciada para usuario:', { patient_id: `[ID:${String(resultado.user.patient_id).slice(-3).padStart(6, '*')}]` })
 
         return { success: true }
       }

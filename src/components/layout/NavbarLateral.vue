@@ -1,5 +1,5 @@
 <!-- src/components/layout/NavbarLateral.vue -->
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Motion, AnimatePresence } from 'motion-v';
@@ -33,26 +33,33 @@ import { useConfigStore } from '@/stores/tiendaConfig';
 import ProfileOverlay from '@/components/perfil/ProfileOverlay.vue';
 
 // Props handling
-const props = defineProps({
-  visible: { type: Boolean, default: true },
-  collapsed: { type: Boolean, default: false }
-});
+const props = defineProps<{
+  visible?: boolean
+  collapsed?: boolean
+}>();
 
-const emit = defineEmits(['toggle', 'update:mobileOpen']);
+const emit = defineEmits<{
+  toggle: []
+  'update:mobileOpen': [value: boolean]
+}>();
 
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 const configStore = useConfigStore();
 
-const clientName = computed(() => '');
+/** Avatar del usuario tipado como string para uso en :src */
+const avatarUrl = computed<string | null>(() => {
+  const avatar = userStore.usuario?.avatar
+  return typeof avatar === 'string' ? avatar : null
+})
 
 // --- STATE ---
-const openSubmenus = ref({});
+const openSubmenus = ref<Record<string, boolean>>({});
 const isMobileOpen = ref(false);
 const isProfileMenuOpen = ref(false);
-const searchInputRef = ref(null);
-const profileContainerRef = ref(null);
+const searchInputRef = ref<HTMLInputElement | null>(null);
+const profileContainerRef = ref<HTMLElement | null>(null);
 const showProfileOverlay = ref(false);
 const showTooltip = ref('');
 
@@ -112,7 +119,7 @@ const profileMenuItems = [
 
 // --- METHODS ---
 
-const toggleSubmenu = (name) => {
+const toggleSubmenu = (name: string) => {
   if (props.collapsed) emit('toggle');
   openSubmenus.value[name] = !openSubmenus.value[name];
 };
@@ -125,12 +132,12 @@ const openMobileMenu = () => {
   isMobileOpen.value = true;
 };
 
-const esRutaActiva = (ruta) => route.path === ruta;
+const esRutaActiva = (ruta: string) => route.path === ruta;
 
-const esSubRutaActiva = (subItems) => {
+const esSubRutaActiva = (subItems: Array<{ ruta: string }> | undefined) => {
   if (!subItems) return false;
   return subItems.some(subItem => {
-    // Extract base path from query string routes
+    // Extraer ruta base sin query string
     const basePath = subItem.ruta.split('?')[0];
     return route.path === basePath || route.fullPath.includes(basePath);
   });
@@ -148,7 +155,7 @@ const handleSearchClick = () => {
   }
 };
 
-const handleSearchKeyDown = (e) => {
+const handleSearchKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
     handleSearchClick();
@@ -167,13 +174,13 @@ const handleSignOut = () => {
 };
 
 // Click Outside Logic for Profile Menu
-const handleClickOutside = (event) => {
-  if (profileContainerRef.value && !profileContainerRef.value.contains(event.target)) {
+const handleClickOutside = (event: MouseEvent) => {
+  if (profileContainerRef.value && !profileContainerRef.value.contains(event.target as Node)) {
     isProfileMenuOpen.value = false;
   }
 };
 
-const handleProfileItemClick = (item) => {
+const handleProfileItemClick = (item: { action: string; href?: string }) => {
   isProfileMenuOpen.value = false;
   
   if (item.action === 'profile') {
@@ -186,7 +193,7 @@ const handleProfileItemClick = (item) => {
 };
 
 // Tooltip helpers
-const showItemTooltip = (name) => {
+const showItemTooltip = (name: string) => {
   if (props.collapsed) {
     showTooltip.value = name;
   }
@@ -243,16 +250,32 @@ onUnmounted(() => {
         :class="collapsed ? 'justify-center' : ''"
         @click="closeMobile"
       >
-        <div 
-          class="flex items-center justify-center transition-all duration-300 overflow-hidden"
-          :class="collapsed ? 'w-10 h-10' : 'w-auto h-10'"
-        >
-          <img 
-            src="/assets/logo_mio_purple.png" 
-            alt="MIO" 
-            class="object-contain transition-all duration-300"
-            :class="collapsed ? 'w-8 h-8' : 'w-auto h-8'"
-          />
+        <div class="flex items-center gap-2.5 transition-all duration-300 overflow-hidden">
+          <!-- Icono del diamante -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+            <defs>
+              <mask id="mio-logo-mask">
+                <rect width="24" height="24" fill="#fff"/>
+                <line x1="-2" y1="20" x2="20" y2="-2" stroke="#000" stroke-width="4.0"/>
+              </mask>
+            </defs>
+            <path d="M12 2 L3 12 L12 22 L21 12 Z" fill="#8B5CF6" :mask="'url(#mio-logo-mask)'" />
+          </svg>
+          <!-- Texto MIO (oculto en modo colapsado) -->
+          <AnimatePresence>
+            <Motion
+              v-show="!collapsed"
+              :initial="{ opacity: 0, width: 0 }"
+              :animate="{ opacity: 1, width: 'auto' }"
+              :exit="{ opacity: 0, width: 0 }"
+              :transition="{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }"
+              class="overflow-hidden"
+            >
+              <span class="text-2xl font-bold tracking-tight text-gray-900 leading-none whitespace-nowrap select-none">
+                MIO
+              </span>
+            </Motion>
+          </AnimatePresence>
         </div>
       </div>
 
@@ -261,13 +284,15 @@ onUnmounted(() => {
         @click="emit('toggle')"
         @mouseenter="showTooltip = 'toggle'"
         @mouseleave="showTooltip = ''"
+        :aria-label="collapsed ? 'Expandir navegación' : 'Colapsar navegación'"
+        :aria-expanded="!collapsed"
         class="hidden md:flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-violet-600 hover:border-violet-200 hover:bg-violet-50 transition-all duration-200 shadow-sm flex-shrink-0 ml-2 relative"
         :class="collapsed ? 'absolute -right-4 top-4 bg-white shadow-md' : ''"
       >
         <PanelLeft v-if="collapsed" :size="14" :stroke-width="2" />
         <ChevronLeft v-else :size="14" :stroke-width="2" />
         
-        <!-- Tooltip for toggle button -->
+        <!-- Tooltip para botón de colapsar -->
         <AnimatePresence>
           <Motion
             v-if="showTooltip === 'toggle' && collapsed"
@@ -276,14 +301,15 @@ onUnmounted(() => {
             :exit="{ opacity: 0, x: -5 }"
             class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap z-50"
           >
-            Show Navigation
+            Mostrar navegación
           </Motion>
         </AnimatePresence>
       </button>
       
-      <!-- Mobile Close Button -->
+      <!-- Botón cerrar menú móvil -->
       <button 
         @click="closeMobile" 
+        aria-label="Cerrar menú"
         class="md:hidden absolute right-4 text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors"
       >
         <X :size="20" :stroke-width="2" />
@@ -313,20 +339,16 @@ onUnmounted(() => {
             <input
               ref="searchInputRef"
               type="text"
-              placeholder="Jump to..."
+              placeholder="Ir a..."
+              aria-label="Buscar sección"
               class="bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 w-full"
             />
-            <div class="flex items-center gap-1 flex-shrink-0">
-              <kbd class="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-100 rounded border border-gray-200">
-                <Command :size="10" />
-                <span>K</span>
-              </kbd>
-            </div>
+            <!-- ⌘K eliminado: shortcut no implementado -->
           </Motion>
         </AnimatePresence>
         
-        <!-- Tooltip for collapsed search -->
-        <AnimatePresence>
+          <!-- Tooltip para búsqueda colapsada -->
+          <AnimatePresence>
           <Motion
             v-if="collapsed && showTooltip === 'search'"
             :initial="{ opacity: 0, x: -5 }"
@@ -334,7 +356,7 @@ onUnmounted(() => {
             :exit="{ opacity: 0, x: -5 }"
             class="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap z-50"
           >
-            Search
+            Buscar
           </Motion>
         </AnimatePresence>
       </div>
@@ -601,10 +623,13 @@ onUnmounted(() => {
         </Motion>
       </AnimatePresence>
 
-      <!-- Profile Button -->
-      <div 
+      <!-- Botón de Perfil -->
+      <button 
         @click="toggleProfileMenu"
-        class="flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200"
+        :aria-expanded="isProfileMenuOpen"
+        aria-haspopup="true"
+        aria-label="Abrir menú de perfil"
+        class="w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-200 cursor-pointer hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200"
         :class="{ 'justify-center': collapsed }"
       >
         <!-- Avatar -->
@@ -618,8 +643,8 @@ onUnmounted(() => {
             ]"
           >
             <img 
-              v-if="userStore.usuario?.avatar" 
-              :src="userStore.usuario.avatar" 
+              v-if="avatarUrl" 
+              :src="avatarUrl" 
               class="w-full h-full object-cover" 
               alt="Avatar"
             />
@@ -660,7 +685,7 @@ onUnmounted(() => {
             />
           </Motion>
         </AnimatePresence>
-      </div>
+      </button>
     </div>
 
     <ProfileOverlay v-model:open="showProfileOverlay" />

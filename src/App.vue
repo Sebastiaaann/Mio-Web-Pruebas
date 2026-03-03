@@ -1,5 +1,5 @@
 <!-- src/App.vue -->
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DisposicionApp from '@/layouts/DisposicionApp.vue';
@@ -15,6 +15,11 @@ const userStore = useUserStore();
 
 // Esperar a que el router esté listo para evitar flash de contenido incorrecto
 const isRouterReady = ref(false);
+
+// Respetar preferencia de animación reducida del sistema operativo
+const prefiereMenosMovimiento = typeof window !== 'undefined'
+  ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  : false;
 
 const manejarSesionExpirada = () => {
   userStore.logout();
@@ -70,10 +75,10 @@ const usarLayout = computed(() => {
         <Motion 
           v-if="Component" 
           :key="route.path"
-          :initial="{ opacity: 0, y: 10 }"
-          :animate="{ opacity: 1, y: 0 }"
-          :exit="{ opacity: 0, y: -10 }"
-          :transition="{ duration: 0.2 }"
+          :initial="prefiereMenosMovimiento ? false : { opacity: 0, y: 10 }"
+          :animate="prefiereMenosMovimiento ? {} : { opacity: 1, y: 0 }"
+          :exit="prefiereMenosMovimiento ? {} : { opacity: 0, y: -10 }"
+          :transition="{ duration: prefiereMenosMovimiento ? 0 : 0.2 }"
         >
           <component :is="Component" />
         </Motion>
@@ -87,10 +92,10 @@ const usarLayout = computed(() => {
         <Motion 
           v-if="Component" 
           :key="route.path"
-          :initial="{ opacity: 0 }"
-          :animate="{ opacity: 1 }"
-          :exit="{ opacity: 0 }"
-          :transition="{ duration: 0.3 }"
+          :initial="prefiereMenosMovimiento ? false : { opacity: 0 }"
+          :animate="prefiereMenosMovimiento ? {} : { opacity: 1 }"
+          :exit="prefiereMenosMovimiento ? {} : { opacity: 0 }"
+          :transition="{ duration: prefiereMenosMovimiento ? 0 : 0.3 }"
         >
           <component :is="Component" />
         </Motion>

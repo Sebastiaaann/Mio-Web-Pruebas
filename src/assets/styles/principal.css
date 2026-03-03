@@ -251,7 +251,7 @@ body {
     box-shadow: 
       0 1px 3px rgba(0, 0, 0, 0.05),
       0 1px 2px rgba(0, 0, 0, 0.025);
-    transition: all 0.2s ease-out;
+    transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out, transform 0.2s ease-out;
   }
   
   .card-premium:hover {
@@ -289,7 +289,7 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease-out;
+    transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out, transform 0.2s ease-out;
   }
   
   .card-metric:hover {
@@ -405,7 +405,7 @@ body {
     border-radius: 0.5rem;
     border: none;
     cursor: pointer;
-    transition: all 0.15s ease-out;
+    transition: background-color 0.15s ease-out, transform 0.15s ease-out, box-shadow 0.15s ease-out;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: inline-flex;
     align-items: center;
@@ -441,7 +441,7 @@ body {
     border-radius: 0.5rem;
     border: 1px solid #E2E8F0;
     cursor: pointer;
-    transition: all 0.15s ease-out;
+    transition: background-color 0.15s ease-out, border-color 0.15s ease-out;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -468,7 +468,7 @@ body {
     border: none;
     background: transparent;
     cursor: pointer;
-    transition: all 0.15s ease-out;
+    transition: color 0.15s ease-out, background-color 0.15s ease-out;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -491,7 +491,7 @@ body {
     border-radius: 0.5rem;
     border: 1px solid var(--theme-primary);
     cursor: pointer;
-    transition: all 0.15s ease-out;
+    transition: background-color 0.15s ease-out, color 0.15s ease-out;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -672,7 +672,7 @@ body {
     border-radius: 0.5rem;
     color: #0F172A;
     background: white;
-    transition: all 0.15s ease-out;
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
   }
   
   .input-premium:focus {
@@ -777,7 +777,7 @@ body {
     border-radius: 0.5rem;
     border: none;
     cursor: pointer;
-    transition: all 0.15s ease-out;
+    transition: background-color 0.15s ease-out;
   }
   
   .homa-button:hover {
@@ -792,7 +792,7 @@ body {
     border-radius: 0.5rem;
     border: 1px solid var(--theme-primary);
     cursor: pointer;
-    transition: all 0.15s ease-out;
+    transition: background-color 0.15s ease-out;
   }
   
   .homa-button-outline:hover {

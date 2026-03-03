@@ -1,12 +1,13 @@
 // src/router/index.ts
 import { createRouter, createWebHistory, type RouteRecordRaw, type RouteLocationNormalized } from 'vue-router'
+import { type Component } from 'vue'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { logger } from '@/utils/logger'
 
 /**
  * Helper para lazy loading con manejo de errores
  */
-type LazyComponent = () => Promise<any>
+type LazyComponent = () => Promise<{ default: Component }>
 
 function lazyLoad(importFn: LazyComponent, nombreComponente = 'Componente'): LazyComponent {
   return () => importFn()
@@ -212,14 +213,26 @@ router.beforeEach((to: RouteLocationNormalized) => {
 })
 
 // Manejo global de errores de navegación
+// Protección contra loop infinito de reloads: máximo 2 recargas por sesión
+const CLAVE_RECARGAS = 'mio-router-recargas'
+const MAX_RECARGAS = 2
+
 router.onError((error, to) => {
   logger.error('Error de navegación:', error)
 
   if (error.message?.includes('Failed to fetch dynamically imported module')
     || error.message?.includes('Importing a module script failed')
     || error.message?.includes('error loading dynamically imported module')) {
-    logger.warn('Recargando página por error de carga de módulo...')
-    window.location.reload()
+    const recargas = parseInt(sessionStorage.getItem(CLAVE_RECARGAS) ?? '0', 10)
+    if (recargas < MAX_RECARGAS) {
+      sessionStorage.setItem(CLAVE_RECARGAS, String(recargas + 1))
+      logger.warn(`Recargando página por error de carga de módulo (intento ${recargas + 1}/${MAX_RECARGAS})...`)
+      window.location.reload()
+    } else {
+      logger.error('Máximo de recargas alcanzado, redirigiendo a inicio.')
+      sessionStorage.removeItem(CLAVE_RECARGAS)
+      router.push({ name: 'inicio' })
+    }
     return
   }
 

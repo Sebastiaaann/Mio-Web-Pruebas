@@ -1,5 +1,5 @@
 <!-- src/layouts/DisposicionApp.vue -->
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import NavbarLateral from '@/components/layout/NavbarLateral.vue';
 import NavegacionInferior from '@/components/layout/NavegacionInferior.vue';
