@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useHealthStore } from '@/stores/tiendaSalud'
+import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 
 const crearRespuestaJson = (data) => new Response(JSON.stringify(data), {
   status: 200,
@@ -16,6 +17,12 @@ const configurarSesion = ({ patientId = 75863, healthPlanId = 18 } = {}) => {
 
   localStorage.setItem('mio-token', 'token-prueba')
   localStorage.setItem('mio-session-meta', sessionMeta)
+
+  // Poblar el store de usuario directamente para que fetchControles/fetchUltimaMedicion
+  // encuentren patient_id y health_plan_id sin necesitar restaurarSesion()
+  const usuarioStore = useTiendaUsuario()
+  usuarioStore.usuario = { patient_id: patientId, health_plan_id: healthPlanId }
+  usuarioStore.token = 'token-prueba'
 }
 
 describe('Endpoints de controles', () => {

@@ -68,14 +68,15 @@ function getFirstName(usuario: UsuarioBasico | null): string {
 function getNombreCompleto(usuario: UsuarioBasico | null): string {
   if (!usuario) return ''
 
+  // Si hay un fullName explícito, tiene prioridad sobre name + lastname
+  if (usuario.fullName) return String(usuario.fullName)
+
   const nombre = usuario.name || usuario.nombre || usuario.firstName || ''
   const apellido = usuario.lastname || usuario.apellido || usuario.lastName || ''
 
   if (nombre || apellido) {
     return `${nombre} ${apellido}`.trim()
   }
-
-  if (usuario.fullName) return String(usuario.fullName)
 
   return ''
 }

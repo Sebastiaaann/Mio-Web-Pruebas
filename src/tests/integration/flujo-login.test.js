@@ -14,7 +14,7 @@ import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { useHealthStore } from '@/stores/tiendaSalud'
 
 // Componentes
-import InicioViewModern from '@/views/inicio/InicioViewModern.vue'
+import LandingMio from '@/views/inicio/LandingMio.vue'
 import HomeView from '@/views/inicio/HomeView.vue'
 
 // Services
@@ -54,7 +54,7 @@ describe('Flujo de Login - Integración', () => {
         {
           path: '/',
           name: 'inicio',
-          component: InicioViewModern,
+          component: LandingMio,
           meta: { requiresAuth: false }
         },
         {
