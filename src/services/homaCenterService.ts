@@ -14,12 +14,19 @@ import { clienteApi } from '@/utils/clienteApi'
 const HOMA_CENTER_PROXY_URL = '/api/homa-center/batch'
 
 /**
- * Obtener token de autenticación del almacenamiento local
+ * Obtener token de autenticación del almacenamiento de sesión
  * NOTA: Solo se usa para el proxy de HOMA Center (que no pasa por clienteApi)
+ * sessionStorage es más seguro que localStorage (no persiste entre pestañas/cierre del navegador).
  */
 function obtenerTokenAuth(): string | null {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('mio-token')
+    // Migración on-the-fly: si el token está en localStorage (sesión antigua), moverlo a sessionStorage
+    const tokenLegacy = localStorage.getItem('mio-token')
+    if (tokenLegacy) {
+      sessionStorage.setItem('mio-token', tokenLegacy)
+      localStorage.removeItem('mio-token')
+    }
+    return sessionStorage.getItem('mio-token')
   }
   return null
 }

@@ -216,17 +216,25 @@ export const authService = {
    * Limpieza segura del storage
    */
   limpiarAlmacenamientoLocal(): void {
-    localStorage.removeItem('mio-token')
-    localStorage.removeItem('mio-session-meta') // Reemplaza a mio-user
-    // Limpiamos la vieja key por si existe
+    sessionStorage.removeItem('mio-token')
+    sessionStorage.removeItem('mio-session-meta')
+    // Limpiamos la vieja key legacy de localStorage por si existe (migración)
     localStorage.removeItem('mio-user')
+    localStorage.removeItem('mio-token')
+    localStorage.removeItem('mio-session-meta')
   },
 
   /**
    * Obtener token guardado
    */
   obtenerToken(): string | null {
-    return localStorage.getItem('mio-token')
+    // Migración on-the-fly: si el token está en localStorage (sesión antigua), moverlo a sessionStorage
+    const tokenLegacy = localStorage.getItem('mio-token')
+    if (tokenLegacy) {
+      sessionStorage.setItem('mio-token', tokenLegacy)
+      localStorage.removeItem('mio-token')
+    }
+    return sessionStorage.getItem('mio-token')
   },
 
   /**
@@ -263,8 +271,8 @@ export const authService = {
       const datos = await response.json() as { success?: boolean; token?: string }
 
       if (datos.token) {
-        // Actualizar token en localStorage (todas las lecturas posteriores lo usarán)
-        localStorage.setItem('mio-token', datos.token)
+        // Actualizar token en sessionStorage (todas las lecturas posteriores lo usarán)
+        sessionStorage.setItem('mio-token', datos.token)
         logger.info('Token refrescado exitosamente')
         return { success: true, token: datos.token }
       }
@@ -289,7 +297,7 @@ export const authService = {
    * Guardar sesión de forma segura (Minimizar PII)
    */
   guardarSesion(token: string, user: AuthUser): void {
-    localStorage.setItem('mio-token', token)
+    sessionStorage.setItem('mio-token', token)
 
     // Solo guardamos metadatos no sensibles o necesarios para el bootstrap
     // El resto de la info (nombre, email) debe vivir en memoria (Pinia)
@@ -300,7 +308,7 @@ export const authService = {
       lastLogin: Date.now()
     }
 
-    localStorage.setItem('mio-session-meta', JSON.stringify(sessionMeta))
+    sessionStorage.setItem('mio-session-meta', JSON.stringify(sessionMeta))
   },
 
   /**
@@ -308,15 +316,24 @@ export const authService = {
    * El perfil completo se debe recargar desde la API
    */
   restaurarSesion(): { token: string; user: SessionLegacy; isLegacy?: boolean } | null {
-    const token = this.obtenerToken()
-    const sessionMetaStr = localStorage.getItem('mio-session-meta')
+    const token = this.obtenerToken() // ya maneja migración localStorage → sessionStorage
+    const sessionMetaStr = sessionStorage.getItem('mio-session-meta')
+
+    // Compatibilidad hacia atrás: migrar mio-session-meta desde localStorage si existe
+    const sessionMetaLegacyStr = localStorage.getItem('mio-session-meta')
+    if (sessionMetaLegacyStr && !sessionMetaStr) {
+      sessionStorage.setItem('mio-session-meta', sessionMetaLegacyStr)
+      localStorage.removeItem('mio-session-meta')
+    }
+
+    const metaStr = sessionStorage.getItem('mio-session-meta')
 
     // Compatibilidad hacia atrás (migración)
     const legacyUserStr = localStorage.getItem('mio-user')
 
     if (token) {
-      if (sessionMetaStr) {
-        return { token, user: JSON.parse(sessionMetaStr) as SessionLegacy }
+      if (metaStr) {
+        return { token, user: JSON.parse(metaStr) as SessionLegacy }
       }
       // Migración on-the-fly: si existe el viejo formato, lo usamos una vez y sugerimos al store que actualice
       if (legacyUserStr) {

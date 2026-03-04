@@ -1,11 +1,14 @@
 /**
  * chatService.ts - Servicio para comunicación con Groq AI
- * Integración con Llama 3.3 70B via Groq API
+ * Integración con Llama 3.3 70B via proxy serverless /api/chat
+ *
+ * SEGURIDAD: La GROQ_API_KEY vive solo en el servidor (api/chat.js).
+ * Este cliente nunca tiene acceso a ella ni la incluye en el bundle.
  */
 import { logger } from '@/utils/logger'
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+// Proxy serverless — la key de Groq nunca llega al navegador
+const PROXY_URL = '/api/chat'
 
 // Configuración del modelo
 const MODEL_CONFIG = {
@@ -71,11 +74,11 @@ export async function enviarMensaje(mensaje: string): Promise<Record<string, unk
       conversationHistory = conversationHistory.slice(-10)
     }
 
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(PROXY_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`
+        'Content-Type': 'application/json'
+        // Sin Authorization — la GROQ_API_KEY vive solo en el servidor (api/chat.js)
       },
       body: JSON.stringify({
         ...MODEL_CONFIG,

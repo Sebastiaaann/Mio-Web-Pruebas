@@ -13,10 +13,18 @@ class ClienteApi {
   private refreshEnProgreso: Promise<boolean> | null = null
 
   /**
-   * Obtiene el token de almacenamiento local sin dependencias circulares
+   * Obtiene el token de almacenamiento de sesión sin dependencias circulares.
+   * sessionStorage es más seguro que localStorage (no persiste entre pestañas/cierre del navegador).
+   * Incluye migración on-the-fly desde localStorage para sesiones antiguas.
    */
   private obtenerToken(): string | null {
-    return localStorage.getItem('mio-token')
+    // Migración on-the-fly: si el token está en localStorage (sesión antigua), moverlo a sessionStorage
+    const tokenLegacy = localStorage.getItem('mio-token')
+    if (tokenLegacy) {
+      sessionStorage.setItem('mio-token', tokenLegacy)
+      localStorage.removeItem('mio-token')
+    }
+    return sessionStorage.getItem('mio-token')
   }
 
   /**
