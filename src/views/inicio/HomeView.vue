@@ -51,15 +51,6 @@ interface MedicionResumen {
   valorCompleto?: string
 }
 
-interface MaterialAudiovisualItem {
-  id: string | number
-  titulo: string
-  descripcion: string
-  imagen?: string
-  url?: string
-  categoria: string
-}
-
 // Stores
 const userStore = useUserStore();
 const healthStore = useHealthStore();
@@ -75,10 +66,6 @@ const { servicios } = storeToRefs(serviciosStore);
 const { nombreCompleto, firstName, usuario } = storeToRefs(userStore);
 const { campanas } = storeToRefs(campanasStore) as { campanas: Ref<Campana[]> };
 const { controlesProximos, historialMediciones, ultimaMedicion } = storeToRefs(healthStore);
-
-// Material audiovisual desde API (fuente primaria)
-const materialAudiovisualApi = ref<MaterialAudiovisualItem[]>([])
-const cargandoMaterial = ref(false)
 
 // Notifications
 const hasNotifications = ref<boolean>(true);
@@ -152,91 +139,24 @@ const proximosEventos = computed<EventoProximo[]>(() => {
     });
 });
 
-// Material Audiovisual - fuente primaria desde API
-const materialAudiovisualItems = computed<MaterialAudiovisualItem[]>(() => {
-  // Si tenemos material desde la API, usarlo directamente
-  if (materialAudiovisualApi.value.length > 0) {
-    return materialAudiovisualApi.value.map((item, index) => ({
-      id: item.id || `video-${index}`,
-      titulo: item.titulo,
-      descripcion: item.descripcion,
-      imagen: item.imagen,
-      url: item.url || '/recursos',
-      categoria: item.categoria
-    }))
-  }
-
-  // Fallback: buscar en servicios (método anterior)
-  const materialService = servicios.value.find(
-    (s: any) => s.name?.toUpperCase().includes('MATERIAL AUDIOVISUAL') ||
+// Opciones del servicio MATERIAL AUDIOVISUAL — fuente para el carousel de dos slides
+const opcionesMaterialAudiovisual = computed(() => {
+  const servicio = servicios.value.find(
+    (s: any) =>
       s.nombre?.toUpperCase().includes('MATERIAL AUDIOVISUAL') ||
-      s.name?.toUpperCase().includes('AUDIOVISUAL') ||
-      s.nombre?.toUpperCase().includes('AUDIOVISUAL')
-  );
+      s.name?.toUpperCase().includes('MATERIAL AUDIOVISUAL')
+  )
+  if (!servicio) return []
 
-  const opciones = (materialService as any)?.options || (materialService as any)?.items || []
+  const planActual = (configStore.planActivo || '').toLowerCase()
+  const items: any[] = (servicio as any).items || []
 
-  if (!materialService || !opciones || opciones.length === 0) {
-    return [];
-  }
-
-  // Obtener opciones según el plan activo
-  const planActual = (configStore.planActivo || 'esencial').toLowerCase();
-  const opcionesPlan = opciones.filter((opt: any) => {
-    const planOpcion = String(opt.plan_name || '').toLowerCase()
-    return planOpcion.includes(planActual) || planActual.includes(planOpcion)
-  });
-
-  if (opcionesPlan.length === 0) {
-    return [];
-  }
-
-  // Filtrar y eliminar duplicados por título
-  const opcionesUnicas = opcionesPlan
-    .filter((option: any) => option.title)
-    .filter((option: any) => {
-      if (!option.type_message) return true;
-
-      try {
-        const categorias = JSON.parse(option.type_message);
-        if (!Array.isArray(categorias)) return true;
-
-        return categorias.every((cat: any) => {
-          const categoriaTitulo = String(cat.title || '').toLowerCase()
-
-          if (cat.excluded_categories?.length) {
-            return !cat.excluded_categories.some((exc: string) =>
-              categoriaTitulo.includes(exc.toLowerCase())
-            );
-          }
-          if (cat.included_categories?.length) {
-            return cat.included_categories.some((inc: string) =>
-              categoriaTitulo.includes(inc.toLowerCase())
-            );
-          }
-          return true;
-        });
-      } catch (e) {
-        if (import.meta.env.DEV) {
-          logger.error('Error parseando type_message:', e);
-        }
-        return true;
-      }
-    })
-    .filter((option: any, index: number, self: any[]) => 
-      // Eliminar duplicados por título
-      index === self.findIndex((o: any) => o.title === option.title)
-    );
-
-  return opcionesUnicas.map((option: any, index: number) => ({
-    id: `material-${index}`,
-    titulo: option.title,
-    descripcion: option.title,
-    imagen: option.image || option.imagen || option.imagenUrl || null,
-    url: option.url || '/recursos',
-    categoria: option.title
-  }));
-});
+  return items.filter((item: any) => {
+    const planItem = String(item.plan_name || item.nombre || '').toLowerCase()
+    if (!planActual || !planItem) return true
+    return planItem.includes(planActual) || planActual.includes(planItem)
+  })
+})
 
 async function cargarLogoPlanMutual(): Promise<void> {
   const patientId = userStore.usuario?.id || userStore.usuario?.patient_id
@@ -268,38 +188,6 @@ function abrirCampana(url: string | undefined) {
   }
 }
 
-async function cargarMaterialAudiovisual(): Promise<void> {
-  const patientId = userStore.usuario?.patient_id
-  if (!patientId) {
-    logger.warn('No hay patient_id para cargar material audiovisual')
-    return
-  }
-
-  cargandoMaterial.value = true
-  try {
-    const resultado = await pacienteService.obtenerMaterialAudiovisual(patientId)
-    if (resultado.success && resultado.items) {
-      materialAudiovisualApi.value = resultado.items.map((item: any, index: number) => ({
-        id: String(item.id || `video-${index}`),
-        titulo: item.titulo || item.title || 'Material audiovisual',
-        descripcion: item.descripcion || item.description || '',
-        imagen: item.thumbnailUrl || item.thumbnail || item.image || '',
-        url: item.url || '/recursos',
-        categoria: item.categoria || item.category || ''
-      }))
-      logger.info('Material audiovisual cargado desde API:', materialAudiovisualApi.value.length)
-    } else {
-      logger.warn('No se pudo obtener material audiovisual:', resultado.error)
-      materialAudiovisualApi.value = []
-    }
-  } catch (e) {
-    logger.error('Error cargando material audiovisual:', e)
-    materialAudiovisualApi.value = []
-  } finally {
-    cargandoMaterial.value = false
-  }
-}
-
 onMounted(async () => {
     // Cargar datos reales de la API de HOMA
     await Promise.all([
@@ -307,7 +195,6 @@ onMounted(async () => {
         campanasStore.cargarCampanas(),
         serviciosStore.cargarServicios(),
         cargarLogoPlanMutual(),
-        cargarMaterialAudiovisual()
     ]);
 });
 
@@ -318,7 +205,6 @@ watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
     logger.info('Plan cambiado a:', newPlan, '- Recargando servicios...');
     await Promise.all([
       serviciosStore.cargarServicios(),
-      cargarMaterialAudiovisual()
     ]);
 }, { immediate: false });
 </script>
@@ -657,7 +543,9 @@ watch(() => configStore.planActivo, async (newPlan, oldPlan) => {
                         
                         <div class="card-premium p-6 h-full"
                         >
-                            <MaterialAudiovisualCarousel :items="materialAudiovisualItems" />
+                            <MaterialAudiovisualCarousel
+                                :opciones="opcionesMaterialAudiovisual"
+                            />
                         </div>
                     </section>
 
