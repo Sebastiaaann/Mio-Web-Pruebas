@@ -109,7 +109,7 @@ const isLoadingPlans = ref(false)
 const planCambiadoManualmente = ref(false)
 const planActivoAPI = ref<PlanAPI | null>(null)
 const tienePlanesAlternativos = computed(() => {
-  return planesPaciente.value.length > 1
+  return planesPaciente.value.length > 1 || availablePlans.value.length > 0
 })
 
 /**
