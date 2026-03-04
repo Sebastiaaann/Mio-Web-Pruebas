@@ -138,7 +138,7 @@ watch(() => configStore.planActivo, async (nuevoPlan, planAnterior) => {
         <section v-else-if="tieneBanners" class="space-y-8">
           <article
             v-for="(banner, index) in bannersFiltrados"
-            :key="banner.id || banner.title"
+            :key="String(banner.id ?? banner.title ?? index)"
             class="beneficios-card group relative overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-[0_20px_50px_-35px_rgba(15,23,42,0.45)]"
           >
             <div class="relative w-full h-56 sm:h-64 md:h-80" style="background: linear-gradient(135deg, #0F172A, #1F2937)">

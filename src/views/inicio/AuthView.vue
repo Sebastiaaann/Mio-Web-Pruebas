@@ -120,7 +120,13 @@ async function enviarRegistro() {
   }
   cargando.value = true
   try {
-    const resultado = await userStore.register()
+    const resultado = await userStore.register({
+      email: email.value,
+      password: password.value,
+      rut: rut.value,
+      nombre: '',
+      apellido: ''
+    })
     if (resultado.success) {
       router.push('/onboarding')
     } else {
