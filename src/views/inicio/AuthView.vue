@@ -11,7 +11,6 @@ import { validarEmail } from '@/utils/validadores'
 import { validateRut, formatRutOnInput } from '@/utils/rutValidator'
 import { ArrowLeftIcon, AtSignIcon, Loader2, EyeIcon, EyeOffIcon } from 'lucide-vue-next'
 import CaminosFlotantes from '@/components/ui/CaminosFlotantes.vue'
-import LogoMio from '@/components/ui/LogoMio.vue'
 import PremiumInput from '@/components/ui/PremiumInput.vue'
 
 const router = useRouter()
@@ -33,6 +32,8 @@ const email = ref('')
 const password = ref('')
 const rut = ref('')
 const emailConfirm = ref('')
+const nombre = ref('')
+const apellido = ref('')
 
 // Dark mode sincronizado con el resto de la app
 const isDark = ref(false)
@@ -110,6 +111,14 @@ async function enviarLogin() {
 /** Paso 2b: enviar registro */
 async function enviarRegistro() {
   error.value = ''
+  if (!nombre.value.trim()) {
+    error.value = 'El nombre es requerido'
+    return
+  }
+  if (!apellido.value.trim()) {
+    error.value = 'El apellido es requerido'
+    return
+  }
   if (!validateRut(rut.value)) {
     error.value = 'RUT inválido'
     return
@@ -124,8 +133,8 @@ async function enviarRegistro() {
       email: email.value,
       password: password.value,
       rut: rut.value,
-      nombre: '',
-      apellido: ''
+      nombre: nombre.value.trim(),
+      apellido: apellido.value.trim()
     })
     if (resultado.success) {
       router.push('/onboarding')
@@ -149,6 +158,8 @@ function volver() {
     password.value = ''
     rut.value = ''
     emailConfirm.value = ''
+    nombre.value = ''
+    apellido.value = ''
   }
 }
 
@@ -180,7 +191,20 @@ function manejarEnter() {
         <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none z-10" />
 
         <!-- Logo arriba -->
-        <LogoMio class="relative z-20 text-white" />
+        <div class="relative z-20 flex items-center gap-2.5">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+            <defs>
+              <mask id="mio-logo-mask-auth-aside">
+                <rect width="24" height="24" fill="#fff"/>
+                <line x1="-2" y1="20" x2="20" y2="-2" stroke="#000" stroke-width="4.0"/>
+              </mask>
+            </defs>
+            <path d="M12 2 L3 12 L12 22 L21 12 Z" fill="#8B5CF6" mask="url(#mio-logo-mask-auth-aside)" />
+          </svg>
+          <span class="text-2xl font-bold tracking-tight text-white leading-none whitespace-nowrap select-none">
+            MIO
+          </span>
+        </div>
 
         <!-- Caminos flotantes animados -->
         <CaminosFlotantes :posicion="1" />
@@ -222,10 +246,23 @@ function manejarEnter() {
         <div class="relative z-10 mx-auto w-full max-w-sm space-y-6">
 
           <!-- Logo visible solo en mobile -->
-          <LogoMio
-            class="lg:hidden mb-2"
-            :class="isDark ? 'text-violet-400' : 'text-[#8B5CF6]'"
-          />
+          <div class="lg:hidden mb-2 flex items-center gap-2.5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0">
+              <defs>
+                <mask id="mio-logo-mask-auth-mobile">
+                  <rect width="24" height="24" fill="#fff"/>
+                  <line x1="-2" y1="20" x2="20" y2="-2" stroke="#000" stroke-width="4.0"/>
+                </mask>
+              </defs>
+              <path d="M12 2 L3 12 L12 22 L21 12 Z" fill="#8B5CF6" mask="url(#mio-logo-mask-auth-mobile)" />
+            </svg>
+            <span
+              class="text-2xl font-bold tracking-tight leading-none whitespace-nowrap select-none"
+              :class="isDark ? 'text-violet-400' : 'text-[#8B5CF6]'"
+            >
+              MIO
+            </span>
+          </div>
 
           <!-- Encabezado -->
           <div class="space-y-1.5">
@@ -386,13 +423,53 @@ function manejarEnter() {
               </p>
             </form>
 
-            <!-- ── PASO: REGISTRO ──────────────────────── -->
+            <!-- ── PASO: REGISTRO ──────────────────────────────── -->
             <form
               v-else
               key="paso-registro"
               @submit.prevent="enviarRegistro"
               class="space-y-3"
             >
+              <!-- Nombre + Apellido en fila -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <label
+                    class="block text-xs font-medium ml-1"
+                    :class="isDark ? 'text-gray-400' : 'text-gray-600'"
+                  >
+                    Nombre
+                  </label>
+                  <input
+                    v-model="nombre"
+                    type="text"
+                    placeholder="Tu nombre"
+                    autocomplete="given-name"
+                    class="w-full rounded-xl border py-3 px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-[#8B5CF6] focus:border-[#8B5CF6]"
+                    :class="isDark
+                      ? 'bg-white/5 border-white/10 text-white placeholder-gray-600'
+                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label
+                    class="block text-xs font-medium ml-1"
+                    :class="isDark ? 'text-gray-400' : 'text-gray-600'"
+                  >
+                    Apellido
+                  </label>
+                  <input
+                    v-model="apellido"
+                    type="text"
+                    placeholder="Tu apellido"
+                    autocomplete="family-name"
+                    class="w-full rounded-xl border py-3 px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-[#8B5CF6] focus:border-[#8B5CF6]"
+                    :class="isDark
+                      ? 'bg-white/5 border-white/10 text-white placeholder-gray-600'
+                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'"
+                  />
+                </div>
+              </div>
+
               <!-- RUT -->
               <div class="space-y-1">
                 <label
@@ -414,7 +491,38 @@ function manejarEnter() {
                 />
               </div>
 
-              <!-- Email -->
+              <!-- Contraseña -->
+              <div class="space-y-1">
+                <label
+                  class="block text-xs font-medium ml-1"
+                  :class="isDark ? 'text-gray-400' : 'text-gray-600'"
+                >
+                  Contraseña
+                </label>
+                <div class="relative">
+                  <input
+                    v-model="password"
+                    :type="mostrarPassword ? 'text' : 'password'"
+                    placeholder="Mínimo 6 caracteres"
+                    autocomplete="new-password"
+                    class="w-full rounded-xl border py-3 pl-4 pr-11 text-sm outline-none transition-all focus:ring-2 focus:ring-[#8B5CF6] focus:border-[#8B5CF6]"
+                    :class="isDark
+                      ? 'bg-white/5 border-white/10 text-white placeholder-gray-600'
+                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'"
+                  />
+                  <button
+                    type="button"
+                    @click="mostrarPassword = !mostrarPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                    :class="isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'"
+                  >
+                    <EyeOffIcon v-if="mostrarPassword" class="h-4 w-4" />
+                    <EyeIcon v-else class="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Correo electrónico -->
               <div class="space-y-1">
                 <label
                   class="block text-xs font-medium ml-1"
@@ -440,7 +548,7 @@ function manejarEnter() {
                 </div>
               </div>
 
-              <!-- Confirmar email -->
+              <!-- Confirmar correo -->
               <div class="space-y-1">
                 <label
                   class="block text-xs font-medium ml-1"
