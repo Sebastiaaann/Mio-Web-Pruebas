@@ -1300,3 +1300,122 @@ error TS2353: 'onClick' does not exist in type ...
 
 Solución siempre: agregar `defineEmits<{ click: [event: MouseEvent] }>()`.
 No afecta runtime, solo satisface el type checker.
+
+---
+
+### Bug 4 — MiPerfilView: usuario.patient_id (NO .id) (RESUELTO)
+
+**Archivos:** `src/views/perfil/MiPerfilView.vue`, `src/stores/tiendaUsuario.ts`
+**Commit:** `5b12a08`
+
+El ID del paciente en el store es `usuario.patient_id`, NO `usuario.id`.
+Acceder a `.id` devuelve `undefined` silenciosamente.
+
+```typescript
+// Incorrecto:
+const patientId = usuarioStore.usuario?.id
+
+// Correcto:
+const patientId = usuarioStore.usuario?.patient_id
+```
+
+---
+
+### Bug 5 — MiPerfilView: plan activo aparecía como opción de compra (RESUELTO)
+
+**Archivos:** `src/views/perfil/MiPerfilView.vue`
+**Commit:** `5b12a08`
+
+Usar computed `planesDisponiblesParaComprar` que filtra el plan activo del grid:
+
+```typescript
+const planesDisponiblesParaComprar = computed(() =>
+  availablePlans.value.filter(
+    (p) => tipoPlanAPI(p.name_plan) !== tipoPlanAPI(planActual.value?.name_plan ?? '')
+  )
+)
+```
+
+Interfaces clave definidas en `MiPerfilView.vue`: `PlanAPI`, `PlanDisponible`, `PlanMeta`.
+
+---
+
+### Bug 6 — AuthView: register() llamado sin argumentos (RESUELTO)
+
+**Archivos:** `src/views/inicio/AuthView.vue`
+**Commit:** `a8882b4`
+
+La función `userStore.register()` requiere el objeto completo de campos:
+
+```typescript
+// Incorrecto:
+await userStore.register()
+
+// Correcto:
+await userStore.register({
+  email: email.value.trim(),
+  password: password.value,
+  rut: rut.value.trim(),
+  nombre: nombre.value.trim(),
+  apellido: apellido.value.trim()
+})
+```
+
+---
+
+### Bug 7 — BeneficiosView: v-for key undefined (RESUELTO)
+
+**Archivos:** `src/views/beneficios/BeneficiosView.vue`
+**Commit:** `a8882b4`
+
+Key de v-for puede ser undefined si `banner.id` y `banner.title` son falsy:
+
+```typescript
+// Incorrecto:
+:key="banner.id || banner.title"
+
+// Correcto — siempre única:
+:key="String(banner.id ?? banner.title ?? index)"
+```
+
+**Regla general:** Todo v-for debe tener un fallback al `index` para garantizar unicidad.
+
+---
+
+### Patrón — Rate Limiter en API Serverless
+
+**Archivos:** `api/_lib/rateLimiter.js`, `api/homa-center/batch.js`
+**Commit:** `a4ee2f8`
+
+Rate limiter de ventana deslizante (20 req/IP/60s). El Map es in-memory —
+se resetea en cada cold start de Vercel serverless. No usar para protección estricta.
+
+```javascript
+import { crearLimitador } from '../_lib/rateLimiter.js'
+const limitar = crearLimitador({ maxPeticiones: 20, ventanaMs: 60_000 })
+
+const ip = req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
+const { permitido, resetEn } = limitar(ip)
+if (!permitido) return res.status(429).json({ error: 'Too many requests', resetEn })
+```
+
+---
+
+### Patrón — Formulario de Registro con nombre/apellido
+
+**Archivos:** `src/views/inicio/AuthView.vue`
+**Commit:** `40de946`
+
+Al agregar campos al formulario de registro: declarar `ref`, validar antes de submit,
+pasar a `register()`, y limpiar en `volver()` junto con los demás campos.
+
+```typescript
+const nombre = ref('')
+const apellido = ref('')
+
+function volver() {
+  // ... otros campos ...
+  nombre.value = ''
+  apellido.value = ''
+}
+```
