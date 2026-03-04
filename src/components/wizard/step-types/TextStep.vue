@@ -6,7 +6,7 @@
  */
 import { computed, watch } from 'vue'
 import { Info, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-vue-next'
-import DOMPurify from 'dompurify'
+import { sanitizarHtml } from '@/utils/sanitizar'
 
 const props = defineProps({
   step: {
@@ -18,13 +18,7 @@ const props = defineProps({
 const emit = defineEmits(['valid'])
 
 // Sanitizar contenido HTML para prevenir XSS
-const sanitizedBody = computed(() => {
-  if (!props.step.body) return ''
-  return DOMPurify.sanitize(props.step.body, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'span'],
-    ALLOWED_ATTR: []
-  })
-})
+const sanitizedBody = computed(() => sanitizarHtml(props.step.body))
 
 // Determinar el tipo de mensaje basado en el header
 const messageType = computed(() => {
