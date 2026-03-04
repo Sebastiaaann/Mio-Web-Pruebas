@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * DynamicWizard - Wizard genérico que carga pasos dinámicamente desde protocolos API
- * 
+ *
  * Este componente:
  * 1. Recibe un protocol_id
  * 2. Carga el diagrama del protocolo desde la API
@@ -11,12 +11,22 @@
  * 6. Envía las observaciones al completar
  */
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
 import { useHealthStore } from '@/stores/tiendaSalud'
 import { useAlturaPaciente } from '@/composables/useAlturaPaciente'
 import { getProtocol, saveProtocolObservations } from '@/services/protocolService'
 import { logger } from '@/utils/logger'
+import type {
+  TipoPaso,
+  PasoWizard,
+  ObservacionGuardada,
+  ProtocoloWizard,
+  GrupoCondicion,
+  DiagramaProtocolo,
+  ComponenteDiagrama,
+  EnlaceDiagrama
+} from '@/types/wizard'
 
 // Componentes de pasos
 import QuestionStep from './step-types/QuestionStep.vue'
@@ -52,7 +62,6 @@ const props = defineProps({
 const emit = defineEmits(['close', 'complete'])
 
 // Stores y router
-const route = useRoute()
 const router = useRouter()
 const userStore = useTiendaUsuario()
 const healthStore = useHealthStore()
@@ -61,18 +70,18 @@ const { alturaCm, alturaMetros, setAlturaCm } = useAlturaPaciente()
 // Estado
 const isLoading = ref(true)
 const isSubmitting = ref(false)
-const error = ref(null)
-const protocolData = ref(null)
-const steps = ref([])
+const error = ref<string | null>(null)
+const protocolData = ref<ProtocoloWizard | null>(null)
+const steps = ref<PasoWizard[]>([])
 const currentStepIndex = ref(0)
-const responses = ref({})
+const responses = ref<Record<string | number, unknown>>({})
 const stepValid = ref(false)
 const mostrarResumen = ref(false)
-const observacionesGuardadas = ref([])
-const fechaGuardado = ref(null)
+const observacionesGuardadas = ref<ObservacionGuardada[]>([])
+const fechaGuardado = ref<Date | null>(null)
 
 // Mapeo de tipos de paso a componentes
-const stepComponents = {
+const stepComponents: Record<TipoPaso, unknown> = {
   question: QuestionStep,
   tensiometer: TensiometerStep,
   weight: WeightStep,
@@ -81,10 +90,10 @@ const stepComponents = {
 }
 
 // Computed
-const currentStep = computed(() => visibleSteps.value[currentStepIndex.value])
+const currentStep = computed<PasoWizard | undefined>(() => visibleSteps.value[currentStepIndex.value])
 const currentStepComponent = computed(() => {
   if (!currentStep.value) return null
-  return stepComponents[currentStep.value.type] || TextStep
+  return stepComponents[currentStep.value.type as TipoPaso] || TextStep
 })
 const totalSteps = computed(() => visibleSteps.value.length)
 const isFirstStep = computed(() => currentStepIndex.value === 0)
@@ -92,7 +101,7 @@ const isLastStep = computed(() => currentStepIndex.value === visibleSteps.value.
 
 const currentStepValue = computed(() => {
   if (!currentStep.value) return null
-  return responses.value[currentStep.value.id] || null
+  return responses.value[currentStep.value.id] ?? null
 })
 
 const fechaResumen = computed(() => {
@@ -111,8 +120,8 @@ const fechaResumen = computed(() => {
 })
 
 const resumenItems = computed(() => {
-  return (observacionesGuardadas.value || []).map(observacion => {
-    const step = steps.value.find(s => String(s.id) === String(observacion.stepId))
+  return (observacionesGuardadas.value || []).map((observacion: ObservacionGuardada) => {
+    const step = steps.value.find((s: PasoWizard) => String(s.id) === String(observacion.stepId))
     const titulo = step?.question?.question || step?.header || obtenerTituloPorTipo(observacion.stepType)
     const valor = formatearRespuesta(observacion.stepType, observacion.response)
 
@@ -121,7 +130,7 @@ const resumenItems = computed(() => {
       titulo,
       valor
     }
-  }).filter(item => item.valor)
+  }).filter((item) => item.valor)
 })
 
 const requiereAltura = computed(() => {
@@ -131,7 +140,7 @@ const requiereAltura = computed(() => {
 })
 
 // Cargar protocolo desde API
-async function loadProtocol() {
+async function loadProtocol(): Promise<void> {
   isLoading.value = true
   error.value = null
   mostrarResumen.value = false
@@ -152,7 +161,10 @@ async function loadProtocol() {
     }
 
     // La API retorna { success: true, data: { protocol: [...] } }
-    const protocol = result.data?.protocol?.[0] || result
+    const resultAny = result as Record<string, unknown>
+    const dataAny = resultAny.data as Record<string, unknown> | undefined
+    const protocolArr = dataAny?.protocol as ProtocoloWizard[] | undefined
+    const protocol: ProtocoloWizard = protocolArr?.[0] ?? (result as ProtocoloWizard)
     protocolData.value = protocol
     parseProtocolSteps(protocol)
   } catch (err) {
@@ -164,22 +176,22 @@ async function loadProtocol() {
 }
 
 // Parsear pasos del protocolo
-function parseProtocolSteps(protocol) {
+function parseProtocolSteps(protocol: ProtocoloWizard): void {
   if (!protocol.diagram) {
     steps.value = []
     return
   }
 
   try {
-    const diagram = typeof protocol.diagram === 'string'
-      ? JSON.parse(protocol.diagram)
+    const diagram: DiagramaProtocolo = typeof protocol.diagram === 'string'
+      ? (JSON.parse(protocol.diagram) as DiagramaProtocolo)
       : protocol.diagram
 
     logger.info('Diagrama parseado', { componentesCount: (diagram.components || []).length })
 
     // La API retorna { components: [...], links: [...] }
-    const components = diagram.components || []
-    const links = diagram.links || []
+    const components: ComponenteDiagrama[] = diagram.components || []
+    const links: EnlaceDiagrama[] = diagram.links || []
 
     if (!Array.isArray(components)) {
       console.error('Components no es un array:', components)
@@ -193,8 +205,8 @@ function parseProtocolSteps(protocol) {
     })
 
     // Crear mapa de condiciones por componente destino
-    const conditionsByTarget = {}
-    links.forEach(link => {
+    const conditionsByTarget: Record<string | number, GrupoCondicion[]> = {}
+    links.forEach((link: EnlaceDiagrama) => {
       const targetId = link.target_component_id
       if (link.dynamic_data?.conditions && link.dynamic_data.conditions.length > 0) {
         if (!conditionsByTarget[targetId]) {
@@ -210,22 +222,24 @@ function parseProtocolSteps(protocol) {
     logger.info('Condiciones por target procesadas', { count: Object.keys(conditionsByTarget).length })
 
     // Ordenar por z_order
-    components.sort((a, b) => (a.z_order || 0) - (b.z_order || 0))
+    components.sort((a: ComponenteDiagrama, b: ComponenteDiagrama) => (a.z_order || 0) - (b.z_order || 0))
 
     // Filtrar solo componentes que deben mostrarse
-    steps.value = components.filter(comp => {
-      const validTypes = ['question', 'tensiometer', 'weight', 'glucometer', 'text']
-      const type = comp.dynamic_data?.observation_type?.type
-      return validTypes.includes(type)
-    }).map(comp => ({
-      id: comp.id,
-      type: comp.dynamic_data?.observation_type?.type || 'text',
-      header: comp.dynamic_data?.header,
-      body: comp.dynamic_data?.body,
-      question: comp.dynamic_data?.question,
-      observationType: comp.dynamic_data?.observation_type,
-      conditions: conditionsByTarget[comp.id] || null
-    }))
+    const tiposValidos: string[] = ['question', 'tensiometer', 'weight', 'glucometer', 'text']
+    steps.value = components
+      .filter((comp: ComponenteDiagrama) => {
+        const type = comp.dynamic_data?.observation_type?.type
+        return type !== undefined && tiposValidos.includes(type)
+      })
+      .map((comp: ComponenteDiagrama): PasoWizard => ({
+        id: comp.id,
+        type: (comp.dynamic_data?.observation_type?.type || 'text') as TipoPaso,
+        header: comp.dynamic_data?.header,
+        body: comp.dynamic_data?.body,
+        question: comp.dynamic_data?.question,
+        observationType: comp.dynamic_data?.observation_type,
+        conditions: conditionsByTarget[comp.id] ?? null
+      }))
 
     logger.info('Pasos procesados', { count: steps.value.length })
 
@@ -236,14 +250,14 @@ function parseProtocolSteps(protocol) {
 }
 
 // Verificar si un paso debe mostrarse (condicionales)
-function shouldShowStep(step) {
+function shouldShowStep(step: PasoWizard): boolean {
   if (!step.conditions || step.conditions.length === 0) {
     return true
   }
 
   // Evaluar grupos de condiciones (OR entre grupos, AND dentro de cada grupo)
-  return step.conditions.some(group => {
-    const sourceResponse = responses.value[group.sourceId]
+  return step.conditions.some((group: GrupoCondicion) => {
+    const sourceResponse = responses.value[group.sourceId] as Record<string, unknown> | null | undefined
     if (!sourceResponse) return false
 
     // Todas las condiciones del grupo deben cumplirse (AND)
@@ -251,7 +265,10 @@ function shouldShowStep(step) {
     let result = true
     for (let i = 0; i < group.conditions.length; i++) {
       const condition = group.conditions[i]
-      const value = sourceResponse[condition.field] || sourceResponse
+      const rawValue = condition.field
+        ? (sourceResponse as Record<string, unknown>)[condition.field]
+        : sourceResponse
+      const value = rawValue as unknown
       let conditionMet = false
 
       switch (condition.operator) {
@@ -259,14 +276,13 @@ function shouldShowStep(step) {
           conditionMet = value == condition.value
           break
         case 'lesser':
-          conditionMet = parseFloat(value) < parseFloat(condition.value)
+          conditionMet = parseFloat(String(value)) < parseFloat(String(condition.value))
           break
         case 'greater':
-          conditionMet = parseFloat(value) > parseFloat(condition.value)
+          conditionMet = parseFloat(String(value)) > parseFloat(String(condition.value))
           break
-        case 'range':
-          const val = parseFloat(value)
-          // Evaluar según el rango especificado para glucosa
+        case 'range': {
+          const val = parseFloat(String(value))
           if (condition.range === 'Low') conditionMet = val < 70
           else if (condition.range === 'Medium Low') conditionMet = val < 70
           else if (condition.range === 'High') conditionMet = val > 140
@@ -274,10 +290,11 @@ function shouldShowStep(step) {
           else if (condition.range === 'Normal') conditionMet = val >= 70 && val <= 140
           else conditionMet = true
           break
+        }
         default:
           // Si no hay operador pero hay range, evaluar por range
           if (condition.range) {
-            const val = parseFloat(value)
+            const val = parseFloat(String(value))
             if (condition.range === 'Low') conditionMet = val < 70
             else if (condition.range === 'Medium Low') conditionMet = val < 70
             else if (condition.range === 'High') conditionMet = val > 140
@@ -308,16 +325,14 @@ function shouldShowStep(step) {
 }
 
 // Obtener pasos visibles (filtrando condicionales)
-const visibleSteps = computed(() => {
-  return steps.value.filter(step => shouldShowStep(step))
+const visibleSteps = computed<PasoWizard[]>(() => {
+  return steps.value.filter((step: PasoWizard) => shouldShowStep(step))
 })
 
-
-
 // Navegación
-function goToNextStep() {
+function goToNextStep(): void {
   if (!stepValid.value) return
-  
+
   if (currentStepIndex.value >= visibleSteps.value.length - 1) {
     submitWizard()
   } else {
@@ -326,7 +341,7 @@ function goToNextStep() {
   }
 }
 
-function goToPreviousStep() {
+function goToPreviousStep(): void {
   if (currentStepIndex.value > 0) {
     currentStepIndex.value--
     stepValid.value = true // El paso anterior ya fue validado
@@ -334,12 +349,13 @@ function goToPreviousStep() {
 }
 
 // Manejar cambio en el paso actual
-function handleStepUpdate(value) {
+function handleStepUpdate(value: unknown): void {
   if (currentStep.value) {
     responses.value[currentStep.value.id] = value
 
     if (currentStep.value.type === 'weight' && value && typeof value === 'object') {
-      const alturaValor = Number(value.height)
+      const valorObj = value as Record<string, unknown>
+      const alturaValor = Number(valorObj.height)
       if (Number.isFinite(alturaValor) && alturaValor > 0) {
         setAlturaCm(alturaValor)
       }
@@ -348,12 +364,12 @@ function handleStepUpdate(value) {
 }
 
 // Manejar validación del paso
-function handleStepValid(isValid) {
+function handleStepValid(isValid: boolean): void {
   stepValid.value = isValid
 }
 
-function obtenerTituloPorTipo(tipo) {
-  const mapa = {
+function obtenerTituloPorTipo(tipo: string): string {
+  const mapa: Record<string, string> = {
     question: 'Pregunta',
     tensiometer: 'Presión arterial',
     weight: 'Peso',
@@ -363,7 +379,7 @@ function obtenerTituloPorTipo(tipo) {
   return mapa[tipo] || 'Medición'
 }
 
-function formatearNumero(valor) {
+function formatearNumero(valor: unknown): string | null {
   if (typeof valor === 'number' && Number.isFinite(valor)) {
     return `${valor}`
   }
@@ -373,7 +389,7 @@ function formatearNumero(valor) {
   return null
 }
 
-function formatearRespuesta(tipo, respuesta) {
+function formatearRespuesta(tipo: string, respuesta: unknown): string | null {
   if (respuesta === null || respuesta === undefined) return null
 
   if (typeof respuesta === 'string' || typeof respuesta === 'number') {
@@ -382,32 +398,34 @@ function formatearRespuesta(tipo, respuesta) {
 
   if (typeof respuesta !== 'object') return null
 
+  const respObj = respuesta as Record<string, unknown>
+
   if (tipo === 'tensiometer') {
-    const sistolica = formatearNumero(respuesta.Systolic)
-    const diastolica = formatearNumero(respuesta.Diastolic)
-    const bpm = formatearNumero(respuesta.bpm)
+    const sistolica = formatearNumero(respObj.Systolic)
+    const diastolica = formatearNumero(respObj.Diastolic)
+    const bpm = formatearNumero(respObj.bpm)
     const presion = sistolica && diastolica ? `${sistolica}/${diastolica} mmHg` : null
-    const partes = []
+    const partes: string[] = []
     if (presion) partes.push(presion)
     if (bpm) partes.push(`${bpm} BPM`)
     return partes.join(' · ') || null
   }
 
   if (tipo === 'weight') {
-    const peso = formatearNumero(respuesta.weight)
-    const imc = formatearNumero(respuesta.IMC)
-    const partes = []
+    const peso = formatearNumero(respObj.weight)
+    const imc = formatearNumero(respObj.IMC)
+    const partes: string[] = []
     if (peso) partes.push(`${peso} kg`)
     if (imc) partes.push(`IMC ${imc}`)
     return partes.join(' · ') || null
   }
 
   if (tipo === 'glucometer') {
-    const glucosa = formatearNumero(respuesta.glucose)
+    const glucosa = formatearNumero(respObj.glucose)
     return glucosa ? `${glucosa} mg/dL` : null
   }
 
-  const aliasCampos = {
+  const aliasCampos: Record<string, string> = {
     Systolic: 'Sistólica',
     Diastolic: 'Diastólica',
     bpm: 'BPM',
@@ -416,8 +434,7 @@ function formatearRespuesta(tipo, respuesta) {
     IMC: 'IMC'
   }
 
-  const respuestaRecord = respuesta || {}
-  const partes = Object.entries(respuestaRecord)
+  const partes = Object.entries(respObj)
     .map(([key, value]) => {
       const numero = formatearNumero(value)
       if (numero) return `${aliasCampos[key] || key}: ${numero}`
@@ -429,11 +446,11 @@ function formatearRespuesta(tipo, respuesta) {
   return partes.length > 0 ? partes.join(' · ') : null
 }
 
-function volverAControles() {
+function volverAControles(): void {
   router.push('/controles')
 }
 
-function handleCloseClick() {
+function handleCloseClick(): void {
   if (mostrarResumen.value) {
     volverAControles()
     return
@@ -442,32 +459,36 @@ function handleCloseClick() {
 }
 
 // Enviar datos al completar
-async function submitWizard() {
+async function submitWizard(): Promise<void> {
   isSubmitting.value = true
   error.value = null
-  
+
   try {
-    const patientId = props.patientId || userStore.usuario?.patient_id || userStore.usuario?._id || userStore.usuario?.uid
-    
+    const patientId = props.patientId
+      || (userStore.usuario as Record<string, unknown>)?.patient_id
+      || (userStore.usuario as Record<string, unknown>)?._id
+      || (userStore.usuario as Record<string, unknown>)?.uid
+
     if (!patientId) {
       throw new Error('No se encontró ID del paciente')
     }
-    
+
     // Obtener datos del paciente del store
-    const patientName = userStore.usuario?.name || userStore.usuario?.nombre || ''
-    const patientSurname = userStore.usuario?.lastname || userStore.usuario?.apellido || ''
-    
+    const usuarioAny = userStore.usuario as Record<string, unknown> | null
+    const patientName = String(usuarioAny?.name || usuarioAny?.nombre || '')
+    const patientSurname = String(usuarioAny?.lastname || usuarioAny?.apellido || '')
+
     // Obtener nombre del protocolo
-    const protocolName = protocolData.value?.name || ''
-    
+    const protocolName = protocolData.value?.name ? String(protocolData.value.name) : ''
+
     // Preparar observaciones en formato Controls Engine
-    const observations = []
-    
+    const observations: ObservacionGuardada[] = []
+
     // Recorrer las respuestas y crear observaciones para cada paso
     for (const [stepId, response] of Object.entries(responses.value)) {
-      const step = steps.value.find(s => s.id === stepId)
+      const step = steps.value.find((s: PasoWizard) => String(s.id) === stepId)
       if (!step || !step.observationType) continue
-      
+
       // Construir observación en formato Controls Engine
       observations.push({
         stepId: stepId,
@@ -479,33 +500,40 @@ async function submitWizard() {
         response: response
       })
     }
-    
+
     if (observations.length === 0) {
       throw new Error('No hay observaciones para guardar')
     }
-    
+
     logger.info('Enviando observaciones', {
       protocolId: props.protocolId,
       observationsCount: observations.length
     })
-    
+
     // Enviar a la API HOMA Center usando el servicio actualizado
+    // Mapear stepId a string y asertar tipo para cumplir con la interfaz WizardObservation
+    const observacionesMapeadas = observations.map(o => ({
+      ...o,
+      stepId: String(o.stepId)
+    })) as Parameters<typeof saveProtocolObservations>[5]
     const result = await saveProtocolObservations(
       String(patientId),
       patientName,
       patientSurname,
       props.protocolId,
       protocolName,
-      observations
+      observacionesMapeadas
     )
-    
+
     // Verificar que se guardó correctamente (la API retorna el batch con ID)
-    if (result && result.id) {
+    const resultAny = (result as unknown) as Record<string, unknown> | null
+    if (resultAny && resultAny.id) {
+      const obsArr = resultAny.observations as unknown[] | undefined
       logger.info('Control guardado exitosamente', {
-        batchId: result.id,
-        observationsCount: result.observations.length
+        batchId: resultAny.id,
+        observationsCount: obsArr?.length ?? observations.length
       })
-      
+
       try {
         await healthStore.fetchAllHealthData()
       } catch (fetchError) {
