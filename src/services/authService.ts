@@ -350,6 +350,22 @@ export const authService = {
     return null
   },
 
+  /**
+   * Registrar nuevo usuario
+   * Stub: la funcionalidad de registro aún no está implementada en el backend
+   * TODO: Implementar cuando el endpoint de registro esté disponible
+   */
+  async registrar(
+    _email: string,
+    _password: string,
+    _rut: string,
+    _nombre: string,
+    _apellido: string
+  ): Promise<LoginResponse> {
+    logger.warn('authService.registrar: funcionalidad no disponible aún')
+    return { success: false, error: 'El registro de nuevas cuentas no está disponible actualmente.' }
+  },
+
   estaAutenticado(): boolean {
     return !!this.obtenerToken()
   }
