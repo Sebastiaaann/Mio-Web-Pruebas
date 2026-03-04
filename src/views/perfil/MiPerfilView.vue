@@ -67,15 +67,63 @@ async function handleLogout() {
 }
 
 // --- LOGICA DE PLANES (Migrada de PerfilView) ---
+
+interface PlanAPI {
+  id_plan?: string | number
+  name_plan?: string
+  active_plan?: string
+  logo?: string
+  nombre?: string
+  colorPrimario?: string
+  client_name?: string
+  client_brand?: string
+  config?: {
+    colors?: Record<string, string>
+    logo?: string | null
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
+
+interface PlanDisponible {
+  id?: string | number
+  store_id?: string | number
+  nombre?: string
+  subtitle?: string
+  [key: string]: unknown
+}
+
+interface PlanMeta {
+  nombre: string
+  logo?: string | null
+  colorPrimario?: string
+  colors?: { primary: string; text_alt: string; logo: string }
+  [key: string]: unknown
+}
+
 const selectedPlanType = ref('esencial') // 'esencial' or 'mutual'
-const availablePlans = ref([])
-const planesPaciente = ref([])
-const currentPlanMeta = ref(null)
+const availablePlans = ref<PlanDisponible[]>([])
+const planesPaciente = ref<PlanAPI[]>([])
+const currentPlanMeta = ref<PlanMeta | null>(null)
 const isLoadingPlans = ref(false)
 const planCambiadoManualmente = ref(false)
-const planActivoAPI = ref(null)
+const planActivoAPI = ref<PlanAPI | null>(null)
 const tienePlanesAlternativos = computed(() => {
   return planesPaciente.value.length > 1
+})
+
+/**
+ * Planes disponibles para comprar, excluyendo los que el paciente ya tiene activos.
+ * Se filtra por nombre para evitar mostrar duplicados entre endpoints distintos.
+ */
+const planesDisponiblesParaComprar = computed(() => {
+  const nombresActivos = new Set(
+    planesPaciente.value.map(p => (p.name_plan || p.nombre || '').toLowerCase())
+  )
+  return availablePlans.value.filter(p => {
+    const nombre = (p.subtitle || p.nombre || '').toLowerCase()
+    return !Array.from(nombresActivos).some(activo => activo.includes(nombre) || nombre.includes(activo))
+  })
 })
 
 // Cargar preferencia
@@ -101,8 +149,8 @@ const errorCambioPlan = ref('')
  * Aplica la configuración visual del plan (tema, colores, logo)
  * Se usa tanto al confirmar el cambio como al cargar el plan inicial
  */
-function aplicarConfiguracionPlan(planType) {
-  const theme = planThemes[planType] || planThemes.esencial
+function aplicarConfiguracionPlan(planType: string) {
+  const theme = planThemes[planType as keyof typeof planThemes] || planThemes.esencial
   
   // Buscar el plan en planesPaciente o en el plan activo de la API
   let foundPlan = planesPaciente.value.find(p => (p.name_plan || '').toLowerCase().includes(planType.toLowerCase()))
@@ -153,7 +201,7 @@ function aplicarConfiguracionPlan(planType) {
 /**
  * Inicia el flujo de cambio de plan mostrando el modal de confirmación
  */
-function iniciarCambioPlan(nuevoPlan) {
+function iniciarCambioPlan(nuevoPlan: string) {
   if (nuevoPlan === selectedPlanType.value) return
   
   planAnterior.value = selectedPlanType.value
@@ -170,7 +218,7 @@ async function confirmarCambioPlan() {
   errorCambioPlan.value = ''
   
   try {
-    const patientId = userStore.usuario?.id || userStore.usuario?.patient_id
+    const patientId = userStore.usuario?.patient_id
     if (!patientId) {
       errorCambioPlan.value = 'No se encontró el ID del paciente.'
       return
@@ -187,7 +235,7 @@ async function confirmarCambioPlan() {
     }
 
     // Llamar a la API para actualizar el plan
-    const resultado = await pacienteService.actualizarPlan(patientId, planDestino.id_plan)
+    const resultado = await pacienteService.actualizarPlan(patientId, planDestino.id_plan!)
     
     if (!resultado.success) {
       errorCambioPlan.value = resultado.error || 'Error al cambiar el plan.'
@@ -239,7 +287,7 @@ watch(selectedPlanType, (newPlanType) => {
   aplicarConfiguracionPlan(newPlanType)
 })
 
-function handlePlanSelection(plan) {
+function handlePlanSelection(plan: PlanDisponible) {
   logger.info('Plan seleccionado:', plan)
   
   const planName = (plan.subtitle || plan.nombre || '').toLowerCase()
@@ -264,7 +312,7 @@ function handlePlanSelection(plan) {
 onMounted(async () => {
   try {
     isLoadingPlans.value = true
-    const patientId = userStore.usuario?.id || userStore.usuario?.patient_id
+    const patientId = userStore.usuario?.patient_id
     
     // Cargar datos básicos solo si aún no están en memoria
     if (!serviciosStore.hayServicios && !serviciosStore.cargando) {
@@ -275,8 +323,9 @@ onMounted(async () => {
     if (patientId) {
       // Planes actuales
       const plansResponse = await pacienteService.obtenerPlanes(patientId)
-      const planesActuales = plansResponse.success
-        ? (plansResponse.data?.plans || plansResponse.planes || [])
+      const dataPlanes = plansResponse.data as { plans?: PlanAPI[] } | undefined
+      const planesActuales: PlanAPI[] = plansResponse.success
+        ? (dataPlanes?.plans || (plansResponse.planes as PlanAPI[] | undefined) || [])
         : []
 
       if (Array.isArray(planesActuales)) {
@@ -284,7 +333,7 @@ onMounted(async () => {
         const activePlan = planesActuales.find(p => p.active_plan === "1")
           if (activePlan) {
             planActivoAPI.value = activePlan
-            const planName = activePlan.name_plan.toLowerCase()
+            const planName = (activePlan.name_plan || '').toLowerCase()
             let tipoPlanAPI = 'esencial'
             if (planName.includes('esencial') || planName.includes('vital')) tipoPlanAPI = 'esencial'
           
@@ -307,18 +356,19 @@ onMounted(async () => {
              configStore.setLogoMutual(activePlan.config?.logo || null)
            }
           
-          currentPlanMeta.value = { ...activePlan, logo: activePlan.config?.logo || planThemes[selectedPlanType.value]?.logo }
+          currentPlanMeta.value = { ...activePlan, nombre: activePlan.nombre || activePlan.name_plan || '', logo: activePlan.config?.logo || planThemes[selectedPlanType.value as keyof typeof planThemes]?.logo }
         }
       }
 
       // Más planes disponibles
       const morePlansResponse = await pacienteService.obtenerMasPlanes(patientId)
-      if (morePlansResponse.success && morePlansResponse.data?.plans) {
-        availablePlans.value = morePlansResponse.data.plans
-      } else if (morePlansResponse.success && morePlansResponse.plans) {
+      const moreData = morePlansResponse.data as { plans?: PlanDisponible[] } | undefined
+      if (morePlansResponse.success && moreData?.plans) {
+        availablePlans.value = moreData.plans
+      } else if (morePlansResponse.success && morePlansResponse.planes) {
         // Fallback estructura antigua
         const existingIds = new Set(availablePlans.value.map(p => p.id))
-        morePlansResponse.plans.forEach(p => {
+        ;(morePlansResponse.planes as PlanDisponible[]).forEach(p => {
             if (!existingIds.has(p.id)) availablePlans.value.push(p)
         })
       }
@@ -415,7 +465,7 @@ onMounted(async () => {
           </div>
 
           <!-- Tus Planes Disponibles -->
-          <div v-if="availablePlans.length > 0" class="mt-8">
+          <div v-if="planesDisponiblesParaComprar.length > 0" class="mt-8">
               <SectionHeader
                 title="Tus Planes Disponibles"
                 subtitle="Selecciona el plan que mejor se adapte a tus necesidades"
@@ -424,7 +474,7 @@ onMounted(async () => {
               />
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <PlanCard
-                  v-for="plan in availablePlans"
+                  v-for="plan in planesDisponiblesParaComprar"
                   :key="plan.store_id || plan.id"
                   :plan="plan"
                   @select="handlePlanSelection"
