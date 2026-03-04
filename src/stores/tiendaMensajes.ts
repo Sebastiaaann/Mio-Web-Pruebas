@@ -163,27 +163,6 @@ export const useMensajesStore = defineStore('mensajes', () => {
       }
     })
 
-    // 5. Novedades Fijas (Ejemplo)
-    addMessage('news', {
-      id: 'NOV-SLEEP',
-      title: 'Nueva función: Control de Sueño',
-      description: 'Ahora puedes registrar tus horas de sueño y ver correlaciones.',
-      icon: markRaw(Sparkles),
-      iconColor: 'text-amber-500',
-      iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-      type: 'info'
-    })
-
-    // 6. Información General (Info)
-    addMessage('info', {
-      id: 'INFO-TIPS',
-      title: 'Tip de Salud: Hidratación',
-      description: 'Recuerda beber al menos 2 litros de agua al día para mantenerte saludable.',
-      icon: markRaw(Info),
-      iconColor: 'text-teal-500',
-      iconBg: 'bg-teal-100 dark:bg-teal-900/30',
-      type: 'info'
-    })
   }
 
   // Alias para mantener compatibilidad con vista anterior si se llama directamente

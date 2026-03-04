@@ -156,7 +156,7 @@ watch(() => configStore.planActivo, async (nuevoPlan, planAnterior) => {
 
               <div class="absolute inset-0 flex flex-col justify-between p-6 sm:p-8">
                 <div class="flex items-center justify-between">
-                  <span class="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">Beneficio</span>
+                  
                   <span class="beneficios-tag bg-white/15 text-white border border-white/30">Exclusivo</span>
                 </div>
 
@@ -184,12 +184,7 @@ watch(() => configStore.planActivo, async (nuevoPlan, planAnterior) => {
                         <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                       </svg>
                     </a>
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-2 rounded-full border border-white/60 px-4 py-2 text-xs font-semibold text-white/90 backdrop-blur-sm transition-all duration-300 hover:border-white"
-                    >
-                      Guardar beneficio
-                    </button>
+                    
                   </div>
                 </div>
               </div>
@@ -210,7 +205,15 @@ watch(() => configStore.planActivo, async (nuevoPlan, planAnterior) => {
         </section>
 
         <section v-else class="bg-white rounded-3xl border border-slate-200/70 p-10 text-center shadow-sm">
-          <p class="text-slate-600">No hay beneficios disponibles para este plan.</p>
+          <div class="flex flex-col items-center gap-3">
+            <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+              </svg>
+            </div>
+            <p class="text-slate-900 font-semibold text-base">No hay beneficios disponibles</p>
+            <p class="text-slate-500 text-sm max-w-sm">Tu plan actual no tiene beneficios asignados por el momento. Contacta a tu equipo de salud para más información.</p>
+          </div>
         </section>
       </div>
     </main>

@@ -6,38 +6,50 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTiendaUsuario } from '@/stores/tiendaUsuario'
+import { useHealthStore } from '@/stores/tiendaSalud'
 import { getAvailableProtocols } from '@/services/healthPlanService'
 import { logger } from '@/utils/logger';
 import {
-  HelpCircle,
   Check,
   Heart,
   Scale,
   Droplet,
   ArrowRight,
   Activity,
-  Loader2,
-  AlertCircle
+  AlertCircle,
+  ChevronRight,
 } from 'lucide-vue-next'
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/medicion-carousel/carousel"
 import HeaderCompleto from "@/components/ui/HeaderCompleto.vue";
 import SkeletonCard from '@/components/ui/SkeletonCard.vue'
 
 // Router y Store
 const router = useRouter()
 const userStore = useTiendaUsuario()
+const healthStore = useHealthStore()
 
 // Estado
 const protocols = ref([])
 const isLoading = ref(true)
 const error = ref(null)
 const selectedProtocol = ref(null)
+
+// Fecha del último registro por protocolo
+const ultimoRegistroPorProtocolo = computed(() => {
+  const mapa = {}
+  for (const protocol of protocols.value) {
+    const entradas = healthStore.historialMediciones?.[protocol.id]
+    if (entradas && entradas.length > 0) {
+      // Ordenar descendente por fecha para garantizar el más reciente primero
+      const ordenadas = [...entradas].sort(
+        (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+      )
+      mapa[protocol.id] = new Date(ordenadas[0].fecha)
+    } else {
+      mapa[protocol.id] = null
+    }
+  }
+  return mapa
+})
 
 // Cargar protocolos al montar el componente
 onMounted(async () => {
@@ -206,75 +218,58 @@ function getProtocolColor(name) {
               Controles disponibles ({{ protocols.length }})
             </h3>
 
-            <div class="px-12">
-              <Carousel :spacing="24" class="w-full">
-                <CarouselContent>
-                  <CarouselItem
-                    v-for="protocol in protocols"
-                    :key="protocol.uid || protocol.id"
-                    class="basis-full md:basis-1/2 lg:basis-1/3"
+            <!-- Lista vertical de protocolos -->
+            <div class="space-y-4">
+              <div
+                v-for="protocol in protocols"
+                :key="protocol.uid || protocol.id"
+                @click="selectProtocol(protocol)"
+                class="flex items-center gap-4 bg-white rounded-2xl border-2 p-5 cursor-pointer transition-all duration-200 hover:shadow-md"
+                :class="selectedProtocol?.id === protocol.id ? 'shadow-md' : 'border-gray-100'"
+                :style="selectedProtocol?.id === protocol.id
+                  ? { borderColor: 'var(--theme-primary)', backgroundColor: 'var(--theme-primary-light, #f5f3ff)' }
+                  : {}"
+              >
+                <!-- Icono -->
+                <div
+                  class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                  :class="getProtocolColor(protocol.name).bg"
+                >
+                  <component
+                    :is="getProtocolIcon(protocol.name)"
+                    class="w-7 h-7"
+                    :class="getProtocolColor(protocol.name).icon"
+                  />
+                </div>
+
+                <!-- Contenido -->
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-base font-bold text-slate-900 truncate">{{ protocol.name }}</h4>
+                  <p class="text-sm text-slate-500 mb-1.5 line-clamp-1">
+                    {{ protocol.description || 'Control de salud programado' }}
+                  </p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="px-2.5 py-0.5 bg-gray-100 text-slate-600 text-xs rounded-full">
+                      {{ protocol.healthPlanName || 'Plan de Salud' }}
+                    </span>
+                    <span v-if="ultimoRegistroPorProtocolo[protocol.id]" class="text-xs text-slate-400">
+                      Último: {{ ultimoRegistroPorProtocolo[protocol.id].toLocaleDateString('es-CL') }}
+                    </span>
+                    <span v-else class="text-xs text-slate-400">Sin registros</span>
+                  </div>
+                </div>
+
+                <!-- Check / Chevron -->
+                <div class="shrink-0">
+                  <div
+                    v-if="selectedProtocol?.id === protocol.id"
+                    class="w-8 h-8 bg-[#10B981] rounded-full flex items-center justify-center"
                   >
-                    <div
-                      @click="selectProtocol(protocol)"
-                      class="protocol-card bg-white rounded-2xl border-2 p-6 cursor-pointer relative transition-all duration-200 h-full"
-                      :class="selectedProtocol?.id === protocol.id
-                        ? 'ring-4 selected-shadow'
-                        : 'border-transparent hover:shadow-xl'"
-                      :style="selectedProtocol?.id === protocol.id ? { borderColor: 'var(--theme-primary)', '--tw-ring-color': 'var(--theme-primary)', '--tw-ring-opacity': '0.1' } : {}"
-                    >
-                      <!-- Checkmark -->
-                      <div
-                        class="absolute top-4 right-4 w-8 h-8 bg-[#10B981] rounded-full flex items-center justify-center transition-all duration-200"
-                        :class="selectedProtocol?.id === protocol.id ? 'opacity-100 scale-100' : 'opacity-0 scale-75'"
-                      >
-                        <Check class="text-white w-5 h-5" />
-                      </div>
-
-                      <!-- Icon -->
-                      <div
-                        class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-                        :class="getProtocolColor(protocol.name).bg"
-                      >
-                        <component
-                          :is="getProtocolIcon(protocol.name)"
-                          class="w-8 h-8"
-                          :class="getProtocolColor(protocol.name).icon"
-                        />
-                      </div>
-
-                      <!-- Content -->
-                      <h4 class="text-h3 text-slate-900 mb-2">
-                        {{ protocol.name }}
-                      </h4>
-                      <p class="text-body text-slate-600 mb-4 text-sm">
-                        {{ protocol.description || 'Control de salud programado' }}
-                      </p>
-
-                      <!-- Health Plan Badge -->
-                      <div class="flex items-center gap-2">
-                        <span class="px-3 py-1 bg-gray-100 text-slate-600 text-xs rounded-full">
-                          {{ protocol.healthPlanName || 'Plan de Salud' }}
-                        </span>
-                      </div>
-
-                      <!-- Button -->
-                      <button
-                        class="w-full mt-6 py-3 px-4 border-2 rounded-xl font-medium transition-colors"
-                        :class="selectedProtocol?.id === protocol.id
-                          ? 'text-white'
-                          : 'bg-white text-gray-700 border-gray-200'"
-                        :style="selectedProtocol?.id === protocol.id ? { backgroundColor: 'var(--theme-primary)', borderColor: 'var(--theme-primary)' } : {}"
-                        @mouseenter="selectedProtocol?.id !== protocol.id && $event.target.style.setProperty('border-color', 'var(--theme-primary)')"
-                        @mouseleave="selectedProtocol?.id !== protocol.id && $event.target.style.removeProperty('border-color')"
-                      >
-                        {{ selectedProtocol?.id === protocol.id ? 'Seleccionado' : 'Seleccionar' }}
-                      </button>
-                    </div>
-                  </CarouselItem>
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
-              </Carousel>
+                    <Check class="text-white w-5 h-5" />
+                  </div>
+                  <ChevronRight v-else class="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -302,9 +297,5 @@ function getProtocolColor(name) {
 <style scoped>
 .font-display {
   font-family: 'Cabinet Grotesk', sans-serif;
-}
-
-.selected-shadow {
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
 }
 </style>

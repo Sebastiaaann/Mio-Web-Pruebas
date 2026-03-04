@@ -26,11 +26,16 @@ const { citasAgendadas } = storeToRefs(citasStore)
 // Fetch citas on mount
 onMounted(() => {
   citasStore.obtenerCitas()
+  // Resetear página si la función de mis citas está deshabilitada
+  if (!mostrarMisCitas && currentPage.value > 0) {
+    currentPage.value = 0
+  }
 })
 
 // --- CAROUSEL LOGIC ---
+const mostrarMisCitas = import.meta.env.VITE_SHOW_MIS_CITAS === 'true'
 const currentPage = ref(0)
-const pages = ['wizard', 'calendario']
+const pages = mostrarMisCitas ? ['wizard', 'calendario'] : ['wizard']
 const totalPages = pages.length
 
 // Sidebar state
@@ -460,7 +465,7 @@ onUnmounted(() => {
         </section>
 
         <!-- PAGE 2: Calendario de Citas -->
-        <section class="h-dvh w-screen flex-shrink-0 bg-background">
+        <section v-if="mostrarMisCitas" class="h-dvh w-screen flex-shrink-0 bg-background">
           <CalendarioCitas :citas="citasAgendadas" :mes-inicial="new Date()" />
         </section>
 

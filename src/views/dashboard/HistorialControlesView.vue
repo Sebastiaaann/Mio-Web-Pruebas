@@ -351,168 +351,385 @@ const descargarPDFFinal = () => {
   }
 };
 
+// ─── Colores de la marca ───────────────────────────────────────────────────
+const COLOR_PRIMARY   = [125, 88, 233]   // violeta mio+
+const COLOR_SUCCESS   = [16, 185, 129]   // verde  normal
+const COLOR_WARNING   = [249, 115, 22]   // naranja alerta
+const COLOR_DANGER    = [239, 68, 68]    // rojo   crítico
+const COLOR_LIGHT     = [245, 243, 255]  // fondo violeta suave
+const COLOR_GRAY_TEXT = [100, 100, 115]
+const COLOR_DARK_TEXT = [30, 30, 45]
+
+// ─── Helper: colores de estado ─────────────────────────────────────────────
+
+function etiquetaEstadoPDF(tipo) {
+  if (tipo === 'success') return 'Normal'
+  if (tipo === 'warning') return 'Alerta'
+  if (tipo === 'danger')  return 'Crítico'
+  return 'Pendiente'
+}
+
+// ─── Helper: dibujar cabecera en cada página ──────────────────────────────
+function dibujarCabecera(doc, pageWidth, nombrePaciente, ahora = new Date()) {
+  // Bloque violeta izquierdo
+  doc.setFillColor(...COLOR_PRIMARY)
+  doc.rect(0, 0, 45, 20, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(13)
+  doc.setFont('helvetica', 'bold')
+  doc.text('mio+', 8, 13)
+
+  // Título derecho
+  doc.setTextColor(...COLOR_DARK_TEXT)
+  doc.setFontSize(15)
+  doc.text('Historial de Controles de Salud', pageWidth - 20, 10, { align: 'right' })
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(...COLOR_GRAY_TEXT)
+  doc.text(
+    `Generado el ${ahora.toLocaleDateString('es-CL')} a las ${ahora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`,
+    pageWidth - 20, 16, { align: 'right' }
+  )
+
+  // Línea separadora
+  doc.setDrawColor(...COLOR_PRIMARY)
+  doc.setLineWidth(0.8)
+  doc.line(0, 21, pageWidth, 21)
+}
+
+// ─── Helper: dibujar pie de página ────────────────────────────────────────
+function dibujarPie(doc, pageWidth, pageHeight, pagina, totalPaginas, nombrePaciente) {
+  doc.setDrawColor(220, 220, 230)
+  doc.setLineWidth(0.4)
+  doc.line(14, pageHeight - 14, pageWidth - 14, pageHeight - 14)
+  doc.setFontSize(7.5)
+  doc.setTextColor(...COLOR_GRAY_TEXT)
+  doc.setFont('helvetica', 'normal')
+  doc.text(nombrePaciente, 14, pageHeight - 8)
+  doc.text(`Página ${pagina} de ${totalPaginas}`, pageWidth - 14, pageHeight - 8, { align: 'right' })
+  doc.text('Plataforma MIO+ · Salud Digital', pageWidth / 2, pageHeight - 8, { align: 'center' })
+}
+
+// ─── PDF de un único control (modal de vista previa) ──────────────────────
 const generarDocPDF = (control) => {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.width;
-  
-  // LOGO MIO (Placeholder circle if image not available)
-  doc.setFillColor(100, 80, 230); // Purple MIO
-  doc.circle(25, 25, 10, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("mio+", 20, 27);
-  
-  // Header Right
-  doc.setTextColor(40, 40, 40);
-  doc.setFontSize(16);
-  doc.text("Informes y Recomendaciones", pageWidth - 20, 25, { align: "right" });
-  doc.setFontSize(10);
-  doc.setTextColor(150, 150, 150);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Generado el ${new Date().toLocaleDateString('es-CL')} ${new Date().toLocaleTimeString('es-CL')}`, pageWidth - 20, 32, { align: "right" });
-  
-  // Purple Line
-  doc.setDrawColor(120, 100, 230);
-  doc.setLineWidth(0.5);
-  doc.line(20, 40, pageWidth - 20, 40);
-  
-  let yPos = 55;
-  
-  // 1. Información del Control (Light Blue Box)
-  doc.setFillColor(235, 248, 255); // Light Blue
-  doc.setDrawColor(180, 220, 255);
-  doc.roundedRect(20, yPos, pageWidth - 40, 35, 3, 3, 'FD');
-  
-  doc.setFontSize(12);
-  doc.setTextColor(0, 100, 180); // Blue Text
-  doc.setFont("helvetica", "bold");
-  doc.text("Información del Control", 25, yPos + 10);
-  
-  doc.setFontSize(10);
-  doc.setTextColor(60, 60, 60);
-  doc.setFont("helvetica", "bold");
-  doc.text("Protocolo:", 25, yPos + 20);
-  doc.text("Fecha:", 90, yPos + 20);
-  doc.text("Hora:", 150, yPos + 20);
-  
-  doc.setFont("helvetica", "normal");
-  doc.text(control.tipo, 25, yPos + 26);
-  doc.text(control.fecha, 90, yPos + 26);
-  doc.text(control.hora, 150, yPos + 26);
-  
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  doc.text("Fuente: Control realizado localmente en la aplicación móvil", 25, yPos + 32);
-  
-  yPos += 45;
-  
-  // 2. Resultados Summary
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "bold");
-  doc.text("Resultados del Control Médico", 20, yPos);
-  yPos += 5;
-  
-  // Count measurements
-  const measurementsCount = control.details ? control.details.length : 1;
-  
-  // Cards (Mediciones count)
-  doc.setDrawColor(230, 230, 230);
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(20, yPos, (pageWidth - 50) / 2, 25, 2, 2, 'FD');
-  
-  doc.setFontSize(16);
-  doc.setTextColor(0, 120, 200); // Blue
-  doc.text(String(measurementsCount), 20 + ((pageWidth - 50) / 4), yPos + 10, { align: "center" });
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.text("Mediciones", 20 + ((pageWidth - 50) / 4), yPos + 18, { align: "center" });
-  
-  // Recommendations count (Mock 0)
-  doc.roundedRect(30 + (pageWidth - 50) / 2, yPos, (pageWidth - 50) / 2, 25, 2, 2, 'FD');
-  doc.setFontSize(16);
-  doc.setTextColor(0, 180, 100); // Green
-  doc.text("0", 30 + ((pageWidth - 50) / 2) + ((pageWidth - 50) / 4), yPos + 10, { align: "center" });
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.text("Recomendaciones", 30 + ((pageWidth - 50) / 2) + ((pageWidth - 50) / 4), yPos + 18, { align: "center" });
-  
-  yPos += 35;
-  
-  // 3. Table - Mediciones Realizadas
-  const tableData = [];
-  
+  const doc = new jsPDF()
+  const pageWidth  = doc.internal.pageSize.width
+  const pageHeight = doc.internal.pageSize.height
+  const nombre = fullName.value || 'Paciente'
+
+  dibujarCabecera(doc, pageWidth, nombre)
+
+  let y = 32
+
+  // ── Caja de información del control ─────────────────────────────────
+  doc.setFillColor(...COLOR_LIGHT)
+  doc.setDrawColor(...COLOR_PRIMARY)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(14, y, pageWidth - 28, 32, 3, 3, 'FD')
+
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...COLOR_PRIMARY)
+  doc.text('Información del Control', 20, y + 9)
+
+  doc.setFontSize(9)
+  doc.setTextColor(...COLOR_DARK_TEXT)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Protocolo:', 20,  y + 18)
+  doc.text('Fecha:',     90,  y + 18)
+  doc.text('Hora:',      150, y + 18)
+  doc.setFont('helvetica', 'normal')
+  doc.text(control.tipo,  20,  y + 24)
+  doc.text(control.fecha, 90,  y + 24)
+  doc.text(control.hora,  150, y + 24)
+
+  doc.setFontSize(7.5)
+  doc.setTextColor(...COLOR_GRAY_TEXT)
+  doc.text('Fuente: control registrado en la aplicación MIO+', 20, y + 30)
+
+  y += 42
+
+  // ── Tarjetas de estadísticas ─────────────────────────────────────────
+  const total   = control.details?.length ?? 1
+  const normales = control.details?.filter(d => getResultadoTipo(d.estado) === 'success').length ?? (control.resultadoTipo === 'success' ? 1 : 0)
+  const alertas  = control.details?.filter(d => getResultadoTipo(d.estado) === 'warning').length ?? (control.resultadoTipo === 'warning' ? 1 : 0)
+  const criticos = control.details?.filter(d => getResultadoTipo(d.estado) === 'danger').length  ?? (control.resultadoTipo === 'danger'  ? 1 : 0)
+
+  const cardW  = (pageWidth - 28 - 9) / 4
+  const cardH  = 22
+  const cards  = [
+    { label: 'Total',    valor: total,    color: COLOR_PRIMARY  },
+    { label: 'Normal',   valor: normales, color: COLOR_SUCCESS  },
+    { label: 'Alerta',   valor: alertas,  color: COLOR_WARNING  },
+    { label: 'Crítico',  valor: criticos, color: COLOR_DANGER   },
+  ]
+
+  cards.forEach((c, i) => {
+    const x = 14 + i * (cardW + 3)
+    doc.setFillColor(255, 255, 255)
+    doc.setDrawColor(220, 220, 230)
+    doc.setLineWidth(0.3)
+    doc.roundedRect(x, y, cardW, cardH, 2, 2, 'FD')
+    // borde color izquierdo
+    doc.setFillColor(...c.color)
+    doc.roundedRect(x, y, 3, cardH, 1, 1, 'F')
+
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...c.color)
+    doc.text(String(c.valor), x + cardW / 2, y + 12, { align: 'center' })
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...COLOR_GRAY_TEXT)
+    doc.text(c.label, x + cardW / 2, y + 19, { align: 'center' })
+  })
+
+  y += cardH + 10
+
+  // ── Tabla de mediciones ──────────────────────────────────────────────
+  const filas = []
   if (control.details && control.details.length > 0) {
-      control.details.forEach(d => {
-          // Try to get a meaningful name if 'nombre' is missing (common in some APIs)
-          const name = d.nombre || d.name || control.tipo;
-          tableData.push([name, `${d.valor} ${d.unidad || ''}`]);
-      });
+    control.details.forEach(d => {
+      const fechaD = new Date(d.fecha)
+      filas.push([
+        fechaD.toLocaleDateString('es-CL'),
+        fechaD.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+        String(d.valor),
+        d.unidad || '',
+        etiquetaEstadoPDF(getResultadoTipo(d.estado))
+      ])
+    })
   } else {
-      tableData.push([control.tipo, `${control.valor} ${control.unidad}`]);
+    filas.push([control.fecha, control.hora, String(control.valor), control.unidad || '', etiquetaEstadoPDF(control.resultadoTipo)])
   }
-  
+
   autoTable(doc, {
-    startY: yPos,
-    head: [[`Mediciones Realizadas - ${control.tipo}`, 'Valor']],
-    body: tableData,
+    startY: y,
+    head: [['Fecha', 'Hora', 'Valor', 'Unidad', 'Estado']],
+    body: filas,
     theme: 'grid',
-    headStyles: { 
-        fillColor: [30, 144, 255], // Blue header
-        textColor: 255,
-        fontStyle: 'bold',
-        halign: 'left'
+    headStyles: {
+      fillColor: COLOR_PRIMARY,
+      textColor: 255,
+      fontStyle: 'bold',
+      fontSize: 9,
     },
+    bodyStyles: { fontSize: 9, textColor: COLOR_DARK_TEXT },
     columnStyles: {
-        0: { cellWidth: 'auto', fontStyle: 'bold', textColor: 80 },
-        1: { cellWidth: 60, textColor: [0, 120, 200], fontStyle: 'bold' }
+      0: { cellWidth: 32 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 28, fontStyle: 'bold', halign: 'right' },
+      3: { cellWidth: 24 },
+      4: { cellWidth: 28, halign: 'center' },
     },
-    styles: { fontSize: 10, cellPadding: 5 },
-    alternateRowStyles: { fillColor: [248, 250, 252] }
-  });
-  
-  yPos = doc.lastAutoTable.finalY + 15;
-  
-  // 4. Recomendaciones Generales
-  doc.setFillColor(225, 245, 255);
-  doc.setDrawColor(180, 220, 255);
-  doc.roundedRect(20, yPos, pageWidth - 40, 45, 3, 3, 'FD');
-  
-  doc.setFontSize(11);
-  doc.setTextColor(0, 100, 180);
-  doc.setFont("helvetica", "bold");
-  doc.text("Recomendaciones Generales de Salud", 25, yPos + 10);
-  
-  doc.setFontSize(9);
-  doc.setTextColor(60, 60, 60);
-  doc.setFont("helvetica", "normal");
-  
-  const recommendations = [
-      "Mantenga un seguimiento regular con su médico tratante",
-      "Siga las indicaciones médicas proporcionadas en este reporte",
-      "Mantenga hábitos de vida saludables: ejercicio regular y alimentación balanceada",
-      "Consulte inmediatamente ante cualquier síntoma preocupante",
-      "Realice controles periódicos según la recomendación de su profesional de salud",
-      "Mantenga actualizada su información médica en la aplicación"
-  ];
-  
-  let recY = yPos + 18;
-  recommendations.forEach(rec => {
-      // Simple checkbox icon simulation [X]
-      doc.rect(26, recY - 2.5, 3, 3);
-      doc.text(rec, 32, recY);
-      recY += 5;
-  });
-  
-  // Footer
-  doc.setFontSize(8);
-  doc.setTextColor(180, 180, 180);
-  doc.text("Reporte generado por App Mio - Plataforma de Salud Digital", pageWidth / 2, 280, { align: "center" });
-  doc.text("Para consultas médicas, contacte a su profesional de la salud", pageWidth / 2, 284, { align: "center" });
-  
-  return doc;
-};
+    alternateRowStyles: { fillColor: [248, 246, 255] },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 4) {
+        const txt = data.cell.text[0]
+        if (txt === 'Normal')   data.cell.styles.textColor = COLOR_SUCCESS
+        if (txt === 'Alerta')   data.cell.styles.textColor = COLOR_WARNING
+        if (txt === 'Crítico')  data.cell.styles.textColor = COLOR_DANGER
+      }
+    },
+    margin: { left: 14, right: 14 },
+  })
+
+  // ── Pie de página ────────────────────────────────────────────────────
+  dibujarPie(doc, pageWidth, pageHeight, 1, 1, nombre)
+
+  return doc
+}
+
+// ─── PDF de historial completo ─────────────────────────────────────────────
+const descargarHistorialCompleto = () => {
+  const doc      = new jsPDF()
+  const pageWidth  = doc.internal.pageSize.width
+  const pageHeight = doc.internal.pageSize.height
+  const nombre   = fullName.value || 'Paciente'
+  const plan     = configStore.planActivo || 'MIO+'
+  const ahora    = new Date()
+
+  // ── PÁGINA 1: Portada / resumen ──────────────────────────────────────
+  dibujarCabecera(doc, pageWidth, nombre, ahora)
+
+  let y = 32
+
+  // Caja de datos del paciente
+  doc.setFillColor(...COLOR_LIGHT)
+  doc.setDrawColor(...COLOR_PRIMARY)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(14, y, pageWidth - 28, 28, 3, 3, 'FD')
+
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...COLOR_PRIMARY)
+  doc.text('Datos del Paciente', 20, y + 9)
+
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...COLOR_DARK_TEXT)
+  doc.text('Nombre:',        20,  y + 18)
+  doc.text('Plan:',          100, y + 18)
+  doc.text('Fecha reporte:', 150, y + 18)
+  doc.setFont('helvetica', 'normal')
+  doc.text(nombre,                                     20,  y + 24)
+  doc.text(String(plan),                              100, y + 24)
+  doc.text(ahora.toLocaleDateString('es-CL'),         150, y + 24)
+
+  y += 38
+
+  // Tarjetas resumen global
+  const todos      = controlesAPI.value
+  const totalCtrl  = todos.length
+  const normalesG  = todos.filter(c => c.resultadoTipo === 'success').length
+  const alertasG   = todos.filter(c => c.resultadoTipo === 'warning').length
+  const criticosG  = todos.filter(c => c.resultadoTipo === 'danger').length
+
+  const cardW  = (pageWidth - 28 - 9) / 4
+  const cardH  = 26
+  const resumen = [
+    { label: 'Total controles', valor: totalCtrl,  color: COLOR_PRIMARY },
+    { label: 'Normal',          valor: normalesG,  color: COLOR_SUCCESS },
+    { label: 'Alerta',          valor: alertasG,   color: COLOR_WARNING },
+    { label: 'Crítico',         valor: criticosG,  color: COLOR_DANGER  },
+  ]
+
+  resumen.forEach((c, i) => {
+    const x = 14 + i * (cardW + 3)
+    doc.setFillColor(255, 255, 255)
+    doc.setDrawColor(220, 220, 230)
+    doc.setLineWidth(0.3)
+    doc.roundedRect(x, y, cardW, cardH, 2, 2, 'FD')
+    doc.setFillColor(...c.color)
+    doc.roundedRect(x, y, 3, cardH, 1, 1, 'F')
+
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(...c.color)
+    doc.text(String(c.valor), x + cardW / 2, y + 14, { align: 'center' })
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...COLOR_GRAY_TEXT)
+    doc.text(c.label, x + cardW / 2, y + 22, { align: 'center' })
+  })
+
+  y += cardH + 8
+
+  // Tabla índice (lista de controles en pág 1)
+  const indiceData = todos.map(c => [
+    c.tipo,
+    c.fecha,
+    c.hora,
+    `${c.valor} ${c.unidad}`,
+    etiquetaEstadoPDF(c.resultadoTipo),
+  ])
+
+  autoTable(doc, {
+    startY: y,
+    head: [['Protocolo', 'Fecha', 'Hora', 'Valor', 'Estado']],
+    body: indiceData,
+    theme: 'grid',
+    headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+    bodyStyles: { fontSize: 8.5, textColor: COLOR_DARK_TEXT },
+    columnStyles: {
+      0: { cellWidth: 55 },
+      1: { cellWidth: 30 },
+      2: { cellWidth: 22 },
+      3: { cellWidth: 32, halign: 'right', fontStyle: 'bold' },
+      4: { cellWidth: 28, halign: 'center' },
+    },
+    alternateRowStyles: { fillColor: [248, 246, 255] },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 4) {
+        const txt = data.cell.text[0]
+        if (txt === 'Normal')  data.cell.styles.textColor = COLOR_SUCCESS
+        if (txt === 'Alerta')  data.cell.styles.textColor = COLOR_WARNING
+        if (txt === 'Crítico') data.cell.styles.textColor = COLOR_DANGER
+      }
+    },
+    margin: { left: 14, right: 14 },
+  })
+
+  // ── PÁGINAS DE DETALLE: una sección por tipo de protocolo ────────────
+  // Agrupar controles por tipo
+  const porTipo = {}
+  todos.forEach(c => {
+    if (!porTipo[c.tipo]) porTipo[c.tipo] = []
+    porTipo[c.tipo].push(c)
+  })
+
+  Object.entries(porTipo).forEach(([tipo, controles]) => {
+    doc.addPage()
+    dibujarCabecera(doc, pageWidth, nombre, ahora)
+
+    let yD = 30
+
+    // Título de sección
+    doc.setFillColor(...COLOR_PRIMARY)
+    doc.roundedRect(14, yD, pageWidth - 28, 12, 2, 2, 'F')
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text(tipo, 20, yD + 8.5)
+
+    yD += 18
+
+    // Tabla detalle de este tipo
+    const filas = []
+    controles.forEach(c => {
+      if (c.details && c.details.length > 0) {
+        c.details.forEach(d => {
+          const fd = new Date(d.fecha)
+          filas.push([
+            fd.toLocaleDateString('es-CL'),
+            fd.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+            String(d.valor),
+            d.unidad || '',
+            etiquetaEstadoPDF(getResultadoTipo(d.estado))
+          ])
+        })
+      } else {
+        filas.push([c.fecha, c.hora, String(c.valor), c.unidad, etiquetaEstadoPDF(c.resultadoTipo)])
+      }
+    })
+
+    autoTable(doc, {
+      startY: yD,
+      head: [['Fecha', 'Hora', 'Valor', 'Unidad', 'Estado']],
+      body: filas,
+      theme: 'grid',
+      headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 9, textColor: COLOR_DARK_TEXT },
+      columnStyles: {
+        0: { cellWidth: 32 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 28, fontStyle: 'bold', halign: 'right' },
+        3: { cellWidth: 24 },
+        4: { cellWidth: 28, halign: 'center' },
+      },
+      alternateRowStyles: { fillColor: [248, 246, 255] },
+      didParseCell(data) {
+        if (data.section === 'body' && data.column.index === 4) {
+          const txt = data.cell.text[0]
+          if (txt === 'Normal')  data.cell.styles.textColor = COLOR_SUCCESS
+          if (txt === 'Alerta')  data.cell.styles.textColor = COLOR_WARNING
+          if (txt === 'Crítico') data.cell.styles.textColor = COLOR_DANGER
+        }
+      },
+      margin: { left: 14, right: 14 },
+    })
+  })
+
+  // ── Pie en todas las páginas ─────────────────────────────────────────
+  const totalPags = doc.getNumberOfPages()
+  for (let p = 1; p <= totalPags; p++) {
+    doc.setPage(p)
+    dibujarPie(doc, pageWidth, pageHeight, p, totalPags, nombre)
+  }
+
+  const fechaArchivo = ahora.toISOString().slice(0, 10)
+  doc.save(`historial-controles-${fechaArchivo}.pdf`)
+}
 
 // Watch para resetear página cuando cambian filtros
 watch([filtroTipo, filtroEstado], () => {
@@ -628,6 +845,18 @@ onMounted(() => {
               <p class="text-slate-500 text-xs font-medium">
                 <span class="text-slate-900 font-bold">{{ controlesFiltrados.length }}</span> resultados
               </p>
+
+              <!-- Descargar historial completo -->
+              <button
+                @click="descargarHistorialCompleto"
+                :disabled="controlesAPI.length === 0"
+                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                :style="{ backgroundColor: 'var(--theme-primary)' }"
+                title="Descargar historial completo en PDF"
+              >
+                <Download class="w-4 h-4" />
+                <span class="hidden sm:inline">Descargar PDF</span>
+              </button>
               
               <div class="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200">
                 <button 

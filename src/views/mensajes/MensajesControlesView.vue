@@ -9,7 +9,7 @@ import { useHealthStore } from '@/stores/tiendaSalud'
 import { useControlesStore } from '@/stores/salud/tiendaControles'
 import { enviarMensaje } from '@/services/chatService'
 import { storeToRefs } from 'pinia'
-import { Motion, AnimatePresence } from 'motion-v'
+import { Motion } from 'motion-v'
 import { logger } from '@/utils/logger';
 import { 
   Search, 
@@ -42,6 +42,9 @@ const searchQuery = ref('')
 const selectedControlId = ref(null)
 const cargando = ref(true)
 const controlesRealizados = ref([])
+
+// Estado móvil: 'lista' | 'detalle'
+const vistaMovil = ref('lista')
 
 // Estado para el Chat
 const chatInput = ref('')
@@ -170,6 +173,30 @@ const selectedControl = computed(() => {
 function selectControl(id) {
   selectedControlId.value = id
   chatMessages.value = [] // Resetear chat al cambiar selección
+  vistaMovil.value = 'detalle'
+}
+
+function volverALista() {
+  vistaMovil.value = 'lista'
+}
+
+// Helper: etiqueta legible del estado
+function etiquetaEstado(estado) {
+  if (estado === 'normal' || estado === 'success') return 'Normal'
+  if (estado === 'warning' || estado === 'alerta') return 'Alerta'
+  return 'Crítico'
+}
+
+// Helper: fecha relativa simple
+function fechaRelativa(fecha) {
+  const fechaObj = fecha instanceof Date ? fecha : new Date(fecha)
+  const ahora = new Date()
+  const diff = ahora.getTime() - fechaObj.getTime()
+  const dias = Math.floor(diff / (1000 * 60 * 60 * 24))
+  if (dias === 0) return 'Hoy'
+  if (dias === 1) return 'Ayer'
+  if (dias < 7) return `Hace ${dias} días`
+  return fechaObj.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })
 }
 
 async function enviarPregunta() {
@@ -260,7 +287,10 @@ onMounted(async () => {
     <div class="bg-white dark:bg-neutral-900 w-full h-full rounded-2xl border border-gray-200 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col md:flex-row">
       
       <!-- LEFT SIDEBAR: LIST -->
-      <div class="w-full md:w-[320px] lg:w-[380px] border-r border-gray-100 dark:border-neutral-800 flex flex-col bg-white dark:bg-neutral-900 h-full">
+      <div 
+        class="w-full md:w-[320px] lg:w-[380px] border-r border-gray-100 dark:border-neutral-800 flex flex-col bg-white dark:bg-neutral-900 h-full"
+        :class="vistaMovil === 'detalle' ? 'hidden md:flex' : 'flex'"
+      >
         
         <!-- Header List -->
         <div class="p-4 border-b border-gray-100 dark:border-neutral-800 bg-white z-10">
@@ -312,7 +342,7 @@ onMounted(async () => {
               <!-- Indicator Bar -->
               <div 
                 v-if="selectedControlId === control.id"
-                class="absolute left-0 top-0 bottom-0 w-1 bg-violet-500"
+                class="absolute left-0 top-0 bottom-0 w-1.5 bg-violet-500 rounded-r"
               ></div>
 
               <!-- Icon -->
@@ -333,18 +363,18 @@ onMounted(async () => {
                     {{ control.nombre }}
                   </span>
                   <span class="text-[10px] text-gray-400 whitespace-nowrap flex items-center gap-1">
-                    {{ control.fechaStr }}
+                    {{ fechaRelativa(control.fecha) }}
                   </span>
                 </div>
                 
                 <div class="flex items-center gap-2 mt-1">
-                  <span class="font-mono text-sm font-bold text-gray-700 dark:text-gray-300">
+                  <span class="font-mono text-lg font-bold text-gray-700 dark:text-gray-300">
                     {{ control.valor }} <span class="text-xs font-normal text-gray-400">{{ control.unidad }}</span>
                   </span>
                   
-                  <!-- Small Status Dot -->
+                  <!-- Status Dot -->
                   <span 
-                    class="w-2 h-2 rounded-full"
+                    class="w-2.5 h-2.5 rounded-full shrink-0"
                     :class="{
                       'bg-green-500': control.estado === 'normal' || control.estado === 'success',
                       'bg-orange-500': control.estado === 'warning' || control.estado === 'alerta',
@@ -359,7 +389,10 @@ onMounted(async () => {
       </div>
 
       <!-- RIGHT MAIN: DETAIL (CHAT STYLE) -->
-      <div class="flex-1 bg-gray-50 dark:bg-neutral-950 flex flex-col relative overflow-hidden h-full">
+      <div 
+        class="flex-1 bg-gray-50 dark:bg-neutral-950 flex flex-col relative overflow-hidden h-full"
+        :class="vistaMovil === 'lista' ? 'hidden md:flex' : 'flex'"
+      >
         <!-- Eliminado AnimatePresence para evitar conflictos de navegación -->
         <div 
           v-if="selectedControl"
@@ -367,8 +400,18 @@ onMounted(async () => {
           class="h-full flex flex-col animate-in fade-in duration-300"
         >
             <!-- Detail Header -->
-            <div class="h-16 border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+            <div class="h-16 border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-sm z-10">
               <div class="flex items-center gap-3">
+                <!-- Botón volver en móvil -->
+                <button
+                  @click="volverALista"
+                  class="md:hidden flex items-center gap-1 text-violet-600 font-semibold text-sm mr-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                  </svg>
+                  Volver
+                </button>
                 <div class="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600">
                    <component :is="selectedControl.icono" :size="20" />
                 </div>
@@ -376,9 +419,23 @@ onMounted(async () => {
                   <h3 class="text-sm font-bold text-gray-900 dark:text-white">
                     {{ selectedControl.nombre }}
                   </h3>
-                  <span class="text-xs text-green-600 flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                    Verificado • {{ selectedControl.fechaStr }}
+                  <span 
+                    class="text-xs flex items-center gap-1.5 font-medium"
+                    :class="{
+                      'text-emerald-600': selectedControl.estado === 'normal' || selectedControl.estado === 'success',
+                      'text-orange-500': selectedControl.estado === 'warning' || selectedControl.estado === 'alerta',
+                      'text-red-600': selectedControl.estado === 'danger' || selectedControl.estado === 'critico'
+                    }"
+                  >
+                    <span 
+                      class="w-1.5 h-1.5 rounded-full"
+                      :class="{
+                        'bg-emerald-500': selectedControl.estado === 'normal' || selectedControl.estado === 'success',
+                        'bg-orange-500': selectedControl.estado === 'warning' || selectedControl.estado === 'alerta',
+                        'bg-red-500': selectedControl.estado === 'danger' || selectedControl.estado === 'critico'
+                      }"
+                    ></span>
+                    {{ etiquetaEstado(selectedControl.estado) }} · {{ selectedControl.fechaStr }}
                   </span>
                 </div>
               </div>
@@ -546,8 +603,8 @@ onMounted(async () => {
                    @keyup.enter="enviarPregunta"
                    type="text"
                    :disabled="enviandoMensaje"
-                   placeholder="Haz una pregunta sobre este control..."
-                   class="flex-1 bg-gray-50 dark:bg-neutral-800 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all disabled:opacity-50"
+                    placeholder="Pregunta sobre este resultado..."
+                    class="flex-1 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all disabled:opacity-50"
                  />
                  <button 
                    @click="enviarPregunta"

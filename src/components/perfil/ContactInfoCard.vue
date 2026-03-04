@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { Mail, Phone } from 'lucide-vue-next'
 import { useUserStore } from '@/stores/tiendaUsuario'
@@ -6,8 +6,8 @@ import { useTheme } from '@/composables/useTheme'
 
 const { colors } = useTheme()
 const userStore = useUserStore()
-const email = computed(() => userStore.usuario?.email || 'sebastian.almo9@gmail.com')
-const phone = computed(() => userStore.usuario?.phone || '+56 9 1234 5678') // Fallback as mostly this data might be missing
+const email = computed(() => userStore.usuario?.email || null)
+const phone = computed(() => userStore.usuario?.phone || null)
 </script>
 
 <template>
@@ -23,7 +23,8 @@ const phone = computed(() => userStore.usuario?.phone || '+56 9 1234 5678') // F
         </div>
         <div>
           <p class="text-xs text-gray-500">Email</p>
-          <p class="font-medium text-sm text-gray-900 truncate max-w-[150px]">{{ email }}</p>
+          <p v-if="email" class="font-medium text-sm text-gray-900 truncate max-w-[150px]">{{ email }}</p>
+          <p v-else class="text-slate-400 italic text-sm">No registrado</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
@@ -35,7 +36,8 @@ const phone = computed(() => userStore.usuario?.phone || '+56 9 1234 5678') // F
         </div>
         <div>
           <p class="text-xs text-gray-500">Teléfono</p>
-          <p class="font-medium text-sm text-gray-900">{{ phone }}</p>
+          <p v-if="phone" class="font-medium text-sm text-gray-900">{{ phone }}</p>
+          <p v-else class="text-slate-400 italic text-sm">No registrado</p>
         </div>
       </div>
     </div>

@@ -13,8 +13,6 @@ import {
     Scale, 
     Activity,
     Loader2,
-    TrendingDown,
-    TrendingUp,
     Minus,
     Calendar,
     Download,
@@ -309,14 +307,7 @@ onBeforeUnmount(() => {
                     <Activity class="w-4 h-4" />
                     Mediciones
                 </button>
-                <button class="px-6 py-4 text-slate-600 hover:text-slate-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
-                    <TrendingUp class="w-4 h-4" />
-                    Análisis
-                </button>
-                <button class="px-6 py-4 text-slate-600 hover:text-slate-900 font-medium text-sm flex items-center gap-2 transition-colors whitespace-nowrap">
-                    <Calendar class="w-4 h-4" />
-                    Medicamentos
-                </button>
+
             </div>
         </div>
 

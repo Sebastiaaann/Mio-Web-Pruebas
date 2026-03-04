@@ -1,11 +1,14 @@
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { useLocalStorage } from '@vueuse/core'
 import { Bell } from 'lucide-vue-next'
 import { useTheme } from '@/composables/useTheme'
 
 const { colors } = useTheme()
-const emailNotifications = ref(true)
-const smsNotifications = ref(false)
+
+const preferencias = useLocalStorage('mio-preferencias-notificaciones', {
+  email: true,
+  sms: false
+})
 </script>
 
 <template>
@@ -26,10 +29,10 @@ const smsNotifications = ref(false)
           <p class="text-xs text-gray-500">Recibe reportes semanales en tu correo</p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" v-model="emailNotifications" class="sr-only peer">
+          <input type="checkbox" v-model="preferencias.email" class="sr-only peer">
           <div 
             class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all transition-colors"
-            :style="emailNotifications ? { backgroundColor: colors.primary } : {}"
+            :style="preferencias.email ? { backgroundColor: colors.primary } : {}"
           ></div>
         </label>
       </div>
@@ -39,10 +42,10 @@ const smsNotifications = ref(false)
           <p class="text-xs text-gray-500">Mensajes críticos para controles urgentes</p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" v-model="smsNotifications" class="sr-only peer">
+          <input type="checkbox" v-model="preferencias.sms" class="sr-only peer">
           <div 
             class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all transition-colors"
-            :style="smsNotifications ? { backgroundColor: colors.primary } : {}"
+            :style="preferencias.sms ? { backgroundColor: colors.primary } : {}"
           ></div>
         </label>
       </div>
