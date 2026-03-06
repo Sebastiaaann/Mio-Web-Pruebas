@@ -8,6 +8,7 @@ import { Motion, AnimatePresence } from 'motion-v';
 
 import { useConfigStore } from '@/stores/tiendaConfig';
 import { useUserStore } from '@/stores/tiendaUsuario';
+import BannerCookies from '@/components/ui/BannerCookies.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -105,6 +106,9 @@ const usarLayout = computed(() => {
         </AnimatePresence>
     </router-view>
   </LimitErrores>
+
+  <!-- Banner de cookies (visible en todas las páginas) -->
+  <BannerCookies />
 </template>
 
 <style>

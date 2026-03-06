@@ -185,6 +185,25 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/encuesta',
     redirect: '/controles'
+  },
+  // Rutas legales (sin autenticación, sin layout)
+  {
+    path: '/politica-cookies',
+    name: 'politica-cookies',
+    component: lazyLoad(() => import('@/views/legal/PoliticaCookiesView.vue'), 'Política de Cookies'),
+    meta: { requiresAuth: false, requiresLayout: false, title: 'Política de Cookies' }
+  },
+  {
+    path: '/privacidad',
+    name: 'privacidad',
+    component: lazyLoad(() => import('@/views/legal/PoliticaPrivacidadView.vue'), 'Política de Privacidad'),
+    meta: { requiresAuth: false, requiresLayout: false, title: 'Política de Privacidad' }
+  },
+  {
+    path: '/terminos',
+    name: 'terminos',
+    component: lazyLoad(() => import('@/views/legal/TerminosServicioView.vue'), 'Términos de Servicio'),
+    meta: { requiresAuth: false, requiresLayout: false, title: 'Términos de Servicio' }
   }
 ]
 
