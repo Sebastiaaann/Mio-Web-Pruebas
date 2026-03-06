@@ -97,7 +97,9 @@ function esperarWidgetDisponible(intentos = 20, esperaMs = 150): Promise<void> {
 function registrarListenerWidget(datosInit: Record<string, unknown>): void {
   if (mensajeListener) return
 
-  mensajeListener = ({ data, source }: MessageEvent) => {
+  mensajeListener = ({ data, source, origin }: MessageEvent) => {
+    // Validar origen antes de procesar — solo aceptar mensajes del widget de Snabb
+    if (origin !== SNABB_WIDGET_ORIGIN) return
     if (!source || !data || typeof data !== 'object') return
 
     const payload = data as { type?: string }

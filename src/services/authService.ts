@@ -360,13 +360,10 @@ export const authService = {
   guardarSesion(token: string, user: AuthUser): void {
     sessionStorage.setItem('mio-token', token)
 
-    // Solo guardamos metadatos no sensibles o necesarios para el bootstrap
-    // El resto de la info (nombre, email) debe vivir en memoria (Pinia)
+    // Solo persistimos patient_id — es el único dato necesario para el bootstrap.
+    // uid, health_plan_id y lastLogin se eliminaron para reducir PII expuesta en storage.
     const sessionMeta: SessionMetaAuth = {
-      uid: user.uid, // Necesario para identificar
-      patient_id: user.patient_id, // Necesario para bootstrap de datos
-      health_plan_id: user.health_plan_id || null,
-      lastLogin: Date.now()
+      patient_id: user.patient_id
     }
 
     sessionStorage.setItem('mio-session-meta', JSON.stringify(sessionMeta))
@@ -394,7 +391,12 @@ export const authService = {
 
     if (token) {
       if (metaStr) {
-        return { token, user: JSON.parse(metaStr) as SessionLegacy }
+        try {
+          return { token, user: JSON.parse(metaStr) as SessionLegacy }
+        } catch {
+          // sessionStorage corrupto — limpiar y continuar con fallback legacy
+          sessionStorage.removeItem('mio-session-meta')
+        }
       }
       // Migración on-the-fly: si existe el viejo formato, lo usamos una vez y sugerimos al store que actualice
       if (legacyUserStr) {
