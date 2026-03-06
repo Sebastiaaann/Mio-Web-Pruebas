@@ -2,6 +2,7 @@
 // Configuración global para Vitest
 
 import { vi } from 'vitest'
+import { ref, watch } from 'vue'
 
 // Mock del logger para evitar ruido en tests
 vi.mock('@/utils/logger', () => ({
@@ -43,18 +44,45 @@ vi.mock('@/services/authService', () => ({
   }
 }))
 
-// Mock de localStorage en memoria
-const memoriaStorage = new Map()
-const localStorageMock = {
-  getItem: (key) => (memoriaStorage.has(key) ? memoriaStorage.get(key) : null),
-  setItem: (key, value) => { memoriaStorage.set(key, String(value)) },
-  removeItem: (key) => { memoriaStorage.delete(key) },
-  clear: () => { memoriaStorage.clear() }
+function crearStorageMock(memoria) {
+  return {
+    get length() {
+      return memoria.size
+    },
+    key: (index) => Array.from(memoria.keys())[index] ?? null,
+    getItem: (key) => (memoria.has(key) ? memoria.get(key) : null),
+    setItem: (key, value) => { memoria.set(key, String(value)) },
+    removeItem: (key) => { memoria.delete(key) },
+    clear: () => { memoria.clear() }
+  }
 }
+
+// Mock de localStorage/sessionStorage en memoria
+const memoriaLocalStorage = new Map()
+const memoriaSessionStorage = new Map()
+const localStorageMock = crearStorageMock(memoriaLocalStorage)
+const sessionStorageMock = crearStorageMock(memoriaSessionStorage)
+
 Object.defineProperty(global, 'localStorage', {
   value: localStorageMock,
   configurable: true
 })
+Object.defineProperty(global, 'sessionStorage', {
+  value: sessionStorageMock,
+  configurable: true
+})
+
+function parsearValorStorage(valor, fallback) {
+  if (valor === null) return fallback
+  if (valor === 'true') return true
+  if (valor === 'false') return false
+
+  try {
+    return JSON.parse(valor)
+  } catch {
+    return valor
+  }
+}
 
 // Mock de @vueuse/core para tests
 vi.mock('@vueuse/core', () => ({
@@ -74,11 +102,31 @@ vi.mock('@vueuse/core', () => ({
       return val
     }
     return { value: val }
+  },
+  useLocalStorage: (key, defaultValue) => {
+    const estado = ref(parsearValorStorage(localStorage.getItem(key), defaultValue))
+
+    watch(estado, (valor) => {
+      if (valor === undefined || valor === null) {
+        localStorage.removeItem(key)
+        return
+      }
+
+      if (typeof valor === 'string') {
+        localStorage.setItem(key, valor)
+        return
+      }
+
+      localStorage.setItem(key, JSON.stringify(valor))
+    }, { deep: true })
+
+    return estado
   }
 }))
 
 // Configuración global para componentes
 beforeEach(() => {
   vi.clearAllMocks()
-  memoriaStorage.clear()
+  memoriaLocalStorage.clear()
+  memoriaSessionStorage.clear()
 })
