@@ -3,16 +3,18 @@ import './assets/styles/principal.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { piniaPersistPlugin } from './plugins/piniaPersist'
 
 import App from './App.vue'
 import router from './router'
+import { normalizarStorageCliente } from '@/utils/storageCliente'
 
 const app = createApp(App)
 
-// Inicializamos Pinia con plugin de persistencia
+// Normalizar storage legado antes de crear stores o montar la app
+normalizarStorageCliente()
+
+// Inicializamos Pinia sin persistencia global de stores
 const pinia = createPinia()
-pinia.use(piniaPersistPlugin)
 app.use(pinia)
 
 // Restaurar sesion antes de montar el router

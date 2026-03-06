@@ -12,6 +12,7 @@ import { ArrowLeft, Sun, Moon, Bell, LogOut, CheckCircle, Heart, User, Loader2, 
 import { useDark, useToggle } from '@vueuse/core'
 import { useUserInitials } from '@/composables/useUserInitials'
 import { useTheme } from '@/composables/useTheme'
+import { leerPlanActivoPersistido } from '@/utils/storageCliente'
 
 // Components
 import ProfileCard from '@/components/perfil/ProfileCard.vue'
@@ -127,7 +128,7 @@ const planesDisponiblesParaComprar = computed(() => {
 })
 
 // Cargar preferencia
-const preferenciaPlanGuardada = localStorage.getItem('mio-plan-activo')
+const preferenciaPlanGuardada = leerPlanActivoPersistido()
 if (preferenciaPlanGuardada) {
   selectedPlanType.value = preferenciaPlanGuardada
   planCambiadoManualmente.value = true

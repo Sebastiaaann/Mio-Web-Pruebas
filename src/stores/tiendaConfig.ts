@@ -1,5 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import {
+  guardarPlanActivoPersistido,
+  leerPlanActivoPersistido,
+  limpiarPlanActivoPersistido
+} from '@/utils/storageCliente'
 
 interface ConfiguracionCliente {
   logo: string | null
@@ -22,7 +27,7 @@ export const useConfigStore = defineStore('config', () => {
   const planActivo = ref('esencial') // Plan activo del usuario (esencial, mutual, vital, etc.)
 
   // Cargar plan desde localStorage al iniciar
-  const planGuardado = localStorage.getItem('mio-plan-activo')
+  const planGuardado = leerPlanActivoPersistido()
   if (planGuardado) {
     planActivo.value = planGuardado
   }
@@ -174,7 +179,7 @@ export const useConfigStore = defineStore('config', () => {
     const planLower = plan.toLowerCase()
     const oldPlan = planActivo.value  // Guardar anterior
     planActivo.value = planLower
-    localStorage.setItem('mio-plan-activo', planLower)
+    guardarPlanActivoPersistido(planLower)
     
     // Aplicar tema mediante clase CSS
     applyTheme(planLower)
@@ -198,7 +203,7 @@ export const useConfigStore = defineStore('config', () => {
     planActivo.value = 'esencial'
     currentConfig.value = { ...defaultConfig }
     logoMutual.value = null
-    localStorage.removeItem('mio-plan-activo')
+    limpiarPlanActivoPersistido()
     
     // Remover clases de tema
     const body = document.body

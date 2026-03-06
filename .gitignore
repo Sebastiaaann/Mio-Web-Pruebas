@@ -53,7 +53,14 @@ homa-prod-*.json
 # Environment variables
 .env
 .env.*
-.env.example
+!.env.example
 
 docs/
 .vercel
+
+# Scripts de debug temporales (evitar secretos hardcodeados)
+**/debug_*.js
+
+# Artefactos de Windows y AI tools
+nul
+skills-lock.json
