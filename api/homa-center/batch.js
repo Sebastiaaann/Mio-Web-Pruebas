@@ -3,7 +3,8 @@
  * Limite: 20 peticiones por IP cada 60 segundos.
  */
 
-const { crearLimitador } = require('../_lib/rateLimiter')
+import { crearLimitador } from '../_lib/rateLimiter.js'
+import { obtenerSesionDesdeRequest } from '../_lib/sessionCrypto.js'
 
 // Limitador compartido para todas las invocaciones en el mismo proceso
 const limitador = crearLimitador({ maxPeticiones: 20, ventanaMs: 60_000 })
@@ -22,6 +23,13 @@ function obtenerIp(req) {
 }
 
 function obtenerTokenAuth(req) {
+  // Prioridad: sesión segura por cookie HttpOnly (modo BFF)
+  const sesion = obtenerSesionDesdeRequest(req)
+  if (sesion?.token && typeof sesion.token === 'string') {
+    return sesion.token
+  }
+
+  // Compatibilidad temporal: header legado X-API-KEY
   const token = req.headers['x-api-key']
   return typeof token === 'string' ? token : null
 }
@@ -36,7 +44,7 @@ function respuestaJson(res, status, payload) {
  * @param {import('@vercel/node').VercelRequest} req
  * @param {import('@vercel/node').VercelResponse} res
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Verificar rate limit
   const ip = obtenerIp(req)
   const { permitido, restantes, mensaje } = limitador.verificar(ip)

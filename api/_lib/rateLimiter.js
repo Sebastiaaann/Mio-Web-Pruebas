@@ -18,7 +18,7 @@
  * @param {{ maxPeticiones: number, ventanaMs: number }} opciones
  * @returns {{ verificar: (ip: string) => ResultadoLimit }}
  */
-function crearLimitador({ maxPeticiones, ventanaMs }) {
+export function crearLimitador({ maxPeticiones, ventanaMs }) {
   /** @type {Map<string, number[]>} Mapa de IP → timestamps de peticiones */
   const registro = new Map()
 
@@ -56,5 +56,3 @@ function crearLimitador({ maxPeticiones, ventanaMs }) {
 
   return { verificar }
 }
-
-module.exports = { crearLimitador }
