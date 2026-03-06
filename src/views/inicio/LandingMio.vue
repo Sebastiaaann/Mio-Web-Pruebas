@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/tiendaUsuario'
-import AlternarTema from '@/components/ui/AlternarTema.vue'
+import HeaderLanding from '@/components/landing/HeaderLanding.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -52,74 +52,15 @@ const irAlAuth = () => router.push('/auth')
       <div class="absolute inset-0 bg-gradient-custom transition-opacity duration-1000"></div>
     </div>
 
-    <!-- NAVBAR -->
-    <nav
-      class="relative z-10 flex items-center justify-between px-6 md:px-12 py-5 transition-all duration-700 ease-out"
-      :class="isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'"
-    >
-      <!-- Logo -->
-      <div class="flex items-center gap-2">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <defs>
-            <mask id="mask-nav">
-              <rect width="24" height="24" fill="white"/>
-              <line x1="2" y1="-2" x2="22" y2="18" stroke="black" stroke-width="3.2"/>
-              <line x1="-6" y1="6" x2="14" y2="26" stroke="black" stroke-width="2.0"/>
-            </mask>
-          </defs>
-          <path d="M12 1.5 L6.5 12 L12 22.5 L17.5 12 Z" fill="#8B5CF6" mask="url(#mask-nav)"/>
-        </svg>
-        <span class="text-xl font-bold text-[#8B5CF6] tracking-tight">
-          Mio<sup class="text-sm">+</sup>
-        </span>
-      </div>
-
-      <!-- Links de navegación (desktop) -->
-      <div
-        class="hidden md:flex items-center gap-8 text-sm font-medium"
-        :class="isDark ? 'text-gray-300' : 'text-gray-600'"
-      >
-        <a href="#caracteristicas" class="hover:text-[#8B5CF6] transition-colors">Características</a>
-        <a href="#controles" class="hover:text-[#8B5CF6] transition-colors">Controles</a>
-        <a href="#clinica" class="hover:text-[#8B5CF6] transition-colors">Clínica</a>
-      </div>
-
-      <!-- CTAs navbar + toggle tema -->
-      <div class="flex items-center gap-3">
-        <AlternarTema :isDark="isDark" @toggle="toggleDarkMode" />
-        <button
-          @click="irAlAuth"
-          class="hidden sm:block text-sm font-medium px-4 py-2 rounded-full transition-colors"
-          :class="isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'"
-        >
-          Iniciar Sesión
-        </button>
-        <button
-          @click="irAlAuth"
-          class="text-sm font-semibold px-5 py-2.5 bg-[#8B5CF6] text-white rounded-full hover:bg-[#7C3AED] transition-all shadow-lg shadow-purple-500/25 hover:scale-105 active:scale-95"
-        >
-          Registrarse →
-        </button>
-      </div>
-    </nav>
+    <!-- HEADER -->
+    <HeaderLanding
+      :isDark="isDark"
+      :isRevealed="isRevealed"
+      @toggle-tema="toggleDarkMode"
+    />
 
     <!-- HERO SECTION -->
-    <main class="relative z-10 flex flex-col items-center text-center px-6 pt-12 pb-0 md:pt-16">
-
-      <!-- Badge -->
-      <div
-        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-8 border transition-all duration-700 delay-100"
-        :class="[
-          isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
-          isDark
-            ? 'bg-purple-900/30 border-purple-700/40 text-purple-300'
-            : 'bg-purple-50 border-purple-200 text-purple-700'
-        ]"
-      >
-        <span class="w-1.5 h-1.5 rounded-full bg-[#8B5CF6] animate-pulse"></span>
-        Plataforma de salud preventiva · AccuHealth
-      </div>
-
+    <main class="relative z-10 flex flex-col items-center text-center px-6 pt-28 pb-0 md:pt-32">
       <!-- Headline -->
       <h1
         class="text-5xl md:text-7xl font-bold tracking-tight leading-none mb-6 transition-all duration-700 delay-150"
