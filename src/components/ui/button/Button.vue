@@ -3,6 +3,7 @@ export default { inheritAttrs: false }
 </script>
 
 <script setup lang="ts">
+import { computed, useAttrs } from "vue";
 import { Primitive } from "reka-ui";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from ".";
@@ -17,14 +18,23 @@ const props = defineProps<{
   type?: 'button' | 'submit' | 'reset'
 }>(); 
 
-defineEmits<{
+const attrs = useAttrs()
+const emit = defineEmits<{
   click: [event: MouseEvent]
 }>()
+
+const atributosPrimitive = computed<Record<string, unknown>>(() => ({
+  'data-slot': 'button',
+  disabled: props.disabled,
+  type: props.type ?? 'button',
+  ...attrs,
+  onClick: (event: MouseEvent) => emit('click', event)
+}))
 </script>
 
 <template>
   <Primitive
-    v-bind="{ 'data-slot': 'button', disabled: props.disabled, type: props.type ?? 'button', ...$attrs }"
+    v-bind="atributosPrimitive"
     :as="as ?? 'button'"
     :as-child="asChild"
     :class="cn(buttonVariants({ variant, size }), props.class)"
