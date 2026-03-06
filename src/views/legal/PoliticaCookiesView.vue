@@ -2,11 +2,33 @@
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  ALCANCE_COOKIE_SESION,
+  CLAVE_AVISO_COOKIES_VISTO,
+  DESCRIPCION_ATRIBUTOS_COOKIE_SESION,
+  DESCRIPCION_AVISO_LOCAL,
+  DESCRIPCION_DURACION_COOKIE_CORTA,
+  DESCRIPCION_DURACION_COOKIE_DETALLE,
+  FECHAS_ACTUALIZACION_LEGAL,
+  NOMBRE_COOKIE_SESION
+} from '@/config/legal'
 
 const router = useRouter()
 
 function volver() {
-  router.back()
+  if (typeof window !== 'undefined' && document.referrer) {
+    try {
+      const urlReferencia = new URL(document.referrer)
+      if (urlReferencia.origin === window.location.origin) {
+        router.back()
+        return
+      }
+    } catch {
+      // Si el referrer no es válido, usar fallback interno.
+    }
+  }
+
+  router.push('/')
 }
 </script>
 
@@ -35,7 +57,7 @@ function volver() {
 
         <h1 class="text-4xl font-bold mb-2">Política de Cookies</h1>
         <p class="text-muted-foreground">
-          Última actualización: {{ new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+          Última actualización: {{ FECHAS_ACTUALIZACION_LEGAL.cookies }}
         </p>
       </div>
 
@@ -62,7 +84,8 @@ function volver() {
           </CardHeader>
           <CardContent class="space-y-4">
             <p class="text-sm text-muted-foreground">
-              Mio+ utiliza únicamente cookies esenciales para el funcionamiento de la aplicación.
+              Mio+ utiliza una cookie de sesión esencial para autenticación y una preferencia local
+              funcional para recordar que ya viste este aviso.
               <strong>No utilizamos cookies de seguimiento, analíticas o publicitarias.</strong>
             </p>
 
@@ -82,7 +105,7 @@ function volver() {
                   <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                Cookie de sesión: <code class="text-xs">mio-session</code>
+                Cookie de sesión: <code class="text-xs">{{ NOMBRE_COOKIE_SESION }}</code>
               </h3>
 
               <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
@@ -93,27 +116,69 @@ function volver() {
 
                 <div>
                   <dt class="font-medium text-muted-foreground">Tipo:</dt>
-                  <dd>Cookie esencial (HttpOnly, Secure)</dd>
+                  <dd>Cookie esencial ({{ DESCRIPCION_ATRIBUTOS_COOKIE_SESION }})</dd>
                 </div>
 
                 <div>
                   <dt class="font-medium text-muted-foreground">Duración:</dt>
-                  <dd>7 días desde el inicio de sesión</dd>
+                  <dd>{{ DESCRIPCION_DURACION_COOKIE_CORTA }}</dd>
                 </div>
 
                 <div>
                   <dt class="font-medium text-muted-foreground">Alcance:</dt>
-                  <dd>Solo dominio app.mio.cl</dd>
+                  <dd>{{ ALCANCE_COOKIE_SESION }}</dd>
                 </div>
               </dl>
 
               <div class="mt-4 p-3 bg-background/60 rounded border border-border/50">
                 <p class="text-xs text-muted-foreground">
                   <strong>Seguridad:</strong> Esta cookie está protegida con cifrado AES-256-GCM y
-                  configurada como HttpOnly (no accesible desde JavaScript) y Secure (solo transmitida
-                  por HTTPS). Esto previene ataques XSS y MitM.
+                  configurada como HttpOnly (no accesible desde JavaScript), SameSite=Strict y
+                  Secure fuera de entornos de desarrollo. Esto previene ataques XSS y reduce el
+                  riesgo de envío de sesión en contextos no esperados.
                 </p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Preferencia local del aviso</CardTitle>
+          </CardHeader>
+          <CardContent class="space-y-4">
+            <p class="text-sm text-muted-foreground">
+              Además de la cookie de sesión, guardamos una preferencia local funcional para recordar
+              que ya viste el aviso de cookies. No contiene datos de salud ni se utiliza para
+              seguimiento.
+            </p>
+
+            <div class="border rounded-lg p-4 bg-muted/50">
+              <h3 class="font-semibold mb-2">
+                Preferencia local: <code class="text-xs">{{ CLAVE_AVISO_COOKIES_VISTO }}</code>
+              </h3>
+
+              <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
+                <div>
+                  <dt class="font-medium text-muted-foreground">Propósito:</dt>
+                  <dd>{{ DESCRIPCION_AVISO_LOCAL }}</dd>
+                </div>
+
+                <div>
+                  <dt class="font-medium text-muted-foreground">Tecnología:</dt>
+                  <dd>localStorage del navegador</dd>
+                </div>
+
+                <div>
+                  <dt class="font-medium text-muted-foreground">Duración:</dt>
+                  <dd>Hasta que borres los datos del navegador o restablezcas esta preferencia.</dd>
+                </div>
+
+                <div>
+                  <dt class="font-medium text-muted-foreground">Uso:</dt>
+                  <dd>Solo evita mostrar el mismo aviso en visitas posteriores.</dd>
+                </div>
+              </dl>
             </div>
           </CardContent>
         </Card>
@@ -125,7 +190,7 @@ function volver() {
           </CardHeader>
           <CardContent class="prose prose-sm max-w-none dark:prose-invert">
             <p>
-              La cookie <code>mio-session</code> es <strong>estrictamente necesaria</strong> para que
+              La cookie <code>{{ NOMBRE_COOKIE_SESION }}</code> es <strong>estrictamente necesaria</strong> para que
               puedas utilizar Mio+. Sin ella, no sería posible:
             </p>
             <ul>
@@ -156,14 +221,14 @@ function volver() {
 
             <h3 class="text-base font-semibold">Al cerrar sesión</h3>
             <p>
-              Cuando cierras sesión en Mio+, la cookie <code>mio-session</code> se elimina automáticamente
+              Cuando cierras sesión en Mio+, la cookie <code>{{ NOMBRE_COOKIE_SESION }}</code> se elimina automáticamente
               de tu dispositivo.
             </p>
 
             <h3 class="text-base font-semibold">Caducidad automática</h3>
             <p>
-              La cookie expira automáticamente después de 7 días de inactividad. Después de este período,
-              deberás iniciar sesión nuevamente.
+              {{ DESCRIPCION_DURACION_COOKIE_DETALLE }} Cuando la sesión vence, deberás iniciar
+              sesión nuevamente para continuar usando la aplicación.
             </p>
           </CardContent>
         </Card>

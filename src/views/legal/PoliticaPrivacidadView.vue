@@ -2,11 +2,27 @@
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  FECHAS_ACTUALIZACION_LEGAL,
+  NOMBRE_COOKIE_SESION
+} from '@/config/legal'
 
 const router = useRouter()
 
 function volver() {
-  router.back()
+  if (typeof window !== 'undefined' && document.referrer) {
+    try {
+      const urlReferencia = new URL(document.referrer)
+      if (urlReferencia.origin === window.location.origin) {
+        router.back()
+        return
+      }
+    } catch {
+      // Si el referrer no es válido, usar fallback interno.
+    }
+  }
+
+  router.push('/')
 }
 </script>
 
@@ -35,7 +51,7 @@ function volver() {
 
         <h1 class="text-4xl font-bold mb-2">Política de Privacidad</h1>
         <p class="text-muted-foreground">
-          Última actualización: {{ new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+          Última actualización: {{ FECHAS_ACTUALIZACION_LEGAL.privacidad }}
         </p>
       </div>
 
@@ -104,6 +120,15 @@ function volver() {
                 Ley 20.584 sobre Derechos y Deberes de los Pacientes).
               </p>
             </div>
+
+            <p class="text-sm text-muted-foreground">
+              También almacenamos una preferencia local funcional para recordar que ya viste el aviso
+              de cookies. No contiene datos de salud, no se comparte con terceros y su detalle
+              completo está en nuestra
+              <router-link to="/politica-cookies" class="text-primary hover:underline">
+                Política de Cookies
+              </router-link>.
+            </p>
           </CardContent>
         </Card>
 
@@ -161,8 +186,9 @@ function volver() {
                 AES-256-GCM de grado militar
               </li>
               <li>
-                <strong>Cookies seguras:</strong> Utilizamos cookies HttpOnly y Secure que no son
-                accesibles desde JavaScript
+                <strong>Sesión segura:</strong> Utilizamos la cookie <code>{{ NOMBRE_COOKIE_SESION }}</code>
+                con atributos HttpOnly y SameSite=Strict, además de Secure fuera de entornos de
+                desarrollo
               </li>
               <li>
                 <strong>Autenticación robusta:</strong> Integración con Firebase Authentication para

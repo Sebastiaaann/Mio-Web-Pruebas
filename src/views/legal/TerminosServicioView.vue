@@ -2,11 +2,27 @@
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  FECHAS_ACTUALIZACION_LEGAL,
+  NOMBRE_COOKIE_SESION
+} from '@/config/legal'
 
 const router = useRouter()
 
 function volver() {
-  router.back()
+  if (typeof window !== 'undefined' && document.referrer) {
+    try {
+      const urlReferencia = new URL(document.referrer)
+      if (urlReferencia.origin === window.location.origin) {
+        router.back()
+        return
+      }
+    } catch {
+      // Si el referrer no es válido, usar fallback interno.
+    }
+  }
+
+  router.push('/')
 }
 </script>
 
@@ -35,7 +51,7 @@ function volver() {
 
         <h1 class="text-4xl font-bold mb-2">Términos de Servicio</h1>
         <p class="text-muted-foreground">
-          Última actualización: {{ new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) }}
+          Última actualización: {{ FECHAS_ACTUALIZACION_LEGAL.terminos }}
         </p>
       </div>
 
@@ -213,14 +229,16 @@ function volver() {
               </router-link>,
               que forma parte integral de estos términos.
             </p>
-            <p>Al utilizar Mio+, consientes que:</p>
+            <p>Al utilizar Mio+, reconoces que:</p>
             <ul>
               <li>Recopilemos y procesemos tu información de salud según nuestra Política de Privacidad</li>
-              <li>Utilicemos cookies esenciales para el funcionamiento de la plataforma (ver
+              <li>La plataforma utiliza la cookie de sesión esencial <code>{{ NOMBRE_COOKIE_SESION }}</code>
+                para autenticación segura (ver
                 <router-link to="/politica-cookies" class="text-primary hover:underline">
                   Política de Cookies
                 </router-link>)
               </li>
+              <li>La plataforma guarda una preferencia local funcional para recordar que ya viste el aviso de cookies</li>
               <li>Compartamos tu información con profesionales de salud autorizados cuando sea necesario</li>
             </ul>
           </CardContent>

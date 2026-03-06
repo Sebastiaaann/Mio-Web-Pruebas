@@ -1,24 +1,30 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core'
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
 import { Motion } from 'motion-v'
 import { Button } from '@/components/ui/button'
+import {
+  CLAVE_AVISO_COOKIES_LEGACY,
+  CLAVE_AVISO_COOKIES_VISTO,
+  NOMBRE_COOKIE_SESION
+} from '@/config/legal'
 
-const router = useRouter()
+// Persistir solo que el usuario ya vio el aviso, sin tratarlo como consentimiento.
+const avisoCookiesVisto = useLocalStorage(CLAVE_AVISO_COOKIES_VISTO, false)
+const mostrarBanner = computed(() => !avisoCookiesVisto.value)
 
-// Usar VueUse para persistir aceptación de cookies
-const cookiesAceptado = useLocalStorage('mio-cookies-aceptado', false)
+onMounted(() => {
+  if (typeof window === 'undefined' || avisoCookiesVisto.value) return
 
-// Mostrar banner solo si no ha sido aceptado
-const mostrarBanner = computed(() => !cookiesAceptado.value)
+  const valorLegacy = window.localStorage.getItem(CLAVE_AVISO_COOKIES_LEGACY)
+  if (valorLegacy === 'true') {
+    avisoCookiesVisto.value = true
+    window.localStorage.removeItem(CLAVE_AVISO_COOKIES_LEGACY)
+  }
+})
 
-function aceptarCookies() {
-  cookiesAceptado.value = true
-}
-
-function verPolitica() {
-  router.push('/politica-cookies')
+function marcarAvisoComoVisto() {
+  avisoCookiesVisto.value = true
 }
 </script>
 
@@ -77,11 +83,12 @@ function verPolitica() {
               <!-- Contenido -->
               <div class="flex-1 min-w-0">
                 <p class="text-sm sm:text-base text-foreground leading-relaxed">
-                  Usamos una cookie esencial para mantener tu sesión segura. Esta cookie es
-                  necesaria para el funcionamiento de la aplicación.
-                  <button
-                    type="button"
-                    @click="verPolitica"
+                  Usamos la cookie de sesión
+                  <code class="mx-1 rounded bg-muted px-1.5 py-0.5 text-xs">{{ NOMBRE_COOKIE_SESION }}</code>
+                  para mantener tu acceso seguro y guardamos una preferencia local funcional para no
+                  volver a mostrar este aviso. No usamos tracking ni cookies de terceros.
+                  <router-link
+                    to="/politica-cookies"
                     class="text-primary hover:underline font-medium inline-flex items-center gap-1 ml-1"
                   >
                     Más información
@@ -98,14 +105,14 @@ function verPolitica() {
                     >
                       <path d="m9 18 6-6-6-6" />
                     </svg>
-                  </button>
+                  </router-link>
                 </p>
               </div>
 
               <!-- Botón -->
               <div class="flex-shrink-0 w-full sm:w-auto">
                 <Button
-                  @click="aceptarCookies"
+                  @click="marcarAvisoComoVisto"
                   class="w-full sm:w-auto"
                   size="default"
                 >
