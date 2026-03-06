@@ -35,14 +35,17 @@ export interface LoginResponse {
   token?: string
   user?: AuthUser
   error?: string
+  /** true cuando el resultado es un registro nuevo (sin sesión activa) */
+  registered?: boolean
 }
 
+/**
+ * Metadatos mínimos de sesión persistidos en sessionStorage.
+ * Solo patient_id es necesario para el bootstrap (hidratarPerfil).
+ * uid, health_plan_id y lastLogin fueron eliminados para reducir PII expuesta.
+ */
 export interface SessionMetaAuth {
-  uid: string
   patient_id: number
-  health_plan_id: number | null
-  lastLogin: number
-  isLegacy?: boolean
 }
 
 // === PACIENTE ===

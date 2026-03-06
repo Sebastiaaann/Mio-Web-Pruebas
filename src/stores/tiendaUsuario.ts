@@ -41,6 +41,8 @@ interface SesionRestaurada {
 interface ResultadoBasico {
   success: boolean
   error?: string
+  /** true cuando el resultado es un registro nuevo (sin sesión activa) */
+  registered?: boolean
 }
 
 /**
@@ -298,6 +300,12 @@ export const useTiendaUsuario = defineStore('usuario', () => {
         datos.nombre,
         datos.apellido
       )
+
+      if (resultado.success && resultado.registered && resultado.user) {
+        // Registro exitoso: no hay token todavía. El usuario debe iniciar sesión.
+        logger.info('✅ Usuario registrado:', { patient_id: resultado.user.patient_id })
+        return { success: true, registered: true }
+      }
 
       if (resultado.success && resultado.token && resultado.user) {
         // Guardar sesión

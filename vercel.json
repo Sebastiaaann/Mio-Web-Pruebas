@@ -14,7 +14,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://code.iconify.design; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src 'self' https://api.fontshare.com; img-src 'self' data: blob: https:; connect-src 'self' https://apihoma.homa.cl:7200 https://*.firebaseio.com https://*.googleapis.com; frame-ancestors 'none';"
+          "value": "default-src 'self'; script-src 'self' https://code.iconify.design; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src 'self' https://api.fontshare.com; img-src 'self' data: blob: https:; connect-src 'self' https://apihoma.homa.cl:7200 https://*.firebaseio.com https://*.googleapis.com; frame-src 'self' https://widget.snabb.cl; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
         },
         {
           "key": "X-Frame-Options",

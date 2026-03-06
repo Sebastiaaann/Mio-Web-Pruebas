@@ -1,23 +1,15 @@
 import { computed, ref } from 'vue'
-
-const STORAGE_KEY = 'mio-altura-cm'
+import {
+  guardarAlturaPacientePersistida,
+  leerAlturaPacientePersistida
+} from '@/utils/storageCliente'
 
 function leerAlturaStorage(): number | null {
-  if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) return null
-  const valor = Number(raw)
-  if (!Number.isFinite(valor) || valor <= 0) return null
-  return valor
+  return leerAlturaPacientePersistida()
 }
 
 function guardarAlturaStorage(alturaCm: number | null): void {
-  if (typeof window === 'undefined') return
-  if (!alturaCm) {
-    localStorage.removeItem(STORAGE_KEY)
-    return
-  }
-  localStorage.setItem(STORAGE_KEY, String(Math.round(alturaCm)))
+  guardarAlturaPacientePersistida(alturaCm)
 }
 
 export function useAlturaPaciente() {

@@ -1,8 +1,11 @@
 import { signInWithEmailAndPassword, signOut, type User as FirebaseUser } from 'firebase/auth'
 import { auth } from '@/config/firebaseConfig'
 import { logger } from '@/utils/logger'
+import { FLAGS } from '@/utils/featureFlags'
+import { limpiarStorageClienteEnLogout } from '@/utils/storageCliente'
 import { validarEmail } from '@/utils/validadores'
 import { clienteApi } from '@/utils/clienteApi'
+import { pacienteService } from '@/services/pacienteService'
 import type { AuthUser, LoginResponse, SessionMetaAuth } from '@/types'
 
 // MODO DESARROLLO: Cambiar a false para usar backend real
@@ -26,7 +29,7 @@ export const AUTH_EVENTS = {
 
 interface HomaAuthResponse {
   success: boolean
-  token: string
+  token?: string
   patient_id: number
   health_plan_id?: number
   plan_id?: number
@@ -100,6 +103,28 @@ export const authService = {
    */
   async _autorizarConHoma(firebaseUser: FirebaseUser): Promise<HomaAuthResponse> {
     try {
+      if (FLAGS.USE_HOMA_BFF) {
+        const response = await fetch('/api/homa/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: firebaseUser.email,
+            uid: firebaseUser.uid
+          })
+        })
+
+        const datos = await response.json() as HomaAuthResponse & { error?: string }
+        if (!response.ok || !datos.success) {
+          throw new Error(datos.error || 'Error en autorización HOMA (BFF)')
+        }
+
+        return {
+          ...datos,
+          token: datos.token || 'bff-session'
+        }
+      }
+
       const datos = await clienteApi.post<HomaAuthResponse>('/api/v1/authorizations', {
         email: firebaseUser.email,
         UID: firebaseUser.uid
@@ -193,6 +218,17 @@ export const authService = {
    */
   async cerrarSesion(): Promise<{ success: boolean; error?: string }> {
     try {
+      if (FLAGS.USE_HOMA_BFF) {
+        try {
+          await fetch('/api/homa/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+          })
+        } catch (errorBff) {
+          logger.warn('No se pudo cerrar sesión BFF', errorBff)
+        }
+      }
+
       await signOut(auth)
       this.limpiarAlmacenamientoLocal()
       this.emitirEvento(AUTH_EVENTS.LOGOUT)
@@ -222,6 +258,7 @@ export const authService = {
     localStorage.removeItem('mio-user')
     localStorage.removeItem('mio-token')
     localStorage.removeItem('mio-session-meta')
+    limpiarStorageClienteEnLogout()
   },
 
   /**
@@ -245,6 +282,30 @@ export const authService = {
    */
   async refrescarToken(): Promise<{ success: boolean; token?: string }> {
     try {
+      if (FLAGS.USE_HOMA_BFF) {
+        const response = await fetch('/api/homa/auth/refresh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        })
+
+        if (!response.ok) {
+          logger.warn('Token refresh BFF falló:', response.status)
+          return { success: false }
+        }
+
+        const datos = await response.json() as { success?: boolean; token?: string }
+        if (datos.success) {
+          const tokenCompat = datos.token || 'bff-session'
+          sessionStorage.setItem('mio-token', tokenCompat)
+          return { success: true, token: tokenCompat }
+        }
+
+        return { success: false }
+      }
+
       const tokenActual = this.obtenerToken()
       if (!tokenActual) {
         return { success: false }
@@ -299,13 +360,10 @@ export const authService = {
   guardarSesion(token: string, user: AuthUser): void {
     sessionStorage.setItem('mio-token', token)
 
-    // Solo guardamos metadatos no sensibles o necesarios para el bootstrap
-    // El resto de la info (nombre, email) debe vivir en memoria (Pinia)
+    // Solo persistimos patient_id — es el único dato necesario para el bootstrap.
+    // uid, health_plan_id y lastLogin se eliminaron para reducir PII expuesta en storage.
     const sessionMeta: SessionMetaAuth = {
-      uid: user.uid, // Necesario para identificar
-      patient_id: user.patient_id, // Necesario para bootstrap de datos
-      health_plan_id: user.health_plan_id || null,
-      lastLogin: Date.now()
+      patient_id: user.patient_id
     }
 
     sessionStorage.setItem('mio-session-meta', JSON.stringify(sessionMeta))
@@ -333,7 +391,12 @@ export const authService = {
 
     if (token) {
       if (metaStr) {
-        return { token, user: JSON.parse(metaStr) as SessionLegacy }
+        try {
+          return { token, user: JSON.parse(metaStr) as SessionLegacy }
+        } catch {
+          // sessionStorage corrupto — limpiar y continuar con fallback legacy
+          sessionStorage.removeItem('mio-session-meta')
+        }
       }
       // Migración on-the-fly: si existe el viejo formato, lo usamos una vez y sugerimos al store que actualice
       if (legacyUserStr) {
@@ -351,19 +414,76 @@ export const authService = {
   },
 
   /**
-   * Registrar nuevo usuario
-   * Stub: la funcionalidad de registro aún no está implementada en el backend
-   * TODO: Implementar cuando el endpoint de registro esté disponible
+   * Registrar nuevo usuario en HOMA API
+   * Llama a POST /api/v1/patients con los datos del paciente
+   * Nota: la contraseña NO se envía a HOMA (HOMA no gestiona passwords)
    */
   async registrar(
-    _email: string,
+    email: string,
     _password: string,
-    _rut: string,
-    _nombre: string,
-    _apellido: string
+    rut: string,
+    nombre: string,
+    apellido: string
   ): Promise<LoginResponse> {
-    logger.warn('authService.registrar: funcionalidad no disponible aún')
-    return { success: false, error: 'El registro de nuevas cuentas no está disponible actualmente.' }
+    try {
+      // Crear paciente en HOMA API
+      const resultado = await pacienteService.crearPaciente({
+        name: nombre,
+        lastname: apellido,
+        document: rut,
+        email
+      })
+
+      if (!resultado.success) {
+        return {
+          success: false,
+          error: resultado.error || 'No se pudo completar el registro. Intente nuevamente.'
+        }
+      }
+
+      // Extraer patient_id de la respuesta (distintas estructuras posibles)
+      const datos = resultado.data as Record<string, unknown> | undefined
+      const patientId: number =
+        (datos?.patient_id as number) ??
+        (datos?.id as number) ??
+        ((datos?.data as Record<string, unknown>)?.patient_id as number) ??
+        ((datos?.data as Record<string, unknown>)?.id as number) ??
+        0
+
+      if (!patientId) {
+        logger.warn('authService.registrar: no se pudo extraer patient_id de la respuesta', {
+          claves: datos ? Object.keys(datos) : []
+        })
+      }
+
+      // Construir usuario con token temporal (sin Firebase, sin contraseña en HOMA)
+      const usuario: AuthUser = {
+        uid: `reg_${patientId || Date.now()}`,
+        patient_id: patientId,
+        health_plan_id: null,
+        email,
+        fullName: `${nombre} ${apellido}`.trim()
+      }
+
+      // No guardar sesión ni emitir LOGIN_SUCCESS: el registro solo crea el paciente.
+      // El usuario debe iniciar sesión explícitamente después del registro.
+
+      logger.info('authService.registrar: paciente registrado', {
+        patientId: patientId ? `[ID:${patientId.toString().slice(0, 3)}...]` : 'desconocido'
+      })
+
+      return {
+        success: true,
+        registered: true,
+        user: usuario
+      }
+    } catch (error) {
+      logger.error('authService.registrar: error inesperado', error)
+      return {
+        success: false,
+        error: 'Ocurrió un error inesperado durante el registro. Intente nuevamente.'
+      }
+    }
   },
 
   estaAutenticado(): boolean {

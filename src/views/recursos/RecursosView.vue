@@ -3,27 +3,23 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useConfigStore } from '@/stores/tiendaConfig'
+import { useUserStore } from '@/stores/tiendaUsuario'
 import { logger } from '@/utils/logger'
 import { pacienteService } from '@/services/pacienteService'
 import TarjetaMaterialAudiovisual from '@/components/ui/home-ios/TarjetaMaterialAudiovisual.vue'
 
 const route = useRoute()
 const configStore = useConfigStore()
+const usuarioStore = useUserStore()
 
 const materialAudiovisual = ref([])
 const cargando = ref(false)
 const error = ref(null)
 
 const obtenerPatientIdActivo = () => {
-  const sessionMeta = localStorage.getItem('mio-session-meta')
-  if (!sessionMeta) return null
-
-  try {
-    const { patient_id } = JSON.parse(sessionMeta)
-    return patient_id || null
-  } catch (e) {
-    return null
-  }
+  // Leer del store de Pinia — fuente de verdad única.
+  // Evitar acceso directo a sessionStorage/localStorage desde vistas.
+  return usuarioStore.usuario?.patient_id || null
 }
 
 const leerListaQuery = (valor) => {

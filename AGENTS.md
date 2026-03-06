@@ -759,6 +759,7 @@ El proyecto cuenta con MCP (Model Context Protocol) servers configurados que pro
 ### MCP HOMA-API (Prioridad: ALTA para datos de pacientes)
 
 **Ubicación:** `mcp-server/index.js`
+**Skill de referencia:** `.opencode/skills/homa-api-integration/SKILL.md` (documentación completa: todos los endpoints, credenciales de prueba, workflows)
 **Descripción:** MCP server para interactuar con la API de HOMA/MIO - sistema de gestión de pacientes y salud.
 
 **Activación automática cuando:**
@@ -1197,3 +1198,224 @@ await fetch(url)  // Cualquiera puede acceder
 - Las sugerencias de mejora deben ser **prácticas y accionables**
 - El código generado debe seguir **todas las directrices de idioma** (español)
 - Cuando haya duda entre múltiples skills, **priorizar Vue skills**
+
+---
+
+## Bugs Conocidos y Fixes — Historial de Sesiones
+
+> Documentación viva. Cada sección es un bug real encontrado y resuelto en producción.
+> Consultar ANTES de tocar los archivos afectados.
+
+### Skill: `vue-component-bugs`
+
+**Ubicación:** `.opencode/skills/vue-component-bugs/SKILL.md`
+
+**Activación automática cuando:**
+- Se trabaja con `src/components/ui/button/Button.vue`
+- Se trabaja con `src/views/perfil/MiPerfilView.vue`
+- Un click handler Vue no se ejecuta (evento silencioso)
+- Se usan componentes que wrappean `Primitive` de reka-ui con `v-bind="$attrs"`
+- Se comparan strings que vienen de la API HOMA (nombres de planes, etc.)
+- Se reporta que una sección condicional no aparece aunque debería
+
+---
+
+### Bug 1 — Button.vue: onClick como prop silencia clicks (RESUELTO)
+
+**Archivos:** `src/components/ui/button/Button.vue`
+**Commit:** `10bf74e`
+
+**Nunca hacer:**
+```typescript
+// MAL: onClick como prop intercepta el evento antes de llegar al DOM
+defineProps<{ onClick?: (e: MouseEvent) => void }>()
+```
+
+**Siempre hacer:**
+```typescript
+// BIEN: inheritAttrs false + emits para typescript + type default 'button'
+export default { inheritAttrs: false }
+
+defineProps<{ type?: 'button' | 'submit' | 'reset' }>()
+defineEmits<{ click: [event: MouseEvent] }>()
+
+// En template: type: props.type ?? 'button' en v-bind
+```
+
+---
+
+### Bug 2 — MiPerfilView: Sección de planes no aparece (RESUELTO)
+
+**Archivos:** `src/views/perfil/MiPerfilView.vue`
+**Commit:** `64276a5`
+
+Si `tienePlanesAlternativos` parece falso aunque hay planes, verificar que la
+computed incluya **todas** las condiciones OR relevantes:
+```typescript
+// Incluir AMBAS condiciones:
+const tienePlanesAlternativos = computed(
+  () => planAlternativo.value !== null || availablePlans.value.length > 0
+)
+```
+
+---
+
+### Bug 3 — MiPerfilView: tipoPlanAPI no detecta 'mutual' (RESUELTO)
+
+**Archivos:** `src/views/perfil/MiPerfilView.vue`
+**Commit:** `e3ada85`
+
+Los strings de la API HOMA no garantizan casing. Siempre usar:
+```typescript
+function tipoPlanAPI(nombre: string): 'esencial' | 'mutual' | 'otro' {
+  const n = nombre.toLowerCase().trim()
+  if (n.includes('mutual')) return 'mutual'
+  if (n.includes('esencial')) return 'esencial'
+  return 'otro'
+}
+```
+
+---
+
+### Regla: Debugging de eventos silenciosos en Vue
+
+Cuando un `@click` no dispara, seguir este orden ANTES de proponer un fix:
+
+1. Abrir DevTools → verificar `button.type` (no debe ser `"submit"`)
+2. Verificar que el componente no tenga `onClick` en `defineProps`
+3. Verificar que no haya `inheritAttrs: true` (default) + `v-bind="$attrs"` duplicado
+4. Agregar log temporal DENTRO del handler para confirmar si se llama
+5. Si el handler nunca se llama: bug en el componente (props interceptando attrs)
+6. Si el handler se llama pero no funciona: bug en la lógica
+
+---
+
+### Regla: vue-tsc con inheritAttrs: false
+
+Cuando un componente tiene `inheritAttrs: false` y `v-bind="$attrs"`, vue-tsc
+rechaza `@click` en los callers con:
+```
+error TS2353: 'onClick' does not exist in type ...
+```
+
+Solución siempre: agregar `defineEmits<{ click: [event: MouseEvent] }>()`.
+No afecta runtime, solo satisface el type checker.
+
+---
+
+### Bug 4 — MiPerfilView: usuario.patient_id (NO .id) (RESUELTO)
+
+**Archivos:** `src/views/perfil/MiPerfilView.vue`, `src/stores/tiendaUsuario.ts`
+**Commit:** `5b12a08`
+
+El ID del paciente en el store es `usuario.patient_id`, NO `usuario.id`.
+Acceder a `.id` devuelve `undefined` silenciosamente.
+
+```typescript
+// Incorrecto:
+const patientId = usuarioStore.usuario?.id
+
+// Correcto:
+const patientId = usuarioStore.usuario?.patient_id
+```
+
+---
+
+### Bug 5 — MiPerfilView: plan activo aparecía como opción de compra (RESUELTO)
+
+**Archivos:** `src/views/perfil/MiPerfilView.vue`
+**Commit:** `5b12a08`
+
+Usar computed `planesDisponiblesParaComprar` que filtra el plan activo del grid:
+
+```typescript
+const planesDisponiblesParaComprar = computed(() =>
+  availablePlans.value.filter(
+    (p) => tipoPlanAPI(p.name_plan) !== tipoPlanAPI(planActual.value?.name_plan ?? '')
+  )
+)
+```
+
+Interfaces clave definidas en `MiPerfilView.vue`: `PlanAPI`, `PlanDisponible`, `PlanMeta`.
+
+---
+
+### Bug 6 — AuthView: register() llamado sin argumentos (RESUELTO)
+
+**Archivos:** `src/views/inicio/AuthView.vue`
+**Commit:** `a8882b4`
+
+La función `userStore.register()` requiere el objeto completo de campos:
+
+```typescript
+// Incorrecto:
+await userStore.register()
+
+// Correcto:
+await userStore.register({
+  email: email.value.trim(),
+  password: password.value,
+  rut: rut.value.trim(),
+  nombre: nombre.value.trim(),
+  apellido: apellido.value.trim()
+})
+```
+
+---
+
+### Bug 7 — BeneficiosView: v-for key undefined (RESUELTO)
+
+**Archivos:** `src/views/beneficios/BeneficiosView.vue`
+**Commit:** `a8882b4`
+
+Key de v-for puede ser undefined si `banner.id` y `banner.title` son falsy:
+
+```typescript
+// Incorrecto:
+:key="banner.id || banner.title"
+
+// Correcto — siempre única:
+:key="String(banner.id ?? banner.title ?? index)"
+```
+
+**Regla general:** Todo v-for debe tener un fallback al `index` para garantizar unicidad.
+
+---
+
+### Patrón — Rate Limiter en API Serverless
+
+**Archivos:** `api/_lib/rateLimiter.js`, `api/homa-center/batch.js`
+**Commit:** `a4ee2f8`
+
+Rate limiter de ventana deslizante (20 req/IP/60s). El Map es in-memory —
+se resetea en cada cold start de Vercel serverless. No usar para protección estricta.
+
+```javascript
+import { crearLimitador } from '../_lib/rateLimiter.js'
+const limitar = crearLimitador({ maxPeticiones: 20, ventanaMs: 60_000 })
+
+const ip = req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
+const { permitido, resetEn } = limitar(ip)
+if (!permitido) return res.status(429).json({ error: 'Too many requests', resetEn })
+```
+
+---
+
+### Patrón — Formulario de Registro con nombre/apellido
+
+**Archivos:** `src/views/inicio/AuthView.vue`
+**Commit:** `40de946`
+
+Al agregar campos al formulario de registro: declarar `ref`, validar antes de submit,
+pasar a `register()`, y limpiar en `volver()` junto con los demás campos.
+
+```typescript
+const nombre = ref('')
+const apellido = ref('')
+
+function volver() {
+  // ... otros campos ...
+  nombre.value = ''
+  apellido.value = ''
+}
+```

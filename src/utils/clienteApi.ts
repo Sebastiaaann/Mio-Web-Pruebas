@@ -1,4 +1,5 @@
 import { logger } from '@/utils/logger'
+import { FLAGS } from '@/utils/featureFlags'
 import type { RequestConfig } from '@/types'
 
 const API_HOMA_URL = import.meta.env.VITE_API_HOMA_URL || 'https://apihoma.homa.cl:7200'
@@ -92,6 +93,32 @@ class ClienteApi {
   }
 
   /**
+   * Aplica transformación de endpoint para modo BFF.
+   * /api/v1/* -> /api/homa/*
+   */
+  private transformarEndpoint(endpoint: string): string {
+    if (!FLAGS.USE_HOMA_BFF) return endpoint
+    if (endpoint.startsWith('/api/v1/')) {
+      return endpoint.replace('/api/v1/', '/api/homa/')
+    }
+    return endpoint
+  }
+
+  /**
+   * Construye URL final según modo (legado o BFF).
+   */
+  private construirUrl(endpoint: string): string {
+    const endpointTransformado = this.transformarEndpoint(endpoint)
+    if (endpointTransformado.startsWith('http')) return endpointTransformado
+
+    if (FLAGS.USE_HOMA_BFF) {
+      return endpointTransformado
+    }
+
+    return `${API_HOMA_URL}${endpointTransformado}`
+  }
+
+  /**
    * Ejecuta la petición HTTP real
    * Retorna un objeto con el resultado para que el caller pueda decidir qué hacer
    */
@@ -112,16 +139,17 @@ class ClienteApi {
           'Content-Type': 'application/json',
           ...(opciones.headers as Record<string, string> | undefined),
         },
-        signal: controller.signal
+        signal: controller.signal,
+        // En modo BFF usamos cookie HttpOnly same-origin.
+        ...(FLAGS.USE_HOMA_BFF ? { credentials: 'include' as RequestCredentials } : {})
       }
 
-      // Inyectar token si existe (HOMA usa X-API-KEY, no Authorization Bearer)
-      if (token) {
+      // Modo legado: inyectar X-API-KEY desde sessionStorage.
+      if (!FLAGS.USE_HOMA_BFF && token) {
         ;(config.headers as Record<string, string>)['X-API-KEY'] = token
       }
 
-      // Asegurar URL completa
-      const url = endpoint.startsWith('http') ? endpoint : `${API_HOMA_URL}${endpoint}`
+      const url = this.construirUrl(endpoint)
 
       const response = await fetch(url, config)
 

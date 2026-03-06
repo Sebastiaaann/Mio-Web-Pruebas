@@ -3,10 +3,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DisposicionApp from '@/layouts/DisposicionApp.vue';
+import LimitErrores from '@/components/LimitErrores.vue';
 import { Motion, AnimatePresence } from 'motion-v';
 
 import { useConfigStore } from '@/stores/tiendaConfig';
 import { useUserStore } from '@/stores/tiendaUsuario';
+import BannerCookies from '@/components/ui/BannerCookies.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -67,40 +69,46 @@ const usarLayout = computed(() => {
   <div v-if="!isRouterReady" class="min-h-screen flex items-center justify-center bg-background">
     <div class="animate-pulse text-primary text-2xl font-bold">Mio<sup class="text-sm">+</sup></div>
   </div>
-  
-  <!-- Con Layout Principal -->
-  <DisposicionApp v-else-if="usarLayout">
-    <router-view v-slot="{ Component }">
-      <AnimatePresence mode="wait">
-        <Motion 
-          v-if="Component" 
-          :key="route.path"
-          :initial="prefiereMenosMovimiento ? false : { opacity: 0, y: 10 }"
-          :animate="prefiereMenosMovimiento ? {} : { opacity: 1, y: 0 }"
-          :exit="prefiereMenosMovimiento ? {} : { opacity: 0, y: -10 }"
-          :transition="{ duration: prefiereMenosMovimiento ? 0 : 0.2 }"
-        >
-          <component :is="Component" />
-        </Motion>
-      </AnimatePresence>
+
+  <!-- Contenido post-router envuelto en error boundary -->
+  <LimitErrores v-else>
+    <!-- Con Layout Principal -->
+    <DisposicionApp v-if="usarLayout">
+      <router-view v-slot="{ Component }">
+        <AnimatePresence mode="wait">
+          <Motion 
+            v-if="Component" 
+            :key="route.path"
+            :initial="prefiereMenosMovimiento ? false : { opacity: 0, y: 10 }"
+            :animate="prefiereMenosMovimiento ? {} : { opacity: 1, y: 0 }"
+            :exit="prefiereMenosMovimiento ? {} : { opacity: 0, y: -10 }"
+            :transition="{ duration: prefiereMenosMovimiento ? 0 : 0.2 }"
+          >
+            <component :is="Component" />
+          </Motion>
+        </AnimatePresence>
+      </router-view>
+    </DisposicionApp>
+
+    <!-- Sin Layout (inicio, auth, onboarding) -->
+    <router-view v-else v-slot="{ Component }">
+        <AnimatePresence mode="wait">
+          <Motion 
+            v-if="Component" 
+            :key="route.path"
+            :initial="prefiereMenosMovimiento ? false : { opacity: 0 }"
+            :animate="prefiereMenosMovimiento ? {} : { opacity: 1 }"
+            :exit="prefiereMenosMovimiento ? {} : { opacity: 0 }"
+            :transition="{ duration: prefiereMenosMovimiento ? 0 : 0.3 }"
+          >
+            <component :is="Component" />
+          </Motion>
+        </AnimatePresence>
     </router-view>
-  </DisposicionApp>
-  
-  <!-- Sin Layout (inicio, auth, onboarding) -->
-  <router-view v-else v-slot="{ Component }">
-      <AnimatePresence mode="wait">
-        <Motion 
-          v-if="Component" 
-          :key="route.path"
-          :initial="prefiereMenosMovimiento ? false : { opacity: 0 }"
-          :animate="prefiereMenosMovimiento ? {} : { opacity: 1 }"
-          :exit="prefiereMenosMovimiento ? {} : { opacity: 0 }"
-          :transition="{ duration: prefiereMenosMovimiento ? 0 : 0.3 }"
-        >
-          <component :is="Component" />
-        </Motion>
-      </AnimatePresence>
-  </router-view>
+  </LimitErrores>
+
+  <!-- Banner de cookies (visible en todas las páginas) -->
+  <BannerCookies />
 </template>
 
 <style>

@@ -9,6 +9,7 @@
 
 import { logger } from '@/utils/logger'
 import { clienteApi } from '@/utils/clienteApi'
+import { FLAGS } from '@/utils/featureFlags'
 
 // URL del proxy para HOMA Center (diferente base URL que clienteApi)
 const HOMA_CENTER_PROXY_URL = '/api/homa-center/batch'
@@ -463,19 +464,24 @@ export async function guardarBatchObservaciones(params: {
       observationsCount: observations.length
     })
 
-    // Obtener token de autenticación
-    const token = obtenerTokenAuth()
-    if (!token) {
-      throw new Error('No se encontró token de autenticación. Por favor inicie sesión nuevamente.')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
     }
 
-    // Enviar a API HOMA Center con autenticación
+    // Modo legado: enviar token por header.
+    if (!FLAGS.USE_HOMA_BFF) {
+      const token = obtenerTokenAuth()
+      if (!token) {
+        throw new Error('No se encontró token de autenticación. Por favor inicie sesión nuevamente.')
+      }
+      headers['X-API-KEY'] = token
+    }
+
+    // En modo BFF, el servidor obtiene token desde cookie HttpOnly.
     const response = await fetch(HOMA_CENTER_PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-KEY': token
-      },
+      headers,
+      ...(FLAGS.USE_HOMA_BFF ? { credentials: 'include' } : {}),
       body: JSON.stringify(payload)
     })
 
