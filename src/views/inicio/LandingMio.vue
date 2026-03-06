@@ -4,6 +4,9 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/tiendaUsuario'
 import HeaderLanding from '@/components/landing/HeaderLanding.vue'
 
+// Imagen en public/ — se referencia con ruta absoluta en runtime
+const screenshotSalud = '/assets/screenshot_mi_salud.png'
+
 const router = useRouter()
 const userStore = useUserStore()
 
@@ -116,7 +119,7 @@ const irAlAuth = () => router.push('/auth')
             : 'border-gray-200/80 shadow-purple-900/10'"
         >
           <img
-            src="/assets/screenshot_mi_salud.png"
+            :src="screenshotSalud"
             alt="Vista Mi Salud — Mio+"
             class="w-full h-auto block"
             loading="eager"
