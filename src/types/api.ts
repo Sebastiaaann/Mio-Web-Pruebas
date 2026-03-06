@@ -35,6 +35,8 @@ export interface LoginResponse {
   token?: string
   user?: AuthUser
   error?: string
+  /** true cuando el resultado es un registro nuevo (sin sesión activa) */
+  registered?: boolean
 }
 
 export interface SessionMetaAuth {

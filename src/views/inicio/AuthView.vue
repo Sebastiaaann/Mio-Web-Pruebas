@@ -25,6 +25,7 @@ type Paso = 'email' | 'login' | 'register'
 const paso = ref<Paso>('email')
 const cargando = ref(false)
 const error = ref('')
+const mensajeExito = ref('')
 const mostrarPassword = ref(false)
 
 // Campos del formulario
@@ -119,12 +120,20 @@ async function enviarRegistro() {
     error.value = 'El apellido es requerido'
     return
   }
+  if (!validarEmail(email.value)) {
+    error.value = 'El correo electrónico no es válido'
+    return
+  }
   if (!validateRut(rut.value)) {
     error.value = 'RUT inválido'
     return
   }
+  if (password.value.length < 6) {
+    error.value = 'La contraseña debe tener al menos 6 caracteres'
+    return
+  }
   if (email.value !== emailConfirm.value) {
-    error.value = 'Los emails no coinciden'
+    error.value = 'Los correos electrónicos no coinciden'
     return
   }
   cargando.value = true
@@ -136,7 +145,15 @@ async function enviarRegistro() {
       nombre: nombre.value.trim(),
       apellido: apellido.value.trim()
     })
-    if (resultado.success) {
+    if (resultado.success && resultado.registered) {
+      mensajeExito.value = '¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.'
+      paso.value = 'login'
+      password.value = ''
+      rut.value = ''
+      emailConfirm.value = ''
+      nombre.value = ''
+      apellido.value = ''
+    } else if (resultado.success) {
       router.push('/onboarding')
     } else {
       error.value = resultado.error || 'Error al registrarse'
@@ -151,6 +168,7 @@ async function enviarRegistro() {
 /** Volver al paso anterior */
 function volver() {
   error.value = ''
+  mensajeExito.value = ''
   if (paso.value === 'email') {
     router.push('/')
   } else {
@@ -568,6 +586,9 @@ function manejarEnter() {
                 />
               </div>
 
+              <!-- Mensaje de éxito tras registro -->
+              <p v-if="mensajeExito" class="text-sm text-green-600 font-medium">{{ mensajeExito }}</p>
+
               <!-- Error -->
               <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
 
@@ -597,9 +618,9 @@ function manejarEnter() {
           <!-- Footer legal -->
           <p class="text-center text-xs" :class="isDark ? 'text-gray-600' : 'text-gray-400'">
             Al continuar aceptas nuestros
-            <a href="#" class="underline underline-offset-2 hover:text-[#8B5CF6] transition-colors">Términos de Servicio</a>
+            <router-link to="/terminos" class="underline underline-offset-2 hover:text-[#8B5CF6] transition-colors">Términos de Servicio</router-link>
             y
-            <a href="#" class="underline underline-offset-2 hover:text-[#8B5CF6] transition-colors">Política de Privacidad</a>.
+            <router-link to="/privacidad" class="underline underline-offset-2 hover:text-[#8B5CF6] transition-colors">Política de Privacidad</router-link>.
           </p>
 
           <!-- Marca -->
